@@ -11,6 +11,8 @@ import {
   Building 
 } from "lucide-react";
 
+import { siteConfig } from "@/data/branding";
+
 const sidebarLinks = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
@@ -26,15 +28,14 @@ export default function DashboardSidebar() {
     <aside className="w-64 bg-white border-r border-border/60 hidden md:flex flex-col h-full shrink-0">
       <div className="h-16 flex items-center px-6 border-b border-border/60 shrink-0">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center">
-            <Briefcase className="w-4 h-4 text-white" />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-[14px] font-bold text-[oklch(0.47_0.20_250)]">The Jobs</span>
-            <span className="text-[14px] font-bold text-[oklch(0.68_0.21_45)]">Advertise</span>
-          </div>
+          <img 
+            src={siteConfig.logo.url} 
+            alt={siteConfig.logo.alt} 
+            className="h-10 w-auto"
+          />
         </Link>
       </div>
+
 
       <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-3">

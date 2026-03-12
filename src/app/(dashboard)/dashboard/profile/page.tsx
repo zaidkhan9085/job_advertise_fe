@@ -71,13 +71,17 @@ export default function CompanyProfilePage() {
                   <label className="text-sm font-semibold text-foreground">Company Size</label>
                   <div className="relative">
                     <Users className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                    <select className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] outline-none transition-all">
+                    <select 
+                      defaultValue="1000-5000"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] outline-none transition-all"
+                    >
                       <option value="1-50">1-50 employees</option>
                       <option value="51-200">51-200 employees</option>
                       <option value="201-1000">201-1000 employees</option>
-                      <option value="1000-5000" selected>1000-5000 employees</option>
+                      <option value="1000-5000">1000-5000 employees</option>
                       <option value="5000+">5000+ employees</option>
                     </select>
+
                   </div>
                 </div>
               </div>
