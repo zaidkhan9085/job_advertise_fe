@@ -47,7 +47,7 @@ export default function RegisterPage() {
             onClick={() => setRole("Recruiter")}
             className={`flex-1 flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
               role === "Recruiter" 
-                ? "border-[oklch(0.68_0.21_45)] bg-[oklch(0.68_0.21_45)]/5 text-[oklch(0.68_0.21_45)]" 
+                ? "border-brand-blue bg-brand-blue/5 text-brand-blue" 
                 : "border-border/60 hover:border-border text-muted-foreground"
             }`}
           >
@@ -64,7 +64,7 @@ export default function RegisterPage() {
               <input 
                 type="text" 
                 placeholder="John Doe"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] focus:border-[oklch(0.68_0.21_45)] outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />
             </div>
@@ -77,7 +77,7 @@ export default function RegisterPage() {
               <input 
                 type="email" 
                 placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] focus:border-[oklch(0.68_0.21_45)] outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />
             </div>
@@ -91,7 +91,7 @@ export default function RegisterPage() {
                 <input 
                   type="text" 
                   placeholder="Acme Corp"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] focus:border-[oklch(0.68_0.21_45)] outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                   required
                 />
               </div>
@@ -105,7 +105,7 @@ export default function RegisterPage() {
               <input 
                 type="password" 
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] focus:border-[oklch(0.68_0.21_45)] outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />
             </div>
@@ -114,7 +114,7 @@ export default function RegisterPage() {
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
+            className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
           >
             {isLoading ? "Creating account..." : (
               <>

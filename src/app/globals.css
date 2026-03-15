@@ -11,12 +11,13 @@
 /* ─── Brand Tokens ─── */
 :root {
   /* Brand palette */
-  --brand-orange:       oklch(0.68 0.21 45);      /* #F97316 approx */
-  --brand-orange-light: oklch(0.78 0.18 45);
-  --brand-orange-dark:  oklch(0.55 0.22 45);
-  --brand-blue:         oklch(0.47 0.20 250);      /* #1D4ED8 approx */
-  --brand-blue-light:   oklch(0.60 0.18 250);
-  --brand-blue-dark:    oklch(0.35 0.20 250);
+  --brand-blue:         oklch(0.25 0.08 250);      /* Dark Blue #1E3A8A approx */
+  --brand-blue-medium:  oklch(0.40 0.15 250);      /* Medium Blue */
+  --brand-blue-light:   oklch(0.60 0.18 250);      /* Light Blue #3B82F6 approx */
+  --brand-blue-muted:   oklch(0.92 0.02 250);      /* Very Light Blue for backgrounds */
+  --brand-gold:         #DAA520;                 /* Golden for Premium */
+  --brand-gold-light:   #FFD700;                 /* Bright Gold */
+  --brand-orange:       var(--brand-blue-light);   /* Removed orange, using light blue as accent */
 
   /* shadcn semantic tokens — mapped to brand */
   --background: oklch(1 0 0);
@@ -27,11 +28,11 @@
   --popover-foreground: oklch(0.13 0.01 260);
   --primary: var(--brand-blue);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.005 250);
-  --secondary-foreground: var(--brand-blue-dark);
-  --muted: oklch(0.96 0.005 250);
-  --muted-foreground: oklch(0.50 0.02 260);
-  --accent: var(--brand-orange);
+  --secondary: var(--brand-blue-muted);
+  --secondary-foreground: var(--brand-blue);
+  --muted: var(--brand-blue-muted);
+  --muted-foreground: oklch(0.45 0.05 250);
+  --accent: var(--brand-blue-light);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.92 0.005 250);
@@ -79,7 +80,7 @@
   --secondary-foreground: oklch(0.96 0 0);
   --muted: oklch(0.22 0.01 260);
   --muted-foreground: oklch(0.65 0.01 260);
-  --accent: var(--brand-orange);
+  --accent: var(--brand-blue-light);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -143,6 +144,10 @@
     box-sizing: border-box;
   }
 
+  a, button, [role="button"], input[type="submit"], select, label {
+    cursor: pointer;
+  }
+
   html {
     scroll-behavior: smooth;
     font-family: var(--font-sans);
@@ -163,20 +168,20 @@
 
   /* Brand gradients */
   .bg-brand-gradient {
-    background: linear-gradient(135deg, var(--brand-blue-dark) 0%, var(--brand-blue) 50%, oklch(0.50 0.18 230) 100%);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-medium) 50%, var(--brand-blue-light) 100%);
   }
 
   .bg-hero-gradient {
     background: linear-gradient(
       135deg,
-      oklch(0.16 0.04 255) 0%,
-      oklch(0.22 0.06 255) 40%,
-      oklch(0.28 0.08 245) 100%
+      oklch(0.15 0.05 250) 0%,
+      oklch(0.25 0.08 250) 40%,
+      oklch(0.40 0.12 250) 100%
     );
   }
 
-  .bg-orange-gradient {
-    background: linear-gradient(135deg, var(--brand-orange-dark), var(--brand-orange));
+  .bg-premium-gradient {
+    background: linear-gradient(135deg, var(--brand-blue) 0%, oklch(0.30 0.10 260) 100%);
   }
 
   /* Card hover */
@@ -189,11 +194,11 @@
   }
 
   /* Glow effects */
-  .glow-orange {
-    box-shadow: 0 0 30px -5px oklch(0.68 0.21 45 / 30%);
-  }
   .glow-blue {
-    box-shadow: 0 0 30px -5px oklch(0.47 0.20 250 / 30%);
+    box-shadow: 0 0 30px -5px oklch(0.25 0.08 250 / 25%);
+  }
+  .glow-premium {
+    box-shadow: 0 0 40px -10px oklch(0.60 0.18 250 / 40%);
   }
 
   /* Section spacing */

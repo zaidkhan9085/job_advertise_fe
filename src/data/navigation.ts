@@ -11,43 +11,115 @@ export interface NavItem {
 }
 
 export const industryItems: NavDropdownItem[] = [
-  { label: "Oil & Gas, Petrochemical, Refinery", href: "/jobs?industry=oil-gas" },
-  { label: "Power Plant, Substation", href: "/jobs?industry=power-plant" },
-  { label: "Construction, EPC", href: "/jobs?industry=construction" },
-  { label: "Manufacturing, Production", href: "/jobs?industry=manufacturing" },
-  { label: "Facility Management, MEP", href: "/jobs?industry=facility-management" },
+  { label: "Oil & Gas, Petrochemical & Refinery", href: "/jobs?industry=oil-gas" },
+  { label: "Power Plant, Substation, Energy & Gas Turbine", href: "/jobs?industry=power-plant" },
+  { label: "Water Treatment Plant (WTP), RO & STP", href: "/jobs?industry=water-treatment" },
+  { label: "Building Construction, Infrastructure & EPC Projects", href: "/jobs?industry=construction" },
+  { label: "Manufacturing & Production", href: "/jobs?industry=manufacturing" },
+  { label: "Facility Management & MEP", href: "/jobs?industry=facility-management" },
   { label: "Healthcare & Hospitality", href: "/jobs?industry=healthcare" },
-  { label: "Information Technology", href: "/jobs?industry=it" },
-  { label: "Marine & Maritime, Aviation", href: "/jobs?industry=marine" },
-  { label: "Non-IT, Banking & Finance", href: "/jobs?industry=banking-finance" },
-  { label: "Other", href: "/jobs?industry=other" },
+  { label: "IT, Hardware, Software & Telecom", href: "/jobs?industry=it" },
+  { label: "Marine, Maritime, Aviation & Offshore", href: "/jobs?industry=marine" },
+  { label: "Banking, Finance & Non-IT Services", href: "/jobs?industry=banking-finance" },
+  { label: "HR, Admin, Back Office & BPO / Telecaller", href: "/jobs?industry=hr-admin" },
+  { label: "Logistics, Transportation, Shipping & Supply Chain", href: "/jobs?industry=logistics" },
+  { label: "FMCG (Fast-Moving Consumer Goods)", href: "/jobs?industry=fmcg" },
+  { label: "Design, Drafting, Engineering & Consultancy", href: "/jobs?industry=design-engineering" },
+  { label: "Heavy Industries, Steel, Cement & Mining", href: "/jobs?industry=heavy-industries" },
+  { label: "Education, Training & Skill Development", href: "/jobs?industry=education" },
+  { label: "Other Industries", href: "/jobs?industry=other" },
 ];
 
 export const nearbyJobsItems: NavDropdownItem[] = [
   { label: "East India", href: "/jobs?location=east-india" },
+  { label: "West India", href: "/jobs?location=west-india" },
   { label: "North India", href: "/jobs?location=north-india" },
   { label: "South India", href: "/jobs?location=south-india" },
-  { label: "West India", href: "/jobs?location=west-india" },
-  { label: "GCC", href: "/jobs?location=GCC" },
-  { label: "Europe", href: "/jobs?location=Europe" },
+  { 
+    label: "Gulf Jobs", 
+    href: "/jobs?location=gulf",
+    subItems: [
+      { label: "UAE", href: "/jobs?location=uae" },
+      { label: "Saudi Arabia", href: "/jobs?location=saudi-arabia" },
+      { label: "Qatar", href: "/jobs?location=qatar" },
+      { label: "Oman", href: "/jobs?location=oman" },
+      { label: "Kuwait", href: "/jobs?location=kuwait" },
+      { label: "Bahrain", href: "/jobs?location=bahrain" },
+      { label: "Iran", href: "/jobs?location=iran" },
+      { label: "Iraq", href: "/jobs?location=iraq" },
+      { label: "Turkey", href: "/jobs?location=turkey" },
+    ]
+  },
+  {
+    label: "Asia Jobs",
+    href: "/jobs?location=asia",
+    subItems: [
+      { label: "Singapore", href: "/jobs?location=singapore" },
+      { label: "Malaysia", href: "/jobs?location=malaysia" },
+      { label: "Thailand", href: "/jobs?location=thailand" },
+      { label: "Indonesia", href: "/jobs?location=indonesia" },
+      { label: "Philippines", href: "/jobs?location=philippines" },
+      { label: "Japan", href: "/jobs?location=japan" },
+      { label: "South Korea", href: "/jobs?location=south-korea" },
+    ]
+  },
+  { label: "Europe", href: "/jobs?location=europe" },
 ];
 
 export const vacancyItems: NavDropdownItem[] = [
-  { label: "Gulf Jobs", href: "/jobs?category=gulf-jobs" },
-  { label: "Asia Jobs", href: "/jobs?category=asia-jobs" },
+  { 
+    label: "Gulf Jobs", 
+    href: "/jobs?category=gulf-jobs",
+    subItems: [
+      { label: "UAE", href: "/jobs?location=uae" },
+      { label: "Saudi Arabia", href: "/jobs?location=saudi-arabia" },
+      { label: "Qatar", href: "/jobs?location=qatar" },
+      { label: "Oman", href: "/jobs?location=oman" },
+      { label: "Kuwait", href: "/jobs?location=kuwait" },
+      { label: "Bahrain", href: "/jobs?location=bahrain" },
+      { label: "Iran", href: "/jobs?location=iran" },
+      { label: "Iraq", href: "/jobs?location=iraq" },
+      { label: "Turkey", href: "/jobs?location=turkey" },
+    ]
+  },
+  { 
+    label: "Asia Jobs", 
+    href: "/jobs?category=asia-jobs",
+    subItems: [
+      { label: "Singapore", href: "/jobs?location=singapore" },
+      { label: "Malaysia", href: "/jobs?location=malaysia" },
+      { label: "Thailand", href: "/jobs?location=thailand" },
+      { label: "Indonesia", href: "/jobs?location=indonesia" },
+      { label: "Philippines", href: "/jobs?location=philippines" },
+      { label: "Japan", href: "/jobs?location=japan" },
+      { label: "South Korea", href: "/jobs?location=south-korea" },
+    ]
+  },
+  { 
+    label: "Russia & Other Countries", 
+    href: "/jobs?category=other-countries",
+    subItems: [
+      { label: "Russia", href: "/jobs?location=russia" },
+      { label: "Kazakhstan", href: "/jobs?location=kazakhstan" },
+      { label: "Uzbekistan", href: "/jobs?location=uzbekistan" },
+      { label: "Azerbaijan", href: "/jobs?location=azerbaijan" },
+      { label: "Georgia", href: "/jobs?location=georgia" },
+      { label: "Israel", href: "/jobs?location=israel" },
+      { label: "Jordan", href: "/jobs?location=jordan" },
+      { label: "Africa", href: "/jobs?location=africa" },
+    ]
+  },
   { label: "Europe Jobs", href: "/jobs?category=europe-jobs" },
   { label: "Australia", href: "/jobs?category=australia" },
   { label: "Canada", href: "/jobs?category=canada" },
-  { label: "Russia", href: "/jobs?category=russia" },
+  { label: "New Zealand", href: "/jobs?category=new-zealand" },
 ];
 
 export const mainNavItems: NavItem[] = [
   { label: "Industry", href: "/jobs", dropdownItems: industryItems },
   { label: "Nearby Jobs", href: "/jobs?type=nearby", dropdownItems: nearbyJobsItems },
-  { label: "Vacancy", href: "/jobs?type=vacancy", dropdownItems: vacancyItems },
+  { label: "Jobs Opening", href: "/jobs?type=vacancy", dropdownItems: vacancyItems },
   { label: "Post Resume", href: "/resume" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Join Group", href: "https://chat.whatsapp.com/E73OloAiRjv8ZZYQBNqEt5?mode=ac_t" }, // Keep WhatsApp external
 ];
 
 export const authNavItems: NavItem[] = [

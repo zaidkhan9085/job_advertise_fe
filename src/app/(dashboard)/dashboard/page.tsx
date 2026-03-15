@@ -31,7 +31,7 @@ export default function DashboardOverview() {
       value: `${mockDashboardStats.profileCompletion}%`,
       description: "Update your company details",
       icon: CheckCircle2,
-      color: "bg-orange-50 text-orange-600",
+      color: "bg-brand-blue/5 text-brand-blue",
     },
   ];
 
@@ -44,7 +44,7 @@ export default function DashboardOverview() {
         </div>
         <Link 
           href="/dashboard/jobs/new"
-          className="inline-flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm whitespace-nowrap"
         >
           <Briefcase className="w-4 h-4" />
           Post a New Job

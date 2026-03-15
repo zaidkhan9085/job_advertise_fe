@@ -1,53 +1,94 @@
+"use client";
+
+import { useRef, useCallback } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { industries } from "@/data/industries";
 
 export default function IndustrySection() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = useCallback((direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const { clientWidth } = scrollRef.current;
+      const scrollAmount = direction === "left" ? -clientWidth : clientWidth;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  }, []);
+
   return (
-    <section className="section-padding bg-[oklch(0.975_0.005_250)]">
-      <div className="container-site">
-        <div className="text-center mb-10">
-          <div className="text-xs font-semibold text-[oklch(0.68_0.21_45)] uppercase tracking-widest mb-2">
-            Browse by Sector
+    <section className="py-24 bg-gradient-to-r from-white via-[#f0f7ff] to-white relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-brand-blue/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      
+      <div className="container-site relative">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+          <div className="space-y-3">
+            <div className="text-xs font-black text-brand-blue/40 uppercase tracking-[0.3em]">
+              Browse by Sector
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-brand-blue tracking-tight">
+              Explore by Industry
+            </h2>
+            <p className="text-muted-foreground font-medium max-w-xl text-lg">
+              Find your next career move in specialized sectors with verified global opportunities.
+            </p>
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">
-            Explore by Industry
-          </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Thousands of jobs across every major sector. Find the field where you belong.
-          </p>
+          <div className="flex gap-4">
+            <button
+              onClick={() => scroll("left")}
+              className="w-14 h-14 rounded-2xl border border-border/60 bg-white text-brand-blue hover:bg-brand-blue-muted hover:border-brand-blue/30 shadow-sm transition-all flex items-center justify-center active:scale-90"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              className="w-14 h-14 rounded-2xl border border-border/60 bg-white text-brand-blue hover:bg-brand-blue-muted hover:border-brand-blue/30 shadow-sm transition-all flex items-center justify-center active:scale-90"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {industries.map((industry) => {
-            const isExternal = industry.href.startsWith("http");
-            const LinkComponent = isExternal ? "a" : Link;
-            const props = isExternal ? { href: industry.href, target: "_blank", rel: "noopener noreferrer" } : { href: industry.href };
-            
-            return (
-              <LinkComponent
-                key={industry.id}
-                {...props}
-                className="group bg-white rounded-2xl border border-border/60 p-5 text-center shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 hover:border-[oklch(0.68_0.21_45)]/30"
-              >
-                <div className="text-3xl mb-3">{industry.icon}</div>
-                <h3 className="text-sm font-semibold text-foreground group-hover:text-[oklch(0.47_0.20_250)] transition-colors line-clamp-2 leading-tight">
-                  {industry.label}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {industry.jobCount.toLocaleString()} jobs
-                </p>
-              </LinkComponent>
-            );
-          })}
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-12 px-1"
+          >
+            {industries.map((industry) => {
+              const Icon = industry.icon;
+              return (
+                <Link
+                  key={industry.id}
+                  href={industry.href}
+                  className="flex-shrink-0 w-[260px] group bg-white rounded-[32px] border border-brand-blue/15 p-8 text-center shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300"
+                >
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-[24px] bg-brand-blue-muted/30 flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all duration-300 shadow-inner">
+                    <Icon className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-base font-black text-brand-blue mb-2 leading-tight group-hover:text-brand-blue-medium transition-colors line-clamp-2 min-h-[40px]">
+                    {industry.label}
+                  </h3>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 group-hover:bg-brand-blue/10 transition-colors">
+                    <span className="w-1 h-1 rounded-full bg-brand-blue/30" />
+                    <span className="text-[11px] font-black text-muted-foreground group-hover:text-brand-blue transition-colors uppercase tracking-widest">
+                      {industry.jobCount.toLocaleString()} Jobs
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-4 text-center">
           <Link
             href="/jobs"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[oklch(0.47_0.20_250)] border border-[oklch(0.47_0.20_250)]/30 hover:bg-[oklch(0.47_0.20_250)]/5 px-5 py-2.5 rounded-xl transition-colors"
+            className="inline-flex items-center gap-3 text-sm font-black text-brand-blue hover:text-brand-blue-medium px-8 py-4 rounded-2xl bg-brand-blue-muted/50 hover:bg-brand-blue-muted transition-all active:scale-95"
           >
-            Browse all industries <ArrowRight className="w-4 h-4" />
+            Browse All Industries <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>

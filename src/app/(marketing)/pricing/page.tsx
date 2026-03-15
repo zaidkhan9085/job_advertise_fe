@@ -65,13 +65,15 @@ export default function PricingPage() {
     <div className="bg-muted/10 min-h-screen pb-24">
       
       {/* Header Section */}
-      <div className="bg-[oklch(0.12_0.02_260)] text-white pt-20 pb-32 md:pt-24 md:pb-48 border-b border-border/20">
-        <div className="container-site px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-6">
+      <div className="bg-hero-gradient text-white pt-20 pb-32 md:pt-24 md:pb-48 border-b border-white/10 relative overflow-hidden">
+        {/* Decor */}
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="container-site px-4 relative z-10 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-6 border border-white/10">
              <span className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em]">Simple Pricing</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
-            Hire the Best <span className="text-brand-orange">Faster</span>
+            Hire the Best <span className="text-brand-blue-light italic">Faster</span>
           </h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg md:text-xl font-medium">
             Choose the recruitment plan that scales with your growth. No hidden fees, cancel anytime.
@@ -86,12 +88,12 @@ export default function PricingPage() {
               key={plan.name}
               className={`relative flex flex-col bg-white rounded-[2rem] border transition-all duration-300 ${
                 plan.recommended 
-                  ? "border-brand-orange shadow-2xl shadow-brand-orange/10 scale-105 z-20 md:translate-y-[-10px]" 
-                  : "border-border/60 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                  ? "border-brand-blue shadow-2xl shadow-brand-blue/10 z-20" 
+                  : "border-brand-blue/15 shadow-xl hover:shadow-2xl hover:border-brand-blue/40"
               }`}
             >
               {plan.recommended && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-orange text-white text-[11px] font-black uppercase tracking-widest px-6 py-2 rounded-full shadow-lg">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-blue text-white text-[11px] font-black uppercase tracking-widest px-6 py-2 rounded-full shadow-lg border border-white/20">
                   Most Popular
                 </div>
               )}
@@ -106,7 +108,7 @@ export default function PricingPage() {
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-foreground">{plan.price}</span>
+                    <span className="text-4xl font-black text-brand-blue">{plan.price}</span>
                     <span className="text-muted-foreground font-bold">{plan.period}</span>
                   </div>
                   <p className="text-muted-foreground text-sm mt-3 font-medium leading-relaxed">
@@ -119,7 +121,7 @@ export default function PricingPage() {
                 <ul className="space-y-4 mb-10 flex-1">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
-                      <div className={`mt-1 shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${plan.recommended ? "bg-brand-orange/10 text-brand-orange" : "bg-emerald-100 text-emerald-600"}`}>
+                      <div className={`mt-1 shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${plan.recommended ? "bg-brand-blue/10 text-brand-blue" : "bg-brand-blue/5 text-brand-blue"}`}>
                         <Check className="w-3 h-3 stroke-[3px]" />
                       </div>
                       <span className="text-sm font-semibold text-foreground/80">{feature}</span>
@@ -131,8 +133,8 @@ export default function PricingPage() {
                   href="/register?role=recruiter"
                   className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-black text-sm transition-all shadow-md active:scale-[0.98] ${
                     plan.recommended 
-                      ? "bg-brand-orange text-white hover:bg-brand-orange-dark shadow-brand-orange/20" 
-                      : "bg-foreground text-white hover:bg-foreground/90"
+                      ? "bg-brand-blue text-white hover:bg-brand-blue-medium shadow-brand-blue/20" 
+                      : "bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white"
                   }`}
                 >
                   {plan.cta} <ArrowRight className="w-4 h-4 ml-1" />
@@ -147,9 +149,9 @@ export default function PricingPage() {
           <p className="text-muted-foreground font-medium mb-4">Need a custom plan for enterprise hiring?</p>
           <Link 
             href="/contact"
-            className="text-[oklch(0.47_0.20_250)] font-black hover:underline flex items-center justify-center gap-2"
+            className="text-brand-blue font-black hover:underline flex items-center justify-center gap-2"
           >
-            Contact Sales Team <ArrowRight className="w-4 h-4" />
+            Contact Sales Team <ArrowRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
       </div>

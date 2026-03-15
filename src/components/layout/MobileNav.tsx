@@ -2,25 +2,65 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { X, ChevronDown, Briefcase } from "lucide-react";
-import { mainNavItems, type NavItem } from "@/data/navigation";
+import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import { siteConfig } from "@/data/branding";
+import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe } from "lucide-react";
 
-function MobileNavSection({ item }: { item: NavItem }) {
+function MobileNavSubSection({ item, depth = 0 }: { item: NavDropdownItem, depth?: number }) {
+  const [open, setOpen] = useState(false);
+  const hasSubItems = item.subItems && item.subItems.length > 0;
+
+  if (!hasSubItems) {
+    return (
+      <Link
+        href={item.href}
+        className={`block py-3 text-[14px] transition-colors ${depth > 0 ? 'text-muted-foreground hover:text-brand-blue pl-6' : 'text-foreground/80 hover:text-brand-blue px-5'}`}
+      >
+        <span className="flex items-center gap-2">
+          {depth > 0 && <span className="w-1 h-px bg-border" />}
+          {item.label}
+        </span>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="mb-1">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center justify-between py-3 text-[14px] font-bold transition-colors ${depth > 0 ? 'text-brand-blue pl-6 pr-5' : 'text-foreground px-5'}`}
+      >
+        <span className="flex items-center gap-2">
+          {depth > 0 && <span className="w-1 h-px bg-brand-blue/30" />}
+          {item.label}
+        </span>
+        <ChevronRight
+          className={`w-4 h-4 transition-transform duration-300 ${open ? "rotate-90 text-brand-blue" : "text-muted-foreground/50"}`}
+        />
+      </button>
+      {open && (
+        <div className={`border-l ml-8 my-1 border-brand-blue/10 flex flex-col`}>
+          {item.subItems!.map((sub) => (
+            <MobileNavSubSection key={sub.label} item={sub} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileNavSection({ item, onClose }: { item: NavItem, onClose: () => void }) {
   const [open, setOpen] = useState(false);
 
   if (!item.dropdownItems) {
-    const isExternal = item.href.startsWith("http");
-    const LinkComponent = isExternal ? "a" : Link;
-    const props = isExternal ? { href: item.href, target: "_blank", rel: "noopener noreferrer" } : { href: item.href };
-
     return (
-      <LinkComponent
-        {...props}
-        className="block px-4 py-3 text-sm font-medium text-foreground border-b border-border/40 hover:bg-secondary transition-colors"
+      <Link
+        href={item.href}
+        onClick={onClose}
+        className="block px-5 py-4 text-[15px] font-black text-brand-blue border-b border-border/40 hover:bg-brand-blue-muted transition-colors uppercase tracking-tight"
       >
         {item.label}
-      </LinkComponent>
+      </Link>
     );
   }
 
@@ -28,30 +68,18 @@ function MobileNavSection({ item }: { item: NavItem }) {
     <div className="border-b border-border/40">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+        className={`w-full flex items-center justify-between px-5 py-4 text-[15px] font-black transition-all uppercase tracking-tight ${open ? 'bg-brand-blue text-white' : 'text-brand-blue hover:bg-brand-blue-muted'}`}
       >
         {item.label}
         <ChevronDown
-          className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`w-5 h-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && (
-        <div className="bg-secondary/50 pb-1">
-          {item.dropdownItems.map((sub) => {
-            const isExternal = sub.href.startsWith("http");
-            const LinkComponent = isExternal ? "a" : Link;
-            const props = isExternal ? { href: sub.href, target: "_blank", rel: "noopener noreferrer" } : { href: sub.href };
-
-            return (
-              <LinkComponent
-                key={sub.href}
-                {...props}
-                className="block px-6 py-2.5 text-sm text-foreground/70 hover:text-foreground hover:bg-secondary transition-colors"
-              >
-                {sub.label}
-              </LinkComponent>
-            );
-          })}
+        <div className="bg-secondary/10 py-3">
+          {item.dropdownItems.map((sub) => (
+            <MobileNavSubSection key={sub.label} item={sub} />
+          ))}
         </div>
       )}
     </div>
@@ -64,7 +92,6 @@ interface MobileNavProps {
 }
 
 export default function MobileNav({ open, onClose }: MobileNavProps) {
-  // Prevent body scroll when drawer is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -80,53 +107,84 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
+        className="fixed inset-0 z-[60] bg-brand-blue/30 backdrop-blur-md animate-in fade-in-0 duration-500"
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 z-50 w-80 max-w-[90vw] bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+      <div className="fixed inset-y-0 right-0 z-[70] w-full max-w-[340px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border/60">
-          <Link href="/" onClick={onClose} className="flex items-center gap-2">
-            <div className="w-16 rounded-lg flex items-center justify-center">
-              <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} />
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-white sticky top-0 z-10">
+          <Link href="/" onClick={onClose} className="flex items-center gap-3 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white shadow-sm">
+              <Globe className="w-6 h-6" />
+            </div>
+            <div className="flex flex-col leading-none">
+              <div className="flex items-center gap-1">
+                <span className="text-xl font-black text-brand-blue tracking-tighter">GULF</span>
+                <span className="text-xl font-black text-brand-blue-light tracking-tighter">JOBS</span>
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-blue/40 mt-0.5">Advertise</span>
             </div>
           </Link>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors"
+            className="p-2.5 rounded-2xl bg-secondary/50 hover:bg-brand-blue-muted text-brand-blue transition-all border border-border/20"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto no-scrollbar py-2">
           {mainNavItems.map((item) => (
-            <MobileNavSection key={item.label} item={item} />
+            <MobileNavSection key={item.label} item={item} onClose={onClose} />
           ))}
+          
+          {/* Quick Support Card */}
+          <div className="m-5 p-6 rounded-3xl bg-brand-blue-muted/30 border border-brand-blue/5">
+            <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue/50 mb-5">Support Center</h5>
+            <div className="space-y-5">
+              <a href={`mailto:support@thejobsadvertise.com`} className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-border/40">
+                  <Mail className="w-5 h-5 text-brand-blue" />
+                </div>
+                Email Support
+              </a>
+              <div className="flex items-center gap-4 text-sm font-bold text-brand-blue/80">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-border/40">
+                  <MapPin className="w-5 h-5 text-brand-blue-light" />
+                </div>
+                Global HQ (Mumbai)
+              </div>
+            </div>
+          </div>
         </nav>
 
-        {/* Bottom CTA */}
-        <div className="p-4 border-t border-border/60 flex flex-col gap-2">
-          <Link
-            href="/login"
-            onClick={onClose}
-            className="w-full py-3 px-4 text-sm font-semibold text-center text-[oklch(0.47_0.20_250)] border-2 border-[oklch(0.47_0.20_250)] rounded-lg hover:bg-secondary transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/post-job"
-            onClick={onClose}
-            className="w-full py-3 px-4 text-sm font-semibold text-center text-white bg-[oklch(0.68_0.21_45)] hover:bg-[oklch(0.55_0.22_45)] rounded-lg transition-colors"
-          >
-            Post Jobs
-          </Link>
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-border/40 bg-white/80 backdrop-blur-lg">
+          <div className="grid grid-cols-2 gap-4">
+            <Link
+              href="/login"
+              onClick={onClose}
+              className="flex items-center justify-center py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/post-job"
+              onClick={onClose}
+              className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+            >
+              Post Job
+            </Link>
+          </div>
+          
+          <div className="mt-6 flex items-center justify-center gap-2">
+             <div className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Ops Online</span>
+          </div>
         </div>
       </div>
     </>

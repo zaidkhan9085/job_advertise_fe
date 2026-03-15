@@ -31,8 +31,8 @@ function JobCard({ job }: { job: typeof featuredJobs[0] }) {
             <span 
               key={badge} 
               className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm backdrop-blur-md ${
-                badge === 'Premium' ? 'bg-[oklch(0.68_0.21_45)]/90 text-white' :
-                badge === 'Pro' ? 'bg-black/80 text-[oklch(0.78_0.18_45)]' :
+                badge === 'Premium' ? 'bg-brand-blue/90 text-white' :
+                badge === 'Pro' ? 'bg-black/80 text-brand-blue-light' :
                 badge === 'Popular' ? 'bg-[oklch(0.47_0.20_250)]/90 text-white' :
                 'bg-emerald-500/90 text-white'
               }`}
@@ -115,7 +115,7 @@ export default function FeaturedJobsSection() {
       <div className="container-site">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
           <div>
-            <div className="text-xs font-semibold text-brand-orange uppercase tracking-widest mb-2">
+            <div className="text-xs font-semibold text-brand-blue uppercase tracking-widest mb-2">
               Premium Overseas Opportunities
             </div>
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground text-balance">

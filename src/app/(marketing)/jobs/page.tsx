@@ -71,8 +71,10 @@ function JobsListingContent() {
     <div className="bg-muted/10 min-h-screen pb-20">
       
       {/* Search Header Banner */}
-      <div className="bg-[oklch(0.12_0.02_260)] text-white pt-16 pb-24 md:pt-20 md:pb-28 border-b border-border/20">
-        <div className="container-site text-center px-4">
+      <div className="bg-hero-gradient text-white pt-16 pb-24 md:pt-20 md:pb-28 border-b border-white/10 relative overflow-hidden">
+        {/* Decor */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="container-site relative text-center px-4">
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
             {selectedLocation !== "Any Location" ? `Jobs in ${selectedLocation}` : 
              selectedCategory !== "Any Category" ? `${selectedCategory} Opportunities` : 
@@ -93,7 +95,7 @@ function JobsListingContent() {
               <input 
                 type="text" 
                 placeholder="Job title, keywords, or company..." 
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-secondary/50 border-none outline-none focus:ring-2 focus:ring-brand-orange transition-all font-medium text-foreground h-full"
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-secondary/50 border-none outline-none focus:ring-2 focus:ring-brand-blue transition-all font-medium text-foreground h-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -101,7 +103,7 @@ function JobsListingContent() {
             <div className="md:w-64 relative shrink-0">
               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <select 
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-secondary/50 border-none outline-none focus:ring-2 focus:ring-brand-orange transition-all font-medium text-foreground appearance-none h-full cursor-pointer"
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-secondary/50 border-none outline-none focus:ring-2 focus:ring-brand-blue transition-all font-medium text-foreground appearance-none h-full cursor-pointer"
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
               >
@@ -113,7 +115,7 @@ function JobsListingContent() {
                 <option>India</option>
               </select>
             </div>
-            <button className="md:w-36 flex items-center justify-center gap-2 bg-brand-orange text-white hover:bg-brand-orange-dark rounded-xl font-bold py-3.5 px-6 transition-colors shadow-sm shrink-0">
+            <button className="md:w-36 flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium rounded-xl font-bold py-3.5 px-6 transition-colors shadow-sm shrink-0 uppercase tracking-widest text-[13px]">
               Search
             </button>
           </div>
@@ -142,9 +144,9 @@ function JobsListingContent() {
                           name="category"
                           checked={selectedCategory === cat}
                           onChange={() => setSelectedCategory(cat)}
-                          className="w-4 h-4 text-brand-orange focus:ring-brand-orange border-border/60" 
+                          className="w-4 h-4 text-brand-blue focus:ring-brand-blue border-brand-blue/20" 
                         />
-                        <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">{cat}</span>
+                        <span className="text-sm text-muted-foreground group-hover:text-brand-blue transition-colors font-medium">{cat}</span>
                       </label>
                     ))}
                   </div>
@@ -155,8 +157,8 @@ function JobsListingContent() {
                   <div className="space-y-2">
                     {["Full-time", "Contract", "Part-time"].map((type) => (
                       <label key={type} className="flex items-center gap-3 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 text-brand-orange rounded focus:ring-brand-orange border-border/60" />
-                        <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">{type}</span>
+                        <input type="checkbox" className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue border-brand-blue/20" />
+                        <span className="text-sm text-muted-foreground group-hover:text-brand-blue transition-colors font-medium">{type}</span>
                       </label>
                     ))}
                   </div>
@@ -172,7 +174,7 @@ function JobsListingContent() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-4">
                  <h2 className="font-bold text-foreground">
-                  Showing <span className="text-brand-orange">{filteredJobs.length}</span> jobs
+                  Showing <span className="text-brand-blue">{filteredJobs.length}</span> jobs
                 </h2>
                 {/* Mobile Filter Toggle */}
                 <button 
@@ -187,14 +189,14 @@ function JobsListingContent() {
                 <div className="flex items-center bg-white rounded-lg border border-border/60 p-0.5 shadow-sm">
                   <button 
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-secondary text-brand-orange shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-brand-blue/5 text-brand-blue shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
                     title="Grid View"
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-secondary text-brand-orange shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-brand-blue/5 text-brand-blue shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
                     title="List View"
                   >
                     <ListIcon className="w-4 h-4" />
@@ -218,7 +220,7 @@ function JobsListingContent() {
                 <p className="text-muted-foreground mt-2">Try adjusting your filters or search terms.</p>
                 <button 
                   onClick={() => { setSearchTerm(""); setSelectedLocation("Any Location"); setSelectedCategory("Any Category"); }}
-                  className="mt-6 text-brand-orange font-bold hover:underline"
+                  className="mt-6 text-brand-blue font-bold hover:underline"
                 >
                   Clear all filters
                 </button>
@@ -235,10 +237,10 @@ function JobsListingContent() {
             {filteredJobs.length > 0 && (
               <div className="flex justify-center mt-12">
                 <nav className="flex items-center gap-1">
-                  <button className="px-4 py-2 rounded-xl border border-border/60 bg-white font-bold text-sm text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50" disabled>Previous</button>
-                  <button className="px-4 py-2 rounded-xl bg-brand-orange text-white font-bold text-sm shadow-md">1</button>
-                  <button className="px-4 py-2 rounded-xl border border-border/60 bg-white font-bold text-sm text-muted-foreground hover:bg-secondary transition-colors">2</button>
-                  <button className="px-4 py-2 rounded-xl border border-border/60 bg-white font-bold text-sm text-muted-foreground hover:bg-secondary transition-colors">Next</button>
+                  <button className="px-4 py-2 rounded-xl border border-brand-blue/10 bg-white font-bold text-sm text-muted-foreground hover:bg-brand-blue/5 transition-colors disabled:opacity-50" disabled>Previous</button>
+                  <button className="px-4 py-2 rounded-xl bg-brand-blue text-white font-bold text-sm shadow-md">1</button>
+                  <button className="px-4 py-2 rounded-xl border border-brand-blue/10 bg-white font-bold text-sm text-muted-foreground hover:bg-brand-blue/5 transition-colors">2</button>
+                  <button className="px-4 py-2 rounded-xl border border-brand-blue/10 bg-white font-bold text-sm text-muted-foreground hover:bg-brand-blue/5 transition-colors">Next</button>
                 </nav>
               </div>
             )}
@@ -269,9 +271,9 @@ function JobsListingContent() {
                           name="mobile-cat"
                           checked={selectedCategory === cat}
                           onChange={() => { setSelectedCategory(cat); setIsSidebarOpen(false); }}
-                          className="w-5 h-5 text-brand-orange focus:ring-brand-orange" 
+                          className="w-5 h-5 text-brand-blue focus:ring-brand-blue border-brand-blue/20" 
                         />
-                        <span className="text-base font-medium">{cat}</span>
+                        <span className="text-base font-medium group-hover:text-brand-blue transition-colors">{cat}</span>
                       </label>
                     ))}
                   </div>
@@ -291,13 +293,13 @@ function JobCardView({ job, mode }: { job: Job; mode: "grid" | "list" }) {
 
   if (mode === "grid") {
     return (
-      <div className="group bg-white rounded-2xl border border-border/60 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 transition-all duration-300 overflow-hidden h-full flex flex-col">
-        <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-border/40">
+      <div className="group bg-white rounded-2xl border border-brand-blue/15 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
+        <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-brand-blue/10">
            {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={posterImg}
             alt={job.imageAlt || job.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500"
             onError={() => setImgError(true)}
           />
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
@@ -310,23 +312,23 @@ function JobCardView({ job, mode }: { job: Job; mode: "grid" | "list" }) {
         </div>
         <div className="p-5 flex flex-col flex-1">
           <Link href={`/jobs/${job.id}`} className="block mb-3">
-            <h3 className="font-extrabold text-lg leading-tight group-hover:text-brand-orange transition-colors line-clamp-2">
+            <h3 className="font-extrabold text-lg leading-tight group-hover:text-brand-blue transition-colors line-clamp-2">
               {job.title}
             </h3>
           </Link>
-          <div className="space-y-2 mb-4 text-sm font-medium text-muted-foreground">
-            <div className="flex items-center gap-1.5"><Building className="w-4 h-4 text-brand-orange/60" /> {job.company}</div>
-            <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-brand-orange/60" /> {job.location}</div>
+          <div className="space-y-2 mb-4 text-sm font-medium text-muted-foreground group-hover:text-brand-blue transition-colors">
+            <div className="flex items-center gap-1.5"><Building className="w-4 h-4 text-brand-blue/40" /> {job.company}</div>
+            <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-brand-blue/40" /> {job.location}</div>
           </div>
-          <div className="mt-auto pt-4 border-t border-border/60 flex items-center justify-between">
-            <span className="text-xs font-bold px-2 py-1 bg-secondary rounded text-muted-foreground">{job.category}</span>
+          <div className="mt-auto pt-4 border-t border-brand-blue/10 flex items-center justify-between">
+            <span className="text-xs font-bold px-2 py-1 bg-brand-blue/5 rounded text-brand-blue">{job.category}</span>
             <div className="flex items-center gap-2">
                {job.whatsapp && (
                 <a href={job.whatsapp} target="_blank" className="p-2 rounded-lg bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors">
                   <MessageCircle className="w-4 h-4" />
                 </a>
               )}
-               <Link href={`/jobs/${job.id}`} className="p-2 rounded-lg bg-secondary text-foreground hover:bg-border/60 transition-colors">
+               <Link href={`/jobs/${job.id}`} className="p-2 rounded-lg bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white transition-all">
                   <ArrowRight className="w-4 h-4" />
                 </Link>
             </div>
@@ -337,32 +339,32 @@ function JobCardView({ job, mode }: { job: Job; mode: "grid" | "list" }) {
   }
 
   return (
-    <div className="group bg-white rounded-2xl border border-border/60 p-4 sm:p-5 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300">
+    <div className="group bg-white rounded-2xl border border-brand-blue/15 p-4 sm:p-5 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
-        <div className="w-full sm:w-24 h-32 sm:h-24 shrink-0 rounded-xl overflow-hidden border border-border/60">
+        <div className="w-full sm:w-24 h-32 sm:h-24 shrink-0 rounded-xl overflow-hidden border border-brand-blue/10">
            {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={posterImg}
             alt={job.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500"
             onError={() => setImgError(true)}
           />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-1">
             <Link href={`/jobs/${job.id}`}>
-              <h3 className="text-lg sm:text-xl font-extrabold text-foreground group-hover:text-brand-orange transition-colors line-clamp-1 leading-snug">
+              <h3 className="text-lg sm:text-xl font-extrabold text-brand-blue group-hover:text-brand-blue-medium transition-colors line-clamp-1 leading-snug">
                 {job.title}
               </h3>
             </Link>
-            <button className="shrink-0 w-8 h-8 rounded-full border border-border/60 text-muted-foreground flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors">
+            <button className="shrink-0 w-8 h-8 rounded-full border border-brand-blue/10 text-muted-foreground flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors">
               <Heart className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-sm font-bold text-muted-foreground mb-4">
-            <span className="flex items-center gap-1.5"><Building className="w-4 h-4 opacity-70" /> {job.company}</span>
-            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 opacity-70" /> {job.location}</span>
-            <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-70" /> {job.type || "Full-time"}</span>
+          <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-sm font-bold text-muted-foreground group-hover:text-brand-blue transition-colors mb-4">
+            <span className="flex items-center gap-1.5"><Building className="w-4 h-4 opacity-50 text-brand-blue" /> {job.company}</span>
+            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 opacity-50 text-brand-blue" /> {job.location}</span>
+            <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-50 text-brand-blue" /> {job.type || "Full-time"}</span>
           </div>
           <div className="flex items-center gap-2">
             {job.badges.map(badge => (
@@ -372,13 +374,13 @@ function JobCardView({ job, mode }: { job: Job; mode: "grid" | "list" }) {
             ))}
           </div>
         </div>
-        <div className="w-full sm:w-auto sm:border-l sm:border-border/60 sm:pl-6 flex flex-row sm:flex-col gap-2 shrink-0">
+        <div className="w-full sm:w-auto sm:border-l sm:border-brand-blue/10 sm:pl-6 flex flex-row sm:flex-col gap-2 shrink-0">
           {job.whatsapp && (
             <a href={job.whatsapp} target="_blank" className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 font-bold text-[13px] transition-colors">
               <MessageCircle className="w-4 h-4" /> WhatsApp
             </a>
           )}
-          <Link href={`/jobs/${job.id}`} className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-foreground hover:bg-border/60 font-bold text-[13px] transition-colors">
+          <Link href={`/jobs/${job.id}`} className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white font-bold text-[13px] transition-all">
             Details <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

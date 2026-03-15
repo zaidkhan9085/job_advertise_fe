@@ -30,7 +30,7 @@ export default function CTASections() {
           </div>
 
           {/* Recruiters CTA */}
-          <div className="relative overflow-hidden rounded-3xl bg-orange-gradient p-8 sm:p-12 text-white">
+          <div className="relative overflow-hidden rounded-3xl bg-hero-gradient p-8 sm:p-12 text-white">
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-black/10 rounded-full blur-2xl" />
             
@@ -45,7 +45,7 @@ export default function CTASections() {
               </p>
               <Link 
                 href="/post-job" 
-                className="inline-flex items-center gap-2 bg-white text-[oklch(0.68_0.21_45)] font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-white text-brand-blue font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors shadow-sm"
               >
                 Post a Job <ArrowRight className="w-4 h-4" />
               </Link>

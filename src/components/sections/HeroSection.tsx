@@ -57,7 +57,7 @@ export default function HeroSection() {
             <Link href="/resume" className="flex items-center justify-center gap-2 bg-white text-[oklch(0.47_0.20_250)] hover:bg-white/90 font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-lg">
               Post Resume
             </Link>
-            <Link href="/post-job" className="hidden sm:flex items-center justify-center gap-2 bg-transparent border-2 border-white/20 text-white hover:bg-white/10 font-semibold px-6 py-3.5 rounded-xl transition-colors">
+            <Link href="/post-job" className="hidden sm:flex items-center justify-center gap-2 bg-white text-brand-blue hover:bg-brand-blue-muted font-black px-6 py-3.5 rounded-xl transition-all shadow-lg active:scale-95 border border-brand-blue/10">
               Post Jobs
             </Link>
             <a href="https://chat.whatsapp.com/E73OloAiRjv8ZZYQBNqEt5?mode=ac_t" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BE5A] text-white font-semibold px-6 py-3.5 rounded-xl transition-colors shadow-lg">

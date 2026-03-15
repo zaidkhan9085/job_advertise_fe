@@ -1,77 +1,139 @@
+"use client";
+
+import { useRef, useCallback } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Globe2, Map } from "lucide-react";
 import { nearbyRegions, vacancyCountries } from "@/data/regions";
+
+function SliderSection({ 
+  title, 
+  subtitle, 
+  badge, 
+  icon: TitleIcon,
+  items, 
+  type 
+}: { 
+  title: string; 
+  subtitle: string; 
+  badge: string;
+  icon: any;
+  items: any[];
+  type: "nearby" | "country";
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = useCallback((direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const { clientWidth } = scrollRef.current;
+      const scrollAmount = direction === "left" ? -clientWidth : clientWidth;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  }, []);
+
+  return (
+    <div className="mb-24 last:mb-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-black text-brand-blue/40 uppercase tracking-[0.3em]">
+            <TitleIcon className="w-4 h-4" />
+            {badge}
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-brand-blue tracking-tight">
+            {title}
+          </h2>
+          <p className="text-muted-foreground font-medium max-w-xl text-lg">
+            {subtitle}
+          </p>
+        </div>
+        <div className="flex gap-4">
+          <button
+            onClick={() => scroll("left")}
+            className="w-14 h-14 rounded-2xl border border-border/60 bg-white text-brand-blue hover:bg-brand-blue-muted hover:border-brand-blue/30 shadow-sm transition-all flex items-center justify-center active:scale-90"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="w-14 h-14 rounded-2xl border border-border/60 bg-white text-brand-blue hover:bg-brand-blue-muted hover:border-brand-blue/30 shadow-sm transition-all flex items-center justify-center active:scale-90"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-12 px-1"
+        >
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="flex-shrink-0 w-[240px] group bg-white rounded-[32px] border border-brand-blue/15 p-8 text-center shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300"
+              >
+                <div className="w-20 h-20 mx-auto mb-6 rounded-[24px] bg-brand-blue-muted/30 flex items-center justify-center relative overflow-hidden group-hover:bg-brand-blue transition-all duration-300 shadow-inner">
+                  {type === "nearby" && Icon ? (
+                    <Icon className="w-10 h-10 text-brand-blue group-hover:text-white transition-colors duration-300" />
+                  ) : (
+                    <span className="text-4xl filter group-hover:brightness-110 transition-all duration-300 drop-shadow-md">
+                      {item.flag}
+                    </span>
+                  )}
+                </div>
+                
+                <h3 className="text-base font-black text-brand-blue mb-2 leading-tight group-hover:text-brand-blue-medium transition-colors line-clamp-1">
+                  {item.label}
+                </h3>
+                
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 group-hover:bg-brand-blue/10 transition-colors">
+                  <span className="w-1 h-1 rounded-full bg-brand-blue/30" />
+                  <span className="text-[10px] font-black text-muted-foreground group-hover:text-brand-blue transition-colors uppercase tracking-widest">
+                    {item.jobCount.toLocaleString()} Jobs
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function RegionsSection() {
   return (
-    <section className="section-padding bg-background">
-      <div className="container-site">
-        {/* Nearby Jobs */}
-        <div className="mb-16">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <div className="text-xs font-semibold text-[oklch(0.68_0.21_45)] uppercase tracking-widest mb-2">Nearby</div>
-              <h2 className="text-3xl font-extrabold text-foreground">Jobs Near You</h2>
-              <p className="text-muted-foreground mt-1.5">Opportunities in your region and nearby GCC.</p>
-            </div>
-            <Link href="/jobs" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[oklch(0.47_0.20_250)] hover:underline">
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {nearbyRegions.map((region) => {
-              const isExternal = region.href.startsWith("http");
-              const LinkComponent = isExternal ? "a" : Link;
-              const props = isExternal ? { href: region.href, target: "_blank", rel: "noopener noreferrer" } : { href: region.href };
-              
-              return (
-                <LinkComponent
-                  key={region.id}
-                  {...props}
-                  className="group bg-white rounded-2xl border border-border/60 p-4 text-center shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 hover:border-[oklch(0.47_0.20_250)]/30"
-                >
-                  <div className="text-3xl mb-2">{region.flag}</div>
-                  <h3 className="text-xs font-semibold text-foreground group-hover:text-[oklch(0.47_0.20_250)] transition-colors">{region.label}</h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{region.jobCount.toLocaleString()} jobs</p>
-                </LinkComponent>
-              );
-            })}
-          </div>
+    <>
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="container-site relative">
+          <SliderSection 
+            title="Jobs Near You" 
+            subtitle="Discover specialized opportunities across key Indian regions and global hubs."
+            badge="Localized Search"
+            icon={Map}
+            items={nearbyRegions}
+            type="nearby"
+          />
         </div>
+      </section>
 
-        {/* Countries / Vacancy */}
-        <div>
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <div className="text-xs font-semibold text-[oklch(0.68_0.21_45)] uppercase tracking-widest mb-2">Global Vacancies</div>
-              <h2 className="text-3xl font-extrabold text-foreground">Browse by Country</h2>
-              <p className="text-muted-foreground mt-1.5">Gulf, Asia-Pacific, and beyond.</p>
-            </div>
-            <Link href="/jobs" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[oklch(0.47_0.20_250)] hover:underline">
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
-            {vacancyCountries.map((c) => {
-              const isExternal = c.href.startsWith("http");
-              const LinkComponent = isExternal ? "a" : Link;
-              const props = isExternal ? { href: c.href, target: "_blank", rel: "noopener noreferrer" } : { href: c.href };
-              
-              return (
-                <LinkComponent
-                  key={c.id}
-                  {...props}
-                  className="group bg-white rounded-2xl border border-border/60 p-4 text-center shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 hover:border-[oklch(0.47_0.20_250)]/30"
-                >
-                  <div className="text-2xl mb-1.5">{c.flag}</div>
-                  <h3 className="text-[11px] font-semibold text-foreground group-hover:text-[oklch(0.47_0.20_250)] transition-colors leading-tight">{c.label}</h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{c.jobCount.toLocaleString()} jobs</p>
-                </LinkComponent>
-              );
-            })}
-          </div>
+      <section className="py-24 bg-gradient-to-b from-white via-[#f4f8ff] to-[#eef2ff] relative overflow-hidden">
+        {/* Background Decor */}
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-brand-blue/5 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
+        
+        <div className="container-site relative">
+          <SliderSection 
+            title="Browse by Country" 
+            subtitle="Explore prominent career destinations across the Gulf, Asia, and Europe."
+            badge="Global Reach"
+            icon={Globe2}
+            items={vacancyCountries}
+            type="country"
+          />
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

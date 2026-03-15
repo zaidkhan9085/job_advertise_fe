@@ -9,7 +9,7 @@ export default function PricingSection() {
     <section className="section-padding bg-[oklch(0.975_0.005_250)]">
       <div className="container-site">
         <div className="text-center mb-16">
-          <div className="text-xs font-bold text-[oklch(0.68_0.21_45)] uppercase tracking-[0.2em] mb-3">Recruiters</div>
+          <div className="text-xs font-bold text-brand-blue uppercase tracking-[0.2em] mb-3">Recruiters</div>
           <h2 className="text-3xl md:text-5xl font-black text-foreground mb-4">Simple, Transparent Pricing</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg font-medium leading-relaxed">
             Choose the right package to reach the best candidates across Gulf & Europe. No hidden fees.
@@ -22,12 +22,12 @@ export default function PricingSection() {
               key={plan.name}
               className={`relative flex flex-col p-8 sm:p-10 rounded-[2.5rem] bg-white border transition-all duration-500 ${
                 plan.popular 
-                  ? "border-[oklch(0.68_0.21_45)] shadow-[0_24px_50px_-12px_oklch(0.68_0.21_45/0.25)] md:-translate-y-4 ring-2 ring-[oklch(0.68_0.21_45)]/20" 
+                  ? "border-brand-blue shadow-[0_24px_50px_-12px_var(--brand-blue-medium)/0.25] md:-translate-y-4 ring-2 ring-brand-blue/20" 
                   : "border-border/60 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]"
               }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[oklch(0.68_0.21_45)] text-white text-[10px] font-black uppercase tracking-[0.15em] py-2 px-6 rounded-full shadow-lg">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-blue text-white text-[10px] font-black uppercase tracking-[0.15em] py-2 px-6 rounded-full shadow-lg">
                   {plan.highlight || "Most Popular"}
                 </div>
               )}
@@ -36,11 +36,11 @@ export default function PricingSection() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-black text-foreground">{plan.name}</h3>
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    plan.name.includes("Golden") ? "bg-brand-orange/10" : 
-                    plan.name.includes("Silver") ? "bg-brand-blue/10" : "bg-emerald-100"
+                    plan.name.includes("Golden") ? "bg-brand-blue/10" : 
+                    plan.name.includes("Silver") ? "bg-brand-blue-light/10" : "bg-emerald-100"
                   }`}>
-                    {plan.name.includes("Golden") ? <Star className="w-5 h-5 text-brand-orange" /> : 
-                     plan.name.includes("Silver") ? <ShieldCheck className="w-5 h-5 text-brand-blue" /> : <Zap className="w-5 h-5 text-emerald-600" />}
+                    {plan.name.includes("Golden") ? <Star className="w-5 h-5 text-brand-blue" /> : 
+                     plan.name.includes("Silver") ? <ShieldCheck className="w-5 h-5 text-brand-blue-light" /> : <Zap className="w-5 h-5 text-emerald-600" />}
                   </div>
                 </div>
                 
@@ -64,7 +64,7 @@ export default function PricingSection() {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
                       <div className={`mt-0.5 rounded-full p-1 ${
-                        plan.popular ? "bg-[oklch(0.68_0.21_45)]/10 text-[oklch(0.68_0.21_45)]" : "bg-emerald-100 text-emerald-600"
+                        plan.popular ? "bg-brand-blue/10 text-brand-blue" : "bg-emerald-100 text-emerald-600"
                       }`}>
                         <Check className="w-3 h-3 stroke-[4px]" />
                       </div>
@@ -78,7 +78,7 @@ export default function PricingSection() {
                 href={plan.href}
                 className={`w-full py-4.5 rounded-2xl font-black text-sm text-center transition-all flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] ${
                   plan.popular 
-                    ? "bg-[oklch(0.68_0.21_45)] hover:bg-[oklch(0.55_0.22_45)] text-white shadow-[oklch(0.68_0.21_45)]/20" 
+                    ? "bg-brand-blue hover:bg-brand-blue-medium text-white shadow-brand-blue/20" 
                     : "bg-foreground text-white hover:bg-foreground/90"
                 }`}
               >

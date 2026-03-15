@@ -2,35 +2,78 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Briefcase, Menu } from "lucide-react";
-import { mainNavItems, authNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
+import { ChevronDown, Menu, ArrowRight, ChevronRight } from "lucide-react";
+import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import { siteConfig } from "@/data/branding";
+import { Globe } from "lucide-react";
 import MobileNav from "./MobileNav";
 
-function DropdownMenu({ items }: { items: NavDropdownItem[] }) {
+function Submenu({ items, active }: { items: NavDropdownItem[], active: boolean }) {
+  if (!active) return null;
+  
   return (
-    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.10)] border border-border/60 py-1.5 z-50 animate-in fade-in-0 slide-in-from-top-2 duration-150">
-      {items.map((item) => {
-        const isExternal = item.href.startsWith("http");
-        const LinkComponent = isExternal ? "a" : Link;
-        const props = isExternal ? { href: item.href, target: "_blank", rel: "noopener noreferrer" } : { href: item.href };
-        
-        return (
-          <LinkComponent
-            key={item.href}
-            {...props}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors group"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-orange/40 group-hover:bg-brand-orange transition-colors flex-shrink-0" />
-            {item.label}
-          </LinkComponent>
-        );
-      })}
+    <div className="absolute top-0 left-full ml-1 w-64 bg-white rounded-2xl shadow-[10px_10px_40px_rgba(30,58,138,0.1)] border border-border/40 p-2 z-[60] animate-in fade-in-0 slide-in-from-left-2 duration-200">
+      {items.map((item) => (
+        <Link
+          key={item.label}
+          href={item.href}
+          className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted rounded-xl transition-all group/sub"
+        >
+          <span className="w-1 h-1 rounded-full bg-border group-hover/sub:bg-brand-blue transition-colors" />
+          {item.label}
+        </Link>
+      ))}
     </div>
   );
 }
 
-function NavDropdownItem({ item }: { item: NavItem }) {
+function DropdownItem({ item }: { item: NavDropdownItem }) {
+  const [hovered, setHovered] = useState(false);
+  const hasSubItems = item.subItems && item.subItems.length > 0;
+
+  return (
+    <div 
+      className="relative group/item"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <Link
+        href={item.href}
+        className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all ${
+          hovered ? 'bg-brand-blue-muted text-brand-blue' : 'text-foreground/80'
+        } ${hasSubItems ? 'font-bold' : ''}`}
+      >
+        <span className="flex items-center gap-2">
+          {!hasSubItems && <span className={`w-1.5 h-1.5 rounded-full transition-all ${hovered ? 'bg-brand-blue scale-125' : 'bg-brand-blue/20'}`} />}
+          {item.label}
+        </span>
+        {hasSubItems && <ChevronRight className={`w-4 h-4 transition-transform ${hovered ? 'translate-x-1' : 'opacity-40'}`} />}
+      </Link>
+      
+      {hasSubItems && <Submenu items={item.subItems!} active={hovered} />}
+    </div>
+  );
+}
+
+function DropdownMenu({ items, label }: { items: NavDropdownItem[], label: string }) {
+  const isIndustry = label === "Industry";
+  
+  return (
+    <div className="absolute top-full left-0 pt-3 z-50"> {/* Bridge the gap with wrapper padding */}
+      <div className={`bg-white rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.15)] border border-border/40 p-2 animate-in fade-in-0 slide-in-from-top-2 duration-200 ${
+        isIndustry ? 'w-[640px]' : 'w-72'
+      }`}>
+        <div className={`${isIndustry ? 'grid grid-cols-2 gap-x-2' : 'flex flex-col gap-0.5'}`}>
+          {items.map((item) => (
+            <DropdownItem key={item.label} item={item} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavItemComponent({ item }: { item: NavItem }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,38 +88,36 @@ function NavDropdownItem({ item }: { item: NavItem }) {
   }, []);
 
   if (!item.dropdownItems) {
-    const isExternal = item.href.startsWith("http");
-    const LinkComponent = isExternal ? "a" : Link;
-    const props = isExternal ? { href: item.href, target: "_blank", rel: "noopener noreferrer" } : { href: item.href };
-
     return (
-      <LinkComponent
-        {...props}
-        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+      <Link
+        href={item.href}
+        className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
       >
         {item.label}
-      </LinkComponent>
+      </Link>
     );
   }
 
   return (
     <div
       ref={ref}
-      className="relative"
+      className="relative pb-2 mb-[-8px]" // Ensure hit area extends to dropdown
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+        className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
+          open ? 'bg-brand-blue text-white shadow-lg shadow-blue-500/20' : 'text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted'
+        }`}
         aria-expanded={open}
       >
         {item.label}
         <ChevronDown
-          className={`w-3.5 h-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+          className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
-      {open && <DropdownMenu items={item.dropdownItems} />}
+      {open && <DropdownMenu items={item.dropdownItems} label={item.label} />}
     </div>
   );
 }
@@ -86,7 +127,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -94,44 +135,48 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 w-full bg-white transition-shadow duration-200 ${
-          scrolled ? "shadow-[0_2px_12px_rgb(0,0,0,0.08)]" : "border-b border-border/60"
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+          scrolled ? "bg-white/90 backdrop-blur-lg shadow-[0_8px_30px_rgb(30,58,138,0.06)] py-1.5" : "bg-white border-b border-border/40 py-3"
         }`}
       >
-        <div className="container-site flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-              <div className="w-16 rounded-lg flex items-center justify-center">
-                <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} />
-              </div>   
-          </Link>
+        <div className="container-site flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white shadow-sm">
+                <Globe className="w-6 h-6" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <div className="flex items-center gap-1">
+                  <span className="text-xl font-black text-brand-blue tracking-tighter">GULF</span>
+                  <span className="text-xl font-black text-brand-blue-light tracking-tighter">JOBS</span>
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-blue/40 mt-0.5">Advertise</span>
+              </div>
+            </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5">
             {mainNavItems.map((item) => (
-              <NavDropdownItem key={item.label} item={item} />
+              <NavItemComponent key={item.label} item={item} />
             ))}
           </nav>
 
-          {/* Auth actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-4">
             <Link
               href="/login"
-              className="px-4 py-2 text-sm font-medium text-[oklch(0.47_0.20_250)] hover:bg-secondary rounded-lg transition-colors"
+              className="text-sm font-bold text-foreground/60 hover:text-brand-blue transition-colors"
             >
               Sign In
             </Link>
             <Link
               href="/post-job"
-              className="px-4 py-2 text-sm font-semibold text-white bg-[oklch(0.68_0.21_45)] hover:bg-[oklch(0.55_0.22_45)] rounded-lg transition-colors shadow-sm"
+              className="px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10"
             >
               Post Jobs
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
+            className="lg:hidden p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
