@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, MessageCircle, Send } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, MessageCircle, Send, Briefcase } from "lucide-react";
 import { socialLinks, contactLinks } from "@/data/socialLinks";
 import { siteConfig } from "@/data/branding";
 import { Globe } from "lucide-react";
@@ -58,26 +58,32 @@ const iconMap: Record<string, React.FC<any>> = {
 export default function Footer() {
   return (
     <footer className="bg-brand-blue text-white overflow-hidden selection:bg-brand-blue-light selection:text-white">
-      {/* Community / WhatsApp Highlight Section */}
+      {/* Specialized Content Section */}
       <div className="bg-brand-blue-medium py-10 border-b border-white/5">
         <div className="container-site flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
           <div className="flex flex-col md:flex-row items-center gap-6 max-w-2xl">
-            <div className="w-16 h-16 rounded-3xl bg-[#25D366] flex items-center justify-center shadow-2xl shadow-emerald-500/20 animate-bounce-slow">
-              <MessageCircle className="w-8 h-8 text-white fill-white/20" />
+            <div className="w-16 h-16 rounded-3xl bg-brand-blue-light/20 flex items-center justify-center shadow-2xl animate-bounce-slow">
+              <Briefcase className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h4 className="text-xl sm:text-2xl font-black tracking-tight mb-1">Join our WhatsApp Community</h4>
-              <p className="text-white/60 text-sm sm:text-base font-medium">Get instant job alerts and global recruitment updates directly on your mobile.</p>
+              <h4 className="text-xl sm:text-2xl font-black tracking-tight mb-1">Explore Specialized Jobs</h4>
+              <p className="text-white/60 text-sm sm:text-base font-medium">Find verified free recruitment vacancies and high-priority shutdown projects across the globe.</p>
             </div>
           </div>
-          <a 
-            href="https://chat.whatsapp.com/E73OloAiRjv8ZZYQBNqEt5"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group px-10 py-4 bg-[#25D366] hover:bg-white hover:text-[#25D366] text-white font-black rounded-2xl transition-all shadow-2xl shadow-emerald-500/10 flex items-center gap-3 active:scale-95"
-          >
-            Join Group <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-          </a>
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+            <Link 
+              href="/jobs?type=free-recruitment"
+              className="w-full sm:w-auto px-8 py-4 bg-white text-brand-blue font-black rounded-2xl transition-all shadow-xl hover:-translate-y-1 active:scale-95 text-center"
+            >
+              Free Recruitment Jobs
+            </Link>
+            <Link 
+              href="/jobs?type=shutdown"
+              className="w-full sm:w-auto px-8 py-4 bg-brand-blue-light text-white font-black rounded-2xl transition-all shadow-xl hover:-translate-y-1 active:scale-95 text-center border border-white/10"
+            >
+              Shutdown Jobs
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -86,16 +92,11 @@ export default function Footer() {
           {/* Brand & Info */}
           <div className="lg:col-span-4 space-y-8">
             <Link href="/" className="flex items-center gap-3 shrink-0 group">
-              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-brand-blue shadow-xl transition-transform group-active:scale-95">
-                <Globe className="w-7 h-7" />
-              </div>
-              <div className="flex flex-col leading-none text-white">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-2xl font-black tracking-tighter">GULF</span>
-                  <span className="text-2xl font-black text-brand-blue-light tracking-tighter">JOBS</span>
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 mt-1">Advertise</span>
-              </div>
+              <img 
+                src={siteConfig.logo.url} 
+                alt={siteConfig.logo.alt} 
+                className="h-14 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="text-white/70 text-[15px] leading-relaxed max-w-sm font-medium">
               The premier platform for international career opportunities. We connect skilled professionals with verified employers across the Gulf, Europe, and Asia.

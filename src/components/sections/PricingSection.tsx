@@ -10,7 +10,7 @@ export default function PricingSection() {
       <div className="container-site">
         <div className="text-center mb-16">
           <div className="text-xs font-bold text-brand-blue uppercase tracking-[0.2em] mb-3">Recruiters</div>
-          <h2 className="text-3xl md:text-5xl font-black text-foreground mb-4">Simple, Transparent Pricing</h2>
+          <h2 className="text-2xl md:text-4xl font-black text-foreground mb-4">Simple, Transparent Pricing</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg font-medium leading-relaxed">
             Choose the right package to reach the best candidates across Gulf & Europe. No hidden fees.
           </p>

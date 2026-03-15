@@ -118,8 +118,8 @@ export default function FeaturedJobsSection() {
             <div className="text-xs font-semibold text-brand-blue uppercase tracking-widest mb-2">
               Premium Overseas Opportunities
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground text-balance">
-              Latest Featured Jobs
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground text-balance">
+              Verified Overseas Opportunities
             </h2>
             <p className="text-muted-foreground mt-2 max-w-xl text-balance">
               Verified job vacancies in UAE, Saudi Arabia, Qatar, Oman, Bahrain, Kuwait, and Europe. Contact employers directly via WhatsApp or Call.

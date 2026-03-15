@@ -14,7 +14,7 @@ export default function TrustCTASection() {
               <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform duration-500">
                 <FileText className="w-8 h-8" />
               </div>
-              <h3 className="text-3xl sm:text-4xl font-black mb-4 tracking-tight">Upload Your Resume</h3>
+              <h3 className="text-2xl md:text-3xl font-black mb-4 tracking-tight">Upload Your Resume</h3>
               <p className="text-white/70 text-lg font-medium mb-12 leading-relaxed max-w-sm">
                 Let top employers find you. Create a profile and upload your CV to be discovered by thousands of hiring managers.
               </p>
@@ -39,7 +39,7 @@ export default function TrustCTASection() {
               <div className="w-16 h-16 rounded-2xl bg-brand-blue/5 flex items-center justify-center mb-8 border border-brand-blue/10 group-hover:scale-110 transition-transform duration-500">
                 <UserPlus className="w-8 h-8 text-brand-blue" />
               </div>
-              <h3 className="text-3xl sm:text-4xl font-black mb-4 tracking-tight text-brand-blue">Post Your Jobs</h3>
+              <h3 className="text-2xl md:text-3xl font-black mb-4 tracking-tight text-brand-blue">Post Your Jobs</h3>
               <p className="text-muted-foreground text-lg font-medium mb-12 leading-relaxed max-w-sm">
                 Reach over 2.4 million qualified candidates locally and globally. Start hiring the best talent for your organization today.
               </p>

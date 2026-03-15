@@ -126,8 +126,10 @@
   --color-brand-orange-light: var(--brand-orange-light);
   --color-brand-orange-dark: var(--brand-orange-dark);
   --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-medium: var(--brand-blue-medium);
   --color-brand-blue-light: var(--brand-blue-light);
-  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-blue-muted: var(--brand-blue-muted);
+  --color-brand-blue-dark: oklch(0.15 0.05 250);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

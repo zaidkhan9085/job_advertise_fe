@@ -40,9 +40,8 @@ export default function HeroSection() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight mb-5 text-balance mx-auto">
-            Your Hiring With <br className="hidden sm:block" />
-            <span className="text-[oklch(0.78_0.18_45)]">Job Advertising</span>
+          <h1 className="text-3xl md:text-4xl lg:text-6xl font-extrabold text-white leading-tight mb-5 text-balance mx-auto">
+            World's #1 Global <span className="text-brand-blue-light italic">Opportunities</span> Portal 
           </h1>
 
           <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed text-balance">

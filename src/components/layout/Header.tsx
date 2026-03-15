@@ -41,7 +41,7 @@ function DropdownItem({ item }: { item: NavDropdownItem }) {
         href={item.href}
         className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all ${
           hovered ? 'bg-brand-blue-muted text-brand-blue' : 'text-foreground/80'
-        } ${hasSubItems ? 'font-bold' : ''}`}
+        } ${hasSubItems ? 'font-bold' : ''} text-sm`}
       >
         <span className="flex items-center gap-2">
           {!hasSubItems && <span className={`w-1.5 h-1.5 rounded-full transition-all ${hovered ? 'bg-brand-blue scale-125' : 'bg-brand-blue/20'}`} />}
@@ -142,16 +142,11 @@ export default function Header() {
         <div className="container-site flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white shadow-sm">
-                <Globe className="w-6 h-6" />
-              </div>
-              <div className="flex flex-col leading-none">
-                <div className="flex items-center gap-1">
-                  <span className="text-xl font-black text-brand-blue tracking-tighter">GULF</span>
-                  <span className="text-xl font-black text-brand-blue-light tracking-tighter">JOBS</span>
-                </div>
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-blue/40 mt-0.5">Advertise</span>
-              </div>
+              <img 
+                src={siteConfig.logo.url} 
+                alt={siteConfig.logo.alt} 
+                className="h-12 w-auto"
+              />
             </Link>
 
           <nav className="hidden lg:flex items-center gap-0.5">

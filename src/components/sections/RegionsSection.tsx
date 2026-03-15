@@ -38,7 +38,7 @@ function SliderSection({
             <TitleIcon className="w-4 h-4" />
             {badge}
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-brand-blue tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-black text-brand-blue tracking-tight">
             {title}
           </h2>
           <p className="text-muted-foreground font-medium max-w-xl text-lg">
@@ -106,11 +106,11 @@ function SliderSection({
 export default function RegionsSection() {
   return (
     <>
-      <section className="py-24 bg-white relative overflow-hidden">
+      <section className="pt-24 pb-16 bg-brand-blue-muted/10 relative overflow-hidden border-b border-brand-blue/5">
         <div className="container-site relative">
           <SliderSection 
             title="Jobs Near You" 
-            subtitle="Discover specialized opportunities across key Indian regions and global hubs."
+            subtitle="Discover specialized opportunities across all India states and global hubs."
             badge="Localized Search"
             icon={Map}
             items={nearbyRegions}
@@ -119,7 +119,7 @@ export default function RegionsSection() {
         </div>
       </section>
 
-      <section className="py-24 bg-gradient-to-b from-white via-[#f4f8ff] to-[#eef2ff] relative overflow-hidden">
+      <section className="pt-16 pb-24 bg-gradient-to-b from-white via-[#f4f8ff] to-[#eef2ff] relative overflow-hidden">
         {/* Background Decor */}
         <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-brand-blue/5 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
         

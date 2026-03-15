@@ -1,5 +1,5 @@
 export const socialLinks = [
-  { label: "Facebook", href: "https://www.facebook.com/thejobsadvertise/" },
+  { label: "Facebook", href: "https://www.facebook.com/share/18RHi2hfFk/?mibextid=wwXIfr" },
   { label: "Instagram", href: "https://www.instagram.com/jobs_advertise/" },
   { label: "LinkedIn", href: "https://www.linkedin.com/company/thejobsadvertise/?viewAsMember=true" },
   { label: "YouTube", href: "https://www.youtube.com/@thejobsadvertise" },

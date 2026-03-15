@@ -31,10 +31,7 @@ export const industryItems: NavDropdownItem[] = [
 ];
 
 export const nearbyJobsItems: NavDropdownItem[] = [
-  { label: "East India", href: "/jobs?location=east-india" },
-  { label: "West India", href: "/jobs?location=west-india" },
-  { label: "North India", href: "/jobs?location=north-india" },
-  { label: "South India", href: "/jobs?location=south-india" },
+  { label: "All India States", href: "/jobs?location=india" },
   { 
     label: "Gulf Jobs", 
     href: "/jobs?location=gulf",
@@ -68,7 +65,7 @@ export const nearbyJobsItems: NavDropdownItem[] = [
 
 export const vacancyItems: NavDropdownItem[] = [
   { 
-    label: "Gulf Jobs", 
+    label: "Jobs in Gulf", 
     href: "/jobs?category=gulf-jobs",
     subItems: [
       { label: "UAE", href: "/jobs?location=uae" },
@@ -83,7 +80,7 @@ export const vacancyItems: NavDropdownItem[] = [
     ]
   },
   { 
-    label: "Asia Jobs", 
+    label: "Jobs in Asia", 
     href: "/jobs?category=asia-jobs",
     subItems: [
       { label: "Singapore", href: "/jobs?location=singapore" },
@@ -96,7 +93,7 @@ export const vacancyItems: NavDropdownItem[] = [
     ]
   },
   { 
-    label: "Russia & Other Countries", 
+    label: "Jobs in Russia & Other Countries", 
     href: "/jobs?category=other-countries",
     subItems: [
       { label: "Russia", href: "/jobs?location=russia" },
@@ -109,10 +106,10 @@ export const vacancyItems: NavDropdownItem[] = [
       { label: "Africa", href: "/jobs?location=africa" },
     ]
   },
-  { label: "Europe Jobs", href: "/jobs?category=europe-jobs" },
-  { label: "Australia", href: "/jobs?category=australia" },
-  { label: "Canada", href: "/jobs?category=canada" },
-  { label: "New Zealand", href: "/jobs?category=new-zealand" },
+  { label: "Jobs in Europe", href: "/jobs?category=europe-jobs" },
+  { label: "Jobs in Australia", href: "/jobs?category=australia" },
+  { label: "Jobs in Canada", href: "/jobs?category=canada" },
+  { label: "Jobs in New Zealand", href: "/jobs?category=new-zealand" },
 ];
 
 export const mainNavItems: NavItem[] = [

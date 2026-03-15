@@ -12,7 +12,7 @@ export default function TestimonialsSection() {
           {/* Left info & metrics */}
           <div className="lg:pr-8">
             <div className="text-xs font-semibold text-[oklch(0.47_0.20_250)] uppercase tracking-widest mb-2">Success Stories</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 leading-tight">Trusted by Thousands Worldwide</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-4 leading-tight">Trusted by Thousands Worldwide</h2>
             <p className="text-muted-foreground mb-10 max-w-md">
               Hear from professionals who found their dream roles, and companies that hired their best talent through The Jobs Advertise.
             </p>

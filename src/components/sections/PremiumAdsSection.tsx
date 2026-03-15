@@ -48,7 +48,7 @@ export default function PremiumAdsSection() {
               </div>
               Verified Opportunities
             </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-brand-blue tracking-tight">Premium Job Ads</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-brand-blue tracking-tight">Premium Job Ads</h2>
             <p className="text-muted-foreground font-medium max-w-xl text-lg">
               Priority placement for top-tier verified positions from global industry leaders.
             </p>

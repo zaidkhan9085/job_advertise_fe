@@ -27,7 +27,7 @@ export default function IndustrySection() {
             <div className="text-xs font-black text-brand-blue/40 uppercase tracking-[0.3em]">
               Browse by Sector
             </div>
-            <h2 className="text-4xl md:text-5xl font-black text-brand-blue tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-black text-brand-blue tracking-tight">
               Explore by Industry
             </h2>
             <p className="text-muted-foreground font-medium max-w-xl text-lg">
