@@ -12,6 +12,10 @@ export interface Region {
 
 export const nearbyRegions: Region[] = [
   { id: "all-india", label: "All India States", flag: "🇮🇳", icon: MapPin, type: "nearby", jobCount: 2000, href: "/jobs?location=india" },
+  { id: "north-india", label: "North India", flag: "🧭", icon: Navigation, type: "nearby", jobCount: 1240, href: "/jobs?location=north-india" },
+  { id: "south-india", label: "South India", flag: "🧭", icon: Navigation, type: "nearby", jobCount: 1100, href: "/jobs?location=south-india" },
+  { id: "east-india", label: "East India", flag: "🧭", icon: Navigation, type: "nearby", jobCount: 850, href: "/jobs?location=east-india" },
+  { id: "west-india", label: "West India", flag: "🧭", icon: Navigation, type: "nearby", jobCount: 960, href: "/jobs?location=west-india" },
   { id: "gulf-jobs", label: "Gulf Jobs", flag: "🌍", icon: Landmark, type: "nearby", jobCount: 1840, href: "/jobs?location=gulf" },
   { id: "asia-jobs", label: "Asia Jobs", flag: "🌏", icon: Plane, type: "nearby", jobCount: 920, href: "/jobs?location=asia" },
   { id: "europe", label: "Europe", flag: "🇪🇺", icon: GraduationCap, type: "nearby", jobCount: 420, href: "/jobs?location=europe" },

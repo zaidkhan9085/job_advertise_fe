@@ -175,7 +175,7 @@ export default function Footer() {
                 <Link href="/legal/disclaimer" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Safety</Link>
               </div>
               <p className="text-white/20 text-[10px] font-black tracking-[0.2em] uppercase">
-                © {new Date().getFullYear()} GULF JOBS ADVERTISE — <span className="text-brand-blue-light italic">World's #1 Jobs Portal</span>
+                © {new Date().getFullYear()} GULF JOBS ADVERTISE
               </p>
             </div>
           </div>

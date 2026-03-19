@@ -5,78 +5,142 @@ import { usePathname } from "next/navigation";
 import { 
   Briefcase, 
   LayoutDashboard, 
-  Files, 
   Users, 
   Settings, 
-  Building 
+  Building,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+  PlayCircle
 } from "lucide-react";
 
+import { useState } from "react";
 import { siteConfig } from "@/data/branding";
+import { useSidebar } from "@/context/SidebarContext";
+import GatedFeatureModal from "@/components/common/GatedFeatureModal";
 
 const sidebarLinks = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
   { label: "Applications", href: "/dashboard/applications", icon: Users },
+  { label: "Story", href: "/dashboard/stories", icon: PlayCircle },
   { label: "Company Profile", href: "/dashboard/profile", icon: Building },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const { isCollapsed, toggleSidebar } = useSidebar();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Mock check for active package - set to false to trigger modal
+  const hasActivePackage = false;
 
   return (
-    <aside className="w-64 bg-white border-r border-border/60 hidden md:flex flex-col h-full shrink-0">
-      <div className="h-16 flex items-center px-6 border-b border-border/60 shrink-0">
-        <Link href="/" className="flex items-center gap-2">
-          <img 
-            src={siteConfig.logo.url} 
-            alt={siteConfig.logo.alt} 
-            className="h-10 w-auto"
-          />
-        </Link>
-      </div>
+    <>
+      <aside 
+        className={`bg-white border-r border-border/60 hidden md:flex flex-col h-full shrink-0 transition-all duration-300 relative ${
+          isCollapsed ? "w-20" : "w-72"
+        }`}
+      >
+        {/* Toggle Button */}
+        <button
+          onClick={toggleSidebar}
+          className="absolute -right-3 top-20 w-6 h-6 bg-white border border-border/60 rounded-full flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all shadow-sm z-50 text-muted-foreground"
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+        </button>
 
-
-      <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-3">
-          Recruiter Menu
-        </div>
-        
-        {sidebarLinks.map((link) => {
-          const isActive = pathname === link.href;
-          const Icon = link.icon;
-          
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive 
-                  ? "bg-[oklch(0.47_0.20_250)]/10 text-[oklch(0.47_0.20_250)]" 
-                  : "text-foreground/70 hover:bg-secondary hover:text-foreground"
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? "text-[oklch(0.47_0.20_250)]" : "text-muted-foreground"}`} />
-              {link.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="p-4 border-t border-border/60 shrink-0">
-        <div className="bg-secondary/50 rounded-xl p-4 border border-border/40">
-          <p className="text-sm font-semibold mb-1">Need help?</p>
-          <p className="text-xs text-muted-foreground mb-3">
-            Contact our support team for assistance with your hiring.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-flex w-full items-center justify-center py-2 text-xs font-semibold bg-white border border-border rounded-lg shadow-sm hover:bg-secondary transition-colors"
-          >
-            Contact Support
+        {/* Logo Section */}
+        <div className={`h-16 flex items-center border-b border-border/60 shrink-0 transition-all duration-300 ${
+          isCollapsed ? "px-0 justify-center" : "px-6"
+        }`}>
+          <Link href="/" className="flex items-center gap-2 overflow-hidden">
+            <img 
+              src={siteConfig.logo.url} 
+              alt={siteConfig.logo.alt} 
+              className={`h-10 w-auto transition-all ${isCollapsed ? "min-w-[40px] scale-90" : ""}`}
+            />
           </Link>
         </div>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className={`flex-1 overflow-y-auto py-6 space-y-1 transition-all duration-300 ${isCollapsed ? "px-2" : "px-4"}`}>
+          {!isCollapsed && (
+            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] px-3 mb-4 opacity-60">
+              Recruiter
+            </div>
+          )}
+          
+          {sidebarLinks.map((link) => {
+            const isActive = pathname === link.href;
+            const Icon = link.icon;
+            
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={(e) => {
+                  if (link.label === "Story" && !hasActivePackage) {
+                    e.preventDefault();
+                    setIsModalOpen(true);
+                  }
+                }}
+                title={isCollapsed ? link.label : ""}
+                className={`flex items-center gap-3 py-3 rounded-xl text-sm font-bold transition-all relative group ${
+                  isCollapsed ? "px-0 justify-center" : "px-4"
+                } ${
+                  isActive 
+                    ? "bg-brand-blue/10 text-brand-blue" 
+                    : "text-foreground/70 hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-brand-blue" : "text-muted-foreground group-hover:text-foreground"}`} />
+                {!isCollapsed && (
+                  <span className="whitespace-nowrap transition-opacity duration-300">
+                    {link.label}
+                  </span>
+                )}
+                {isActive && !isCollapsed && (
+                  <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-brand-blue" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Support Box */}
+        <div className={`p-4 border-t border-border/60 shrink-0 transition-all duration-300 ${isCollapsed ? "px-2" : "p-4"}`}>
+          {isCollapsed ? (
+            <Link
+              href="/contact"
+              title="Contact Support"
+              className="flex items-center justify-center h-12 w-full rounded-xl bg-secondary/50 border border-border/40 text-muted-foreground hover:bg-brand-blue hover:text-white transition-all shadow-inner"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </Link>
+          ) : (
+            <div className="bg-brand-blue/5 rounded-2xl p-5 border border-brand-blue/10">
+              <p className="text-sm font-black text-brand-blue mb-2">Need help?</p>
+              <p className="text-[11px] text-brand-blue/60 mb-4 font-medium leading-relaxed">
+                Contact our global support team for hiring assistance.
+              </p>
+              <Link
+                href="/contact"
+                className="inline-flex w-full items-center justify-center py-2.5 text-[10px] font-black uppercase tracking-widest bg-white text-brand-blue border border-brand-blue/20 rounded-xl shadow-sm hover:bg-brand-blue hover:text-white transition-all"
+              >
+                Contact Support
+              </Link>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      <GatedFeatureModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
+    </>
   );
 }

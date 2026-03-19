@@ -1,19 +1,93 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Check, ArrowRight, Star, ShieldCheck, Zap } from "lucide-react";
 import { pricingPlans } from "@/data/pricing";
 
 export default function PricingSection() {
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [currency, setCurrency] = useState<"INR" | "USD">("INR");
+
+  const EXCHANGE_RATE = 83; // 1 USD = 83 INR
+  const YEARLY_DISCOUNT = 0.2; // 20% Discount
+
+  const formatPrice = (priceINR: number) => {
+    if (priceINR === 0) return currency === "INR" ? "₹ 0.00" : "$ 0.00";
+
+    let calculatedPrice = priceINR;
+    
+    // Apply yearly discount if needed
+    if (billing === "yearly") {
+      calculatedPrice = priceINR * 12 * (1 - YEARLY_DISCOUNT);
+    }
+
+    // Convert currency
+    if (currency === "USD") {
+      calculatedPrice = calculatedPrice / EXCHANGE_RATE;
+      return `$ ${calculatedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    return `₹ ${calculatedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   return (
     <section className="section-padding bg-[oklch(0.975_0.005_250)]">
       <div className="container-site">
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <div className="text-xs font-bold text-brand-blue uppercase tracking-[0.2em] mb-3">Recruiters</div>
           <h2 className="text-2xl md:text-4xl font-black text-foreground mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg font-medium leading-relaxed">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg font-medium leading-relaxed mb-10">
             Choose the right package to reach the best candidates across Gulf & Europe. No hidden fees.
           </p>
+
+          {/* Dynamic Toggles Container */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
+            
+            {/* Billing Cycle Toggle */}
+            <div className="bg-white p-1.5 rounded-2xl border border-border/60 shadow-sm flex items-center relative group">
+              <button 
+                onClick={() => setBilling("monthly")}
+                className={`relative z-10 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${billing === "monthly" ? "text-white" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Monthly
+              </button>
+              <button 
+                onClick={() => setBilling("yearly")}
+                className={`relative z-10 px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${billing === "yearly" ? "text-white" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Yearly
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black transition-colors ${billing === "yearly" ? "bg-white/20 text-white" : "bg-brand-blue/10 text-brand-blue"}`}>
+                  -20%
+                </span>
+              </button>
+              {/* Sliding Pill */}
+              <div 
+                className={`absolute top-1.5 bottom-1.5 bg-brand-blue rounded-xl transition-all duration-500 ease-out shadow-lg shadow-brand-blue/20 ${billing === "monthly" ? "left-1.5 w-[110px]" : "left-[118px] w-[130px]"}`} 
+              />
+            </div>
+
+            {/* Currency Toggle */}
+            <div className="bg-white p-1.5 rounded-2xl border border-border/60 shadow-sm flex items-center relative group">
+              <button 
+                onClick={() => setCurrency("INR")}
+                className={`relative z-10 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${currency === "INR" ? "text-white" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                ₹ INR
+              </button>
+              <button 
+                onClick={() => setCurrency("USD")}
+                className={`relative z-10 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${currency === "USD" ? "text-white" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                $ USD
+              </button>
+              {/* Sliding Pill */}
+              <div 
+                className={`absolute top-1.5 bottom-1.5 bg-brand-blue rounded-xl transition-all duration-500 ease-out shadow-lg shadow-brand-blue/20 ${currency === "INR" ? "left-1.5 w-[90px]" : "left-[94px] w-[95px]"}`} 
+              />
+            </div>
+
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
@@ -46,12 +120,10 @@ export default function PricingSection() {
                 
                 <div className="flex flex-col gap-1 mb-4">
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-4xl font-black text-foreground">{plan.price}</span>
-                    <span className="text-muted-foreground font-bold text-sm">{plan.period}</span>
+                    <span className="text-4xl font-black text-foreground">{formatPrice(plan.monthlyPriceINR)}</span>
+                    <span className="text-muted-foreground font-bold text-sm">/ {billing === "monthly" ? "30 days" : "Year"}</span>
                   </div>
-                  {plan.subPeriod && (
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{plan.subPeriod}</span>
-                  )}
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Per Package | {billing === "monthly" ? "Monthly Plan" : "Yearly Plan"}</span>
                 </div>
                 
                 <p className="text-sm text-muted-foreground font-medium leading-relaxed">{plan.description}</p>

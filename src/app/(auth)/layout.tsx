@@ -11,8 +11,8 @@ export default function AuthLayout({
       {/* Simple Auth Header */}
       <header className="h-20 flex items-center justify-center border-b border-border/60 bg-white">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-16 rounded-lg flex items-center justify-center">
-            <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} />
+          <div className="w-48 flex items-center justify-center py-4">
+            <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} className="w-full h-auto object-contain" />
           </div>
         </Link>
       </header>

@@ -34,8 +34,8 @@ export default function TopBar() {
             className="flex items-center gap-1.5 hover:text-[#25D366] transition-colors"
           >
             <MessageCircle className="w-3.5 h-3.5" />
-            Join WhatsApp
-          </a>
+            Join Whatsapp Channel
+  </a>
           <a
             href={contactLinks.androidApp}
             target="_blank"
@@ -68,17 +68,7 @@ export default function TopBar() {
             })}
           </div>
           <div className="w-px h-4 bg-white/20" />
-          <div className="flex items-center gap-4">
-            {authNavItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="hover:text-white transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
+          {/* Auth links removed as requested */}
         </div>
       </div>
     </div>

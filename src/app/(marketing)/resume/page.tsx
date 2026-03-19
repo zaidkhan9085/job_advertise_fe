@@ -1,14 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, FileText, CheckCircle2, AlertCircle, Info, ChevronDown } from "lucide-react";
+import { 
+  Upload, 
+  CheckCircle2, 
+  ChevronDown, 
+  Mail, 
+  MapPin, 
+  Briefcase, 
+  MessageSquare,
+  FileIcon
+} from "lucide-react";
+import { industries } from "@/data/industries";
+
+const countryCodes = [
+  { code: "+971", label: "UAE", flag: "🇦🇪" },
+  { code: "+91", label: "IND", flag: "🇮🇳" },
+  { code: "+966", label: "KSA", flag: "🇸🇦" },
+  { code: "+974", label: "QAT", flag: "🇶🇦" },
+  { code: "+965", label: "KWT", flag: "🇰🇼" },
+  { code: "+968", label: "OMN", flag: "🇴🇲" },
+  { code: "+973", label: "BAH", flag: "🇧🇭" },
+  { code: "+44", label: "UK", flag: "🇬🇧" },
+  { code: "+1", label: "USA", flag: "🇺🇸" },
+];
 
 export default function PostResumePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
   };
 
   if (isSubmitted) {
@@ -23,7 +52,10 @@ export default function PostResumePage() {
             Your profile has been successfully uploaded to our global candidate database. Recruiters can now discover your expertise.
           </p>
           <button
-            onClick={() => setIsSubmitted(false)}
+            onClick={() => {
+              setIsSubmitted(false);
+              setSelectedFile(null);
+            }}
             className="w-full bg-[oklch(0.47_0.20_250)] text-white font-bold py-4 rounded-2xl hover:bg-[oklch(0.35_0.20_250)] transition-all shadow-md active:scale-[0.98]"
           >
             Upload Another
@@ -42,199 +74,151 @@ export default function PostResumePage() {
             <span className="w-2 h-2 rounded-full bg-brand-blue-light animate-pulse" />
             <span className="text-white/90 text-sm font-bold uppercase tracking-widest">Global Talent Pool</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
-            Get Hired by <span className="text-brand-blue-light italic">Top Employers</span>
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
+            Submit Your <span className="text-brand-blue-light italic">Resume</span>
           </h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg md:text-xl font-medium leading-relaxed">
-            Join 2.4 million+ professionals. Upload your resume and let your dream job in Gulf or Europe find you.
+            Join 2.4 million+ professionals. Upload your resume and let your dream job find you.
           </p>
         </div>
       </div>
 
       <div className="container-site px-4 -mt-20 relative z-10">
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
-
-          {/* Main Form Area */}
-          <div className="lg:col-span-8">
-            <div className="bg-white rounded-3xl shadow-2xl border border-border/60 overflow-hidden">
-              <div className="p-8 md:p-12">
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Personal info */}
-                  <div className="space-y-6">
-                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2 border-b border-border/40 pb-3">
-                      <span className="w-8 h-8 rounded-lg bg-[oklch(0.47_0.20_250)]/10 text-[oklch(0.47_0.20_250)] flex items-center justify-center text-sm">1</span>
-                      Personal Information
-                    </h3>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Full Name *</label>
-                      <input
-                        type="text"
-                        required
-                        className="w-full px-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-[oklch(0.47_0.20_250)] focus:bg-white transition-all outline-none font-medium"
-                        placeholder="John Doe"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Date of Birth *</label>
-                      <input
-                        type="date"
-                        required
-                        className="w-full px-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-[oklch(0.47_0.20_250)] focus:bg-white transition-all outline-none font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">WhatsApp Number *</label>
-                      <div className="relative">
-                        <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">+91</span>
-                        <input
-                          type="tel"
-                          required
-                          className="w-full pl-16 pr-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
-                          placeholder="9876543210"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Nationality *</label>
-                      <div className="relative group">
-                        <select required className="w-full px-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer">
-                          <option value="">Select Nationality</option>
-                          <option>Indian</option>
-                          <option>Pakistani</option>
-                          <option>Bangladeshi</option>
-                          <option>Nepalese</option>
-                          <option>Sri Lankan</option>
-                          <option>Philippine</option>
-                          <option>Egyptian</option>
-                          <option>UAE National</option>
-                          <option>Saudi National</option>
-                          <option>Other</option>
-                        </select>
-                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none group-focus-within:text-brand-blue transition-colors" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Email Address *</label>
-                      <input
-                        type="email"
-                        required
-                        className="w-full px-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-[oklch(0.47_0.20_250)] focus:bg-white transition-all outline-none font-medium"
-                        placeholder="john@example.com"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Career info */}
-                  <div className="space-y-6">
-                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2 border-b border-border/40 pb-3">
-                      <span className="w-8 h-8 rounded-lg bg-brand-blue/10 text-brand-blue flex items-center justify-center text-sm">2</span>
-                      Career Preferences
-                    </h3>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Preferred Location *</label>
-                      <div className="relative group">
-                        <select required className="w-full px-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer">
-                          <option value="">Select Destination</option>
-                          <option>Dubai, UAE</option>
-                          <option>Saudi Arabia</option>
-                          <option>Qatar</option>
-                          <option>Europe</option>
-                          <option>Anywhere</option>
-                        </select>
-                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none group-focus-within:text-brand-blue transition-colors" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Current Industry *</label>
-                      <div className="relative group">
-                        <select required className="w-full px-5 py-4 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer">
-                          <option value="">Select Industry</option>
-                          <option>Oil & Gas</option>
-                          <option>Construction</option>
-                          <option>IT & Software</option>
-                          <option>Healthcare</option>
-                          <option>Hospitality</option>
-                        </select>
-                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none group-focus-within:text-brand-blue transition-colors" />
-                      </div>
-                    </div>
-
-                    {/* File Upload */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground/80 ml-1">Upload Resume (PDF/DOC) *</label>
-                      <div className="relative group">
-                        <input
-                          type="file"
-                          required
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <div className="w-full px-5 py-10 rounded-2xl bg-[oklch(0.47_0.20_250)]/5 border-2 border-dashed border-[oklch(0.47_0.20_250)]/20 group-hover:bg-[oklch(0.47_0.20_250)]/10 group-hover:border-[oklch(0.47_0.20_250)]/40 transition-all text-center">
-                          <Upload className="w-8 h-8 text-[oklch(0.47_0.20_250)] mx-auto mb-3" />
-                          <p className="text-sm font-bold text-[oklch(0.47_0.20_250)]">Drop your file here or click to browse</p>
-                          <p className="text-xs text-muted-foreground mt-2">Max file size: 5MB</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2 pt-6">
-                    <button
-                      type="submit"
-                      className="w-full bg-[oklch(0.47_0.20_250)] text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-[oklch(0.47_0.20_250)]/20 hover:bg-[oklch(0.35_0.20_250)] hover:-translate-y-1 transition-all active:scale-[0.98]"
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-border/60 overflow-hidden overflow-visible">
+            <div className="p-8 md:p-12">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* Select Industry */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-brand-blue" />
+                    Select Industry *
+                  </label>
+                  <div className="relative group">
+                    <select 
+                      required 
+                      className="w-full pl-5 pr-12 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
                     >
-                      Submit Your Resume
-                    </button>
-                    <p className="text-center text-xs text-muted-foreground mt-4 font-medium italic">
-                      By submitting, you agree to our Terms of Service & Privacy Policy.
-                    </p>
+                      <option value="">Select your industry</option>
+                      {industries.map(ind => (
+                        <option key={ind.id} value={ind.id}>{ind.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none group-focus-within:text-brand-blue transition-colors" />
                   </div>
-                </form>
-              </div>
-            </div>
-          </div>
+                </div>
 
-          {/* Sidebar / Info */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white p-8 rounded-3xl border border-border/60 shadow-lg">
-              <h3 className="font-extrabold text-xl mb-6 flex items-center gap-2">
-                <Info className="w-5 h-5 text-brand-blue" />
-                Why Post Your CV?
-              </h3>
-              <ul className="space-y-6">
-                {[
-                  { title: "Direct Exposure", desc: "Your CV is visible to 12,000+ verified recruiters globally.", icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" /> },
-                  { title: "Smart Matching", desc: "Our AI matches your profile with high-paying job vacancies.", icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" /> },
-                  { title: "Instant Alerts", desc: "Get notified as soon as a company views your profile.", icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" /> }
-                ].map(item => (
-                  <li key={item.title} className="flex gap-4">
-                    <div className="mt-1 shrink-0">{item.icon}</div>
-                    <div>
-                      <h4 className="font-bold text-foreground text-base mb-1">{item.title}</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                {/* WhatsApp with Country Code */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-brand-blue" />
+                    WhatsApp No *
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="w-1/3 relative group">
+                      <select 
+                        required 
+                        className="w-full pl-4 pr-10 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer text-sm"
+                      >
+                        {countryCodes.map(c => (
+                          <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none group-focus-within:text-brand-blue" />
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="WhatsApp Number"
+                      className="w-2/3 px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+                    />
+                  </div>
+                </div>
 
-            <div className="bg-brand-blue/5 p-8 rounded-3xl border border-brand-blue/10">
-              <h3 className="font-extrabold text-brand-blue mb-2 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-brand-blue" />
-                Safety First
-              </h3>
-              <p className="text-sm text-brand-blue/70 leading-relaxed font-medium">
-                We never ask for payment for job applications. Beware of fraudulent recruitment agencies. Always verify the company before sharing sensitive information.
-              </p>
+                {/* Email ID */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-brand-blue" />
+                    Email Id *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="example@mail.com"
+                    className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+                  />
+                </div>
+
+                {/* Current & Preferred Location */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-brand-blue" />
+                      Current Location *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mumbai, India"
+                      className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-brand-blue" />
+                      Preferred Location *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Dubai, UAE"
+                      className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Resume Upload */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+                    <FileIcon className="w-4 h-4 text-brand-blue" />
+                    Resume Upload (PDF / DOC) *
+                  </label>
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      required
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="w-full px-5 py-12 rounded-2xl bg-brand-blue/5 border-2 border-dashed border-brand-blue/20 group-hover:bg-brand-blue/10 group-hover:border-brand-blue/40 transition-all text-center">
+                      <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        <Upload className="w-8 h-8 text-brand-blue" />
+                      </div>
+                      <p className="text-base font-black text-brand-blue">
+                        {selectedFile ? selectedFile.name : "Click to upload or drag & drop"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 font-medium">Supported formats: PDF, DOC, DOCX (Max 5MB)</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    className="w-full bg-brand-blue text-white font-black text-xl py-5 rounded-2xl shadow-xl shadow-brand-blue/20 hover:bg-brand-blue-medium hover:-translate-y-1 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                  >
+                    Submit Resume
+                  </button>
+                  <p className="text-center text-[10px] text-muted-foreground mt-4 font-medium uppercase tracking-wider">
+                    Secure & Confidential • Free for candidates
+                  </p>
+                </div>
+              </form>
             </div>
           </div>
-
         </div>
       </div>
     </div>

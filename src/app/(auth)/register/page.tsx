@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Mail, Lock, User, Briefcase, Building, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, User, Briefcase, Building, CheckCircle2, Phone, MapPin } from "lucide-react";
 
 export default function RegisterPage() {
   const [role, setRole] = useState<"Candidate" | "Recruiter">("Candidate");
@@ -83,19 +83,74 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {role === "Recruiter" && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-foreground">Company Name</label>
-              <div className="relative">
-                <Building className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                <input 
-                  type="text" 
-                  placeholder="Acme Corp"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
-                  required
-                />
+          {role === "Candidate" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground">Position</label>
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <input 
+                    type="text" 
+                    placeholder="Software Engineer"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground">Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <input 
+                    type="text" 
+                    placeholder="New York, NY"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {role === "Recruiter" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground">Company Name</label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <input 
+                    type="text" 
+                    placeholder="Acme Corp"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground">Contact Number</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <input 
+                    type="tel" 
+                    placeholder="+1 (555) 000-0000"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground">Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <input 
+                    type="text" 
+                    placeholder="London, UK"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div className="space-y-1.5">

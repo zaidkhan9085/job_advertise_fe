@@ -13,7 +13,9 @@ export default function PremiumAdsSection() {
   const scroll = useCallback((direction: "left" | "right") => {
     if (scrollRef.current) {
       const { clientWidth } = scrollRef.current;
-      const cardWidth = clientWidth / 3;
+      // Breakpoint at 1366px (custom)
+      const isLarge = window.innerWidth >= 1366;
+      const cardWidth = isLarge ? clientWidth / 4 : clientWidth / 3;
       const scrollAmount = direction === "left" ? -clientWidth : clientWidth;
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
@@ -27,6 +29,7 @@ export default function PremiumAdsSection() {
         if (scrollLeft + clientWidth >= scrollWidth - 10) {
           scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
         } else {
+          // Auto-scroll by one screen width
           scrollRef.current.scrollBy({ left: clientWidth, behavior: "smooth" });
         }
       }
@@ -36,7 +39,7 @@ export default function PremiumAdsSection() {
   }, []);
 
   return (
-    <section className="py-24 bg-gradient-to-b from-[#f0f4ff] via-white to-[#f0f4ff] overflow-hidden relative">
+    <section className="pt-8 pb-24 bg-gradient-to-b from-[#f0f4ff] via-white to-[#f0f4ff] overflow-hidden relative">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
       <div className="container-site relative">
@@ -77,10 +80,13 @@ export default function PremiumAdsSection() {
             {premiumJobs.map((job, idx) => (
               <div
                 key={`${job.id}-${idx}`}
-                className="flex-shrink-0 w-[300px] sm:w-[calc(33.333%-1rem)] group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(30,58,138,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden"
+                style={{ 
+                  width: 'min(calc(100vw - 4rem), 300px)', // Mobile default
+                }}
+                className="flex-shrink-0 @container group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(30,58,138,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden sm:w-[calc(45%)] md:w-[calc(33.333%-1.25rem)] [@media(min-width:1366px)]:w-[calc(25%-1.25rem)]"
               >
                 {/* Image Area */}
-                <div className="relative aspect-[16/10] overflow-hidden">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <img
                     src={job.image || "https://placehold.co/800x500/1e3a8a/ffffff?text=Premium+Ad"}
                     alt={job.title}

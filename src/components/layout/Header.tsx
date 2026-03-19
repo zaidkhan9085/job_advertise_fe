@@ -149,22 +149,16 @@ export default function Header() {
               />
             </Link>
 
-          <nav className="hidden lg:flex items-center gap-0.5">
+          <nav className="hidden lg:flex items-center gap-0 xl:gap-0.5">
             {mainNavItems.map((item) => (
               <NavItemComponent key={item.label} item={item} />
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-bold text-foreground/60 hover:text-brand-blue transition-colors"
-            >
-              Sign In
-            </Link>
+          <div className="hidden lg:flex items-center gap-2 xl:gap-4">
             <Link
               href="/post-job"
-              className="px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10"
+              className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
             >
               Post Jobs
             </Link>

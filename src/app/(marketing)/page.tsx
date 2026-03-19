@@ -17,7 +17,6 @@ export default function Home() {
       <GeneralAdsSection />
       <IndustrySection />
       <RegionsSection />
-      <TrustCTASection />
       <TestimonialsSection />
       <SafetySection />
     </>

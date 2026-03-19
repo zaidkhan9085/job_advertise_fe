@@ -1,8 +1,7 @@
 export interface PricingPlan {
   name: string;
-  price: string;
+  monthlyPriceINR: number;
   period: string;
-  subPeriod?: string;
   description: string;
   features: string[];
   cta: string;
@@ -15,9 +14,8 @@ export const pricingPlans: PricingPlan[] = [
   {
     name: "Golden Package",
     highlight: "Recommended",
-    price: "₹ 2,999.00",
+    monthlyPriceINR: 2999,
     period: "/ 30 days",
-    subPeriod: "Per Package | Monthly Plan",
     description: "Premium exposure with priority listings and live support.",
     features: [
       "200 Website Jobs Listing",
@@ -33,9 +31,8 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     name: "Silver Package",
-    price: "₹ 999.00",
+    monthlyPriceINR: 999,
     period: "/ 30 days",
-    subPeriod: "Per Package | Monthly Plan",
     description: "Standard visibility for small teams and quick hires.",
     features: [
       "50 Website Jobs Listing",
@@ -50,9 +47,8 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     name: "Free Package",
-    price: "₹ 0.00",
+    monthlyPriceINR: 0,
     period: "/ 30 days",
-    subPeriod: "Per Package",
     description: "Basic entry plan for listing single vacancies.",
     features: [
       "5 Regular Listings",

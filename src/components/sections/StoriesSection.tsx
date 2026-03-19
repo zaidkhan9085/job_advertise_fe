@@ -2,6 +2,7 @@
 
 import { Plus, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
+import GatedFeatureModal from "@/components/common/GatedFeatureModal";
 
 const STORIES = [
   { id: 1, title: "Construction Job | UAE", image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=300&h=450&auto=format&fit=crop" },
@@ -67,6 +68,10 @@ export default function StoriesSection() {
     }
   };
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Mock check for active package
+  const hasActivePackage = false;
+
   return (
     <section className="py-12 bg-white border-b border-border/40 overflow-hidden">
       <div className="container-site relative">
@@ -105,7 +110,10 @@ export default function StoriesSection() {
             className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
           >
             {/* Create Story Card */}
-            <button className="flex-shrink-0 w-[140px] h-[220px] sm:w-[160px] sm:h-[250px] rounded-[24px] border-2 border-dashed border-border hover:border-brand-blue/50 flex flex-col items-center justify-center gap-4 group/btn transition-all bg-secondary/20 hover:bg-brand-blue-muted/30">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex-shrink-0 w-[140px] h-[220px] sm:w-[160px] sm:h-[250px] rounded-[24px] border-2 border-dashed border-border hover:border-brand-blue/50 flex flex-col items-center justify-center gap-4 group/btn transition-all bg-secondary/20 hover:bg-brand-blue-muted/30"
+            >
               <div className="w-14 h-14 rounded-full bg-brand-blue flex items-center justify-center text-white shadow-xl shadow-blue-500/20 group-hover/btn:scale-110 transition-transform">
                 <Plus className="w-7 h-7" />
               </div>
@@ -137,6 +145,11 @@ export default function StoriesSection() {
           </div>
         </div>
       </div>
+
+      <GatedFeatureModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </section>
   );
 }
