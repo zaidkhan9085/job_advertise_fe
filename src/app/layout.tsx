@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     siteName: "The Jobs Advertise",
     locale: "en_US",
   },
+  icons: {
+    icon: "/favicon-pin.png",
+    shortcut: "/favicon-pin.png",
+    apple: "/favicon-pin.png",
+  },
 };
 
 export default function RootLayout({
