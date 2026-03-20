@@ -113,18 +113,16 @@ export default function PostJobPage() {
                 <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Company / Agency *</label>
                 <div className="relative group">
                   <select 
-                    name="entityType"
+                    name="regionCategory"
                     required
+                    defaultValue=""
                     className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
                   >
-                    <option value="" disabled selected>Select Region / Category</option>
-                    <option>East India</option>
-                    <option>West India</option>
-                    <option>North India</option>
-                    <option>South India</option>
-                    <option>Gulf / GCC</option>
-                    <option>Europe Countries</option>
-                    <option>Asia Countries</option>
+                    <option value="" disabled>Select Region / Category</option>
+                    <option value="india">All India States</option>
+                    <option value="gulf">Gulf / GCC Jobs</option>
+                    <option value="asia">Asia Countries</option>
+                    <option value="europe">Europe Countries</option>
                   </select>
                   <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-hover:text-brand-blue transition-colors">
                     <ChevronRight className="w-5 h-5 rotate-90" />
