@@ -2,8 +2,8 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Globe2, Map } from "lucide-react";
-import { nearbyRegions, vacancyCountries } from "@/data/regions";
+import { ArrowRight, ChevronLeft, ChevronRight, Globe2 } from "lucide-react";
+import { vacancyCountries } from "@/data/regions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -156,9 +156,9 @@ function SliderSection({
             observeParents={true}
             watchOverflow={false}
             breakpoints={{
-              768: { slidesPerView: 3 },
-              1024: { slidesPerView: 4 },
-              1280: { slidesPerView: 5 },
+              768: { slidesPerView: Math.min(items.length, 3) },
+              1024: { slidesPerView: Math.min(items.length, 4) },
+              1280: { slidesPerView: Math.min(items.length, 5) },
             }}
             className="pb-12"
           >
@@ -206,18 +206,6 @@ export default function RegionsSection() {
       <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-brand-blue/5 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
       
       <div className="container-site relative">
-        <SliderSection 
-          title="Jobs Near You"
-          subtitle="Discover immediate openings in major employment hubs across India."
-          badge="Local Opportunities"
-          icon={Map}
-          items={nearbyRegions}
-          type="nearby"
-          paginationId="nearby"
-        />
-
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-brand-blue/10 to-transparent my-24" />
-
         <SliderSection 
           title="Browse by Country"
           subtitle="Explore trending international careers in top global destinations."

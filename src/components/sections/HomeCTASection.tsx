@@ -12,7 +12,7 @@ export default function HomeCTASection() {
       className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
     },
     {
-      label: "Recruitment Jobs",
+      label: "Free Recruitment Jobs",
       href: "/jobs?type=free-recruitment",
       icon: Briefcase,
       className: "bg-brand-blue text-white hover:bg-brand-blue-medium",

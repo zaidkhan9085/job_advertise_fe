@@ -93,53 +93,60 @@ export default function ResumeBuilderPage() {
     <div className="flex flex-col h-screen bg-[#F1F5F9] overflow-hidden">
       
       {/* Precision Header */}
-      <header className="h-16 bg-white border-b border-border/40 flex items-center justify-between px-6 shrink-0 z-50">
-        <div className="flex items-center gap-4">
-          <Link href="/resume" className="p-2 hover:bg-secondary rounded-lg transition-all text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-lg font-black text-slate-900 tracking-tight">ResumePro</h1>
-            <span className="text-[10px] font-black text-brand-blue/40 uppercase tracking-widest hidden sm:block">Modern Builder</span>
+      <header className="flex flex-col lg:flex-row lg:h-16 bg-white border-b border-border/40 px-4 py-3 lg:px-6 lg:py-0 lg:items-center justify-between shrink-0 z-50 transition-all">
+        <div className="flex items-center justify-between w-full lg:w-auto gap-4">
+          <div className="flex items-center gap-3">
+            <Link href="/resume" className="p-2 hover:bg-secondary rounded-lg transition-all text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-base lg:text-lg font-black text-slate-900 tracking-tight">ResumePro</h1>
+              <span className="text-[9px] font-black text-brand-blue/30 uppercase tracking-widest hidden sm:block">Modern Builder</span>
+            </div>
+          </div>
+
+          {/* View Switcher (Dynamic - Integrated in Row 1 for mobile) */}
+          <div className="flex bg-slate-100/80 p-1 rounded-xl border border-slate-200/60 scale-90 sm:scale-100 origin-right">
+             <button 
+               onClick={() => setViewMode("edit")}
+               className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all flex items-center gap-2 ${viewMode === "edit" ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
+             >
+               <Layout className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Edit</span>
+             </button>
+             <button 
+               onClick={() => setViewMode("both")}
+               className={`hidden lg:flex px-4 py-1.5 rounded-lg text-xs font-bold transition-all items-center gap-2 ${viewMode === "both" ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
+             >
+               <Monitor className="w-3.5 h-3.5" /> Split
+             </button>
+             <button 
+               onClick={() => setViewMode("preview")}
+               className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all flex items-center gap-2 ${viewMode === "preview" ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
+             >
+               <Eye className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Preview</span>
+             </button>
           </div>
         </div>
 
-        {/* View Switcher (Dynamic) */}
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-           <button 
-             onClick={() => setViewMode("edit")}
-             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${viewMode === "edit" ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
-           >
-             <Layout className="w-3.5 h-3.5" /> <span className="hidden md:inline">Edit</span>
-           </button>
-           <button 
-             onClick={() => setViewMode("both")}
-             className={`hidden lg:flex px-4 py-1.5 rounded-lg text-xs font-bold transition-all items-center gap-2 ${viewMode === "both" ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
-           >
-             <Monitor className="w-3.5 h-3.5" /> SplitView
-           </button>
-           <button 
-             onClick={() => setViewMode("preview")}
-             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${viewMode === "preview" ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
-           >
-             <Eye className="w-3.5 h-3.5" /> <span className="hidden md:inline">Preview</span>
-           </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button onClick={handleReset} title="Reset Draft" className="p-2 sm:p-2.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shrink-0">
+        {/* Action Buttons: Moved to next row on mobile as requested */}
+        <div className="flex items-center justify-between lg:justify-end gap-2 w-full lg:w-auto mt-3 lg:mt-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+          <button onClick={handleReset} title="Reset Draft" className="p-2.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shrink-0">
             <RotateCcw className="w-4 h-4" />
           </button>
           
-          <button onClick={handleSave} className="p-2.5 sm:px-4 sm:py-2.5 rounded-xl text-sm font-bold border border-slate-200 hover:bg-secondary flex items-center gap-2 transition-all active:scale-95 shrink-0">
-            <Save className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} /> 
-            <span className="hidden md:inline">{isSaving ? "Saving..." : "Save Draft"}</span>
-          </button>
-          
-          <button onClick={handlePrint} className="p-2.5 sm:px-5 sm:py-2.5 rounded-xl text-sm font-black bg-brand-blue text-white shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium flex items-center gap-2 transition-all active:scale-95 shrink-0">
-            <Download className="w-4 h-4" />
-            <span className="hidden md:inline">Download</span>
-          </button>
+          <div className="flex items-center gap-2 flex-1 lg:flex-initial">
+            <button onClick={handleSave} className="flex-1 lg:flex-initial px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-200 hover:bg-secondary flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0">
+              <Save className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} /> 
+              <span className="hidden md:inline">{isSaving ? "Saving..." : "Save Draft"}</span>
+              <span className="md:hidden text-xs">Save</span>
+            </button>
+            
+            <button onClick={handlePrint} className="flex-1 lg:flex-initial px-5 py-2.5 rounded-xl text-sm font-black bg-brand-blue text-white shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0">
+              <Download className="w-4 h-4" />
+              <span className="hidden md:inline">Download</span>
+              <span className="md:hidden text-xs">Download</span>
+            </button>
+          </div>
         </div>
       </header>
 
