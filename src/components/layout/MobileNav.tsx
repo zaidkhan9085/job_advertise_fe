@@ -115,17 +115,12 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
       <div className="fixed inset-y-0 right-0 z-[70] w-full max-w-[340px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-white sticky top-0 z-10">
-          <Link href="/" onClick={onClose} className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white shadow-sm">
-              <Globe className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <div className="flex items-center gap-1">
-                <span className="text-xl font-black text-brand-blue tracking-tighter">GULF</span>
-                <span className="text-xl font-black text-brand-blue-light tracking-tighter">JOBS</span>
-              </div>
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-blue/40 mt-0.5">Advertise</span>
-            </div>
+          <Link href="/" onClick={onClose} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
+            <img 
+              src={siteConfig.logo.url} 
+              alt={siteConfig.logo.alt} 
+              className="h-12 w-auto"
+            />
           </Link>
           <button
             onClick={onClose}

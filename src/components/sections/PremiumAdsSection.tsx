@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, MessageCircle, Phone, Eye, Heart, Star, Crown } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Phone, Eye, Heart, Star, Crown, ArrowRight } from "lucide-react";
 import { featuredJobs } from "@/data/jobs";
 
 export default function PremiumAdsSection() {
@@ -126,20 +126,32 @@ export default function PremiumAdsSection() {
                     </h3>
                   </Link>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
                     <a
                       href={job.whatsapp}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#25D366] text-white hover:bg-[#128C7E] transition-all text-xs font-black shadow-lg shadow-emerald-500/20 active:scale-95"
+                      title="WhatsApp"
+                      className="flex flex-col items-center justify-center py-3 rounded-2xl bg-[#25D366] text-white hover:bg-[#128C7E] transition-all shadow-lg shadow-emerald-500/20 active:scale-95 gap-1"
                     >
-                      <MessageCircle className="w-5 h-5 flex-shrink-0" /> WhatsApp
+                      <MessageCircle className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-[9px] font-black uppercase tracking-tighter">WhatsApp</span>
                     </a>
                     <Link
                       href={`/jobs/${job.id}`}
-                      className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-brand-blue text-white hover:bg-brand-blue-medium transition-all text-xs font-black shadow-lg shadow-blue-500/20 active:scale-95"
+                      title="Call Now"
+                      className="flex flex-col items-center justify-center py-3 rounded-2xl bg-brand-blue text-white hover:bg-brand-blue-medium transition-all shadow-lg shadow-blue-500/20 active:scale-95 gap-1"
                     >
-                      <Phone className="w-4 h-4 flex-shrink-0" /> Call Now
+                      <Phone className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[9px] font-black uppercase tracking-tighter">Call Now</span>
+                    </Link>
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      title="Apply Now"
+                      className="flex flex-col items-center justify-center py-3 rounded-2xl bg-brand-orange text-white hover:bg-brand-orange-medium transition-all shadow-lg shadow-orange-500/20 active:scale-95 gap-1"
+                    >
+                      <ArrowRight className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-[9px] font-black uppercase tracking-tighter">Apply Now</span>
                     </Link>
                   </div>
                 </div>

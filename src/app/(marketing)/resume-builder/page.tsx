@@ -50,8 +50,15 @@ export default function ResumeBuilderPage() {
   // High performance: separate editor typing from preview rendering
   const deferredResumeData = useDeferredValue(resumeData);
 
-  // Persistence
+  // Persistence & Viewport Defaults
   useEffect(() => {
+    // Initial mobile check
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setViewMode("edit");
+      setZoom(0.4); // 40% zoom as requested
+    }
+
     const saved = localStorage.getItem("resume-builder-v2");
     if (saved) {
       try { setResumeData(JSON.parse(saved)); } catch (e) { console.error(e); }
@@ -120,16 +127,18 @@ export default function ResumeBuilderPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={handleReset} title="Reset Draft" className="p-2.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100">
+          <button onClick={handleReset} title="Reset Draft" className="p-2 sm:p-2.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shrink-0">
             <RotateCcw className="w-4 h-4" />
           </button>
-          <button onClick={handleSave} className="px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-200 hover:bg-secondary flex items-center gap-2 transition-all active:scale-95">
+          
+          <button onClick={handleSave} className="p-2.5 sm:px-4 sm:py-2.5 rounded-xl text-sm font-bold border border-slate-200 hover:bg-secondary flex items-center gap-2 transition-all active:scale-95 shrink-0">
             <Save className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} /> 
-            <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save Draft"}</span>
+            <span className="hidden md:inline">{isSaving ? "Saving..." : "Save Draft"}</span>
           </button>
-          <button onClick={handlePrint} className="px-5 py-2.5 rounded-xl text-sm font-black bg-brand-blue text-white shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium flex items-center gap-2 transition-all active:scale-95">
+          
+          <button onClick={handlePrint} className="p-2.5 sm:px-5 sm:py-2.5 rounded-xl text-sm font-black bg-brand-blue text-white shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium flex items-center gap-2 transition-all active:scale-95 shrink-0">
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Download</span>
+            <span className="hidden md:inline">Download</span>
           </button>
         </div>
       </header>

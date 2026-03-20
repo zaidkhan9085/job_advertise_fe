@@ -92,6 +92,7 @@ export default function Editor({ sections, setSections }: EditorProps) {
   return (
     <div className="space-y-6 pb-20">
       <DndContext 
+        id="resume-builder-dnd"
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}

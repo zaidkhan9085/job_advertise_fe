@@ -10,6 +10,32 @@ export interface NavItem {
   dropdownItems?: NavDropdownItem[];
 }
 
+export const indiaStates: NavDropdownItem[] = [
+  { label: "Maharashtra", href: "/jobs?location=maharashtra" },
+  { label: "Delhi / NCR", href: "/jobs?location=delhi" },
+  { label: "Karnataka", href: "/jobs?location=karnataka" },
+  { label: "Tamil Nadu", href: "/jobs?location=tamil-nadu" },
+  { label: "Gujarat", href: "/jobs?location=gujarat" },
+  { label: "Telangana", href: "/jobs?location=telangana" },
+  { label: "Uttar Pradesh", href: "/jobs?location=uttar-pradesh" },
+  { label: "West Bengal", href: "/jobs?location=west-bengal" },
+  { label: "Kerala", href: "/jobs?location=kerala" },
+  { label: "Punjab", href: "/jobs?location=punjab" },
+  { label: "Haryana", href: "/jobs?location=haryana" },
+  { label: "Rajasthan", href: "/jobs?location=rajasthan" },
+  { label: "Andhra Pradesh", href: "/jobs?location=andhra-pradesh" },
+  { label: "Bihar", href: "/jobs?location=bihar" },
+  { label: "Madhya Pradesh", href: "/jobs?location=madhya-pradesh" },
+  { label: "Chhattisgarh", href: "/jobs?location=chhattisgarh" },
+  { label: "Jharkhand", href: "/jobs?location=jharkhand" },
+  { label: "Odisha", href: "/jobs?location=odisha" },
+  { label: "Assam", href: "/jobs?location=assam" },
+  { label: "Uttarakhand", href: "/jobs?location=uttarakhand" },
+  { label: "Himachal Pradesh", href: "/jobs?location=himachal-pradesh" },
+  { label: "Jammu & Kashmir", href: "/jobs?location=jammu-kashmir" },
+  { label: "Goa", href: "/jobs?location=goa" },
+];
+
 export const industryItems: NavDropdownItem[] = [
   { label: "Oil & Gas, Petrochemical & Refinery", href: "/jobs?industry=oil-gas" },
   { label: "Power Plant, Substation, Energy & Gas Turbine", href: "/jobs?industry=power-plant" },
@@ -31,7 +57,11 @@ export const industryItems: NavDropdownItem[] = [
 ];
 
 export const nearbyJobsItems: NavDropdownItem[] = [
-  { label: "All India States", href: "/jobs?location=india" },
+  { 
+    label: "All India States", 
+    href: "/jobs?location=india",
+    subItems: indiaStates
+  },
   { 
     label: "Gulf Jobs", 
     href: "/jobs?location=gulf",
@@ -56,7 +86,7 @@ export const nearbyJobsItems: NavDropdownItem[] = [
       { label: "Thailand", href: "/jobs?location=thailand" },
       { label: "Indonesia", href: "/jobs?location=indonesia" },
       { label: "Philippines", href: "/jobs?location=philippines" },
-      { label: "Japan", href: "/jobs?location=japan" },
+      { label: "Jobs in Japan", href: "/jobs?location=japan" },
       { label: "South Korea", href: "/jobs?location=south-korea" },
     ]
   },
@@ -105,6 +135,11 @@ export const vacancyItems: NavDropdownItem[] = [
       { label: "Jobs in Jordan", href: "/jobs?location=jordan" },
       { label: "Jobs in Africa", href: "/jobs?location=africa" },
     ]
+  },
+  { 
+    label: "Jobs in India", 
+    href: "/jobs?category=india-jobs",
+    subItems: indiaStates
   },
   { label: "Jobs in Europe", href: "/jobs?category=europe-jobs" },
   { label: "Jobs in Australia", href: "/jobs?category=australia" },

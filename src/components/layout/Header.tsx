@@ -11,18 +11,24 @@ import MobileNav from "./MobileNav";
 function Submenu({ items, active }: { items: NavDropdownItem[], active: boolean }) {
   if (!active) return null;
   
+  const isLong = items.length > 15;
+  
   return (
-    <div className="absolute top-0 left-full ml-1 w-64 bg-white rounded-2xl shadow-[10px_10px_40px_rgba(30,58,138,0.1)] border border-border/40 p-2 z-[60] animate-in fade-in-0 slide-in-from-left-2 duration-200">
-      {items.map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted rounded-xl transition-all group/sub"
-        >
-          <span className="w-1 h-1 rounded-full bg-border group-hover/sub:bg-brand-blue transition-colors" />
-          {item.label}
-        </Link>
-      ))}
+    <div className={`absolute top-0 left-full ml-1 bg-white rounded-2xl shadow-[10px_10px_40px_rgba(30,58,138,0.1)] border border-border/40 p-2 z-[60] animate-in fade-in-0 slide-in-from-left-2 duration-200 max-h-[min(80vh,500px)] overflow-y-auto custom-scrollbar ${
+      isLong ? 'w-[480px]' : 'w-64'
+    }`}>
+      <div className={`${isLong ? 'grid grid-cols-2 gap-x-1' : 'flex flex-col gap-0.5'}`}>
+        {items.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted rounded-xl transition-all group/sub shrink-0"
+          >
+            <span className="w-1 h-1 rounded-full bg-border group-hover/sub:bg-brand-blue transition-colors shrink-0" />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
