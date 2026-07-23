@@ -2,19 +2,32 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Mail, Lock, LogIn, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, Lock, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { ApiError } from "@/lib/api";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    // Mock submit
-    setTimeout(() => {
+
+    try {
+      await login(email, password);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1000);
+    }
   };
 
   return (
@@ -27,20 +40,22 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Mock Alert */}
-        <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-100 mb-6 flex items-start gap-2">
-          <span className="font-bold shrink-0">Note:</span>
-          <span>Authentication is currently a mock. Any email/password will work and redirect to the dashboard.</span>
-        </div>
+        {error && (
+          <div className="bg-red-50 text-red-800 text-sm p-3 rounded-lg border border-red-100 mb-6">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />
@@ -56,9 +71,11 @@ export default function LoginPage() {
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-              <input 
-                type="password" 
+              <input
+                type="password"
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />

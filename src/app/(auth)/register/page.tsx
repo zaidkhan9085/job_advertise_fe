@@ -2,20 +2,44 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, User, Briefcase, Building, CheckCircle2, Phone, MapPin } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { ApiError } from "@/lib/api";
 
 export default function RegisterPage() {
   const [role, setRole] = useState<"Candidate" | "Recruiter">("Candidate");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { register } = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    // Mock submit
-    setTimeout(() => {
+
+    try {
+      await register({
+        full_name: role === "Recruiter" ? companyName : fullName,
+        email,
+        password,
+        role,
+        phone,
+        location,
+      });
+      router.push("/login");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1000);
+    }
   };
 
   return (
@@ -56,27 +80,39 @@ export default function RegisterPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-              <input 
-                type="text" 
-                placeholder="John Doe"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
-                required
-              />
-            </div>
+        {error && (
+          <div className="bg-red-50 text-red-800 text-sm p-3 rounded-lg border border-red-100 mb-6">
+            {error}
           </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {role === "Candidate" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />
@@ -84,32 +120,20 @@ export default function RegisterPage() {
           </div>
 
           {role === "Candidate" && (
-            <>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-foreground">Position</label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                  <input 
-                    type="text" 
-                    placeholder="Software Engineer"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
-                    required
-                  />
-                </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">Location</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                <input
+                  type="text"
+                  placeholder="New York, NY"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                  required
+                />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-foreground">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                  <input 
-                    type="text" 
-                    placeholder="New York, NY"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
-                    required
-                  />
-                </div>
-              </div>
-            </>
+            </div>
           )}
 
           {role === "Recruiter" && (
@@ -118,9 +142,11 @@ export default function RegisterPage() {
                 <label className="text-sm font-semibold text-foreground">Company Name</label>
                 <div className="relative">
                   <Building className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Acme Corp"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                     required
                   />
@@ -130,9 +156,11 @@ export default function RegisterPage() {
                 <label className="text-sm font-semibold text-foreground">Contact Number</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     placeholder="+1 (555) 000-0000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                     required
                   />
@@ -142,9 +170,11 @@ export default function RegisterPage() {
                 <label className="text-sm font-semibold text-foreground">Location</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="London, UK"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                     required
                   />
@@ -157,9 +187,11 @@ export default function RegisterPage() {
             <label className="text-sm font-semibold text-foreground">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-              <input 
-                type="password" 
+              <input
+                type="password"
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
                 required
               />
