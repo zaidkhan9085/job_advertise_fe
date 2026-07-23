@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, User, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardHeader() {
+  const { user, logout } = useAuth();
+
   return (
     <header className="h-16 bg-white border-b border-border/60 px-4 md:px-8 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-4">
@@ -29,12 +31,19 @@ export default function DashboardHeader() {
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex flex-col items-end text-sm">
-            <span className="font-semibold leading-tight">Global Construction</span>
-            <span className="text-xs text-muted-foreground">Recruiter</span>
+            <span className="font-semibold leading-tight">{user?.fullName || "My Account"}</span>
+            <span className="text-xs text-muted-foreground">{user?.displayRole}</span>
           </div>
           <div className="w-9 h-9 rounded-full bg-secondary border border-border/60 flex items-center justify-center overflow-hidden shrink-0">
             <User className="w-5 h-5 text-muted-foreground" />
           </div>
+          <button
+            onClick={logout}
+            title="Sign out"
+            className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </header>
