@@ -34,10 +34,12 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   return body as T;
 }
 
-// Backend uses lowercase enum values (candidate/employer/admin); the UI uses
-// friendlier labels — map between the two at the API boundary only.
+// Backend uses lowercase enum values (candidate/employer/sub_admin/admin); the
+// UI uses friendlier labels — map between the two at the API boundary only.
+// sub_admin has no dedicated UI yet (treated as Recruiter) — it's promoted
+// from an Employer account and only gains extra moderation permissions.
 export type FrontendRole = "Candidate" | "Recruiter";
-export type BackendRole = "candidate" | "employer" | "admin";
+export type BackendRole = "candidate" | "employer" | "sub_admin" | "admin";
 
 const FRONTEND_TO_BACKEND_ROLE: Record<FrontendRole, BackendRole> = {
   Candidate: "candidate",
@@ -47,6 +49,7 @@ const FRONTEND_TO_BACKEND_ROLE: Record<FrontendRole, BackendRole> = {
 const BACKEND_TO_FRONTEND_ROLE: Record<BackendRole, "Candidate" | "Recruiter" | "Admin"> = {
   candidate: "Candidate",
   employer: "Recruiter",
+  sub_admin: "Recruiter",
   admin: "Admin",
 };
 
@@ -96,6 +99,95 @@ export function resetPasswordRequest(token: string, password: string) {
     method: "POST",
     body: JSON.stringify({ password }),
   });
+}
+
+// --- Jobs ---
+export type JobPostType = "FEATURED" | "NORMAL" | "STORY";
+export type JobPostStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface JobPost {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  description: string;
+  type: JobPostType;
+  status: JobPostStatus;
+  views: number;
+  clicks: number;
+  employerId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateJobPayload {
+  title: string;
+  company: string;
+  location: string;
+  description: string;
+  type?: JobPostType;
+}
+
+export function getJobs() {
+  return apiFetch<JobPost[]>("/api/jobs");
+}
+
+export function getJobById(id: string) {
+  return apiFetch<JobPost>(`/api/jobs/${id}`);
+}
+
+export function getMyJobs() {
+  return apiFetch<JobPost[]>("/api/jobs/mine");
+}
+
+export function createJob(payload: CreateJobPayload) {
+  return apiFetch<{ message: string; job: JobPost }>("/api/jobs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteJob(id: string) {
+  return apiFetch<{ message: string }>(`/api/jobs/${id}`, { method: "DELETE" });
+}
+
+// --- Admin: job moderation ---
+export function getPendingJobs() {
+  return apiFetch<(JobPost & { employer: { id: number; full_name: string | null; email: string } })[]>(
+    "/api/jobs/pending"
+  );
+}
+
+export function updateJobStatus(id: string, status: "APPROVED" | "REJECTED") {
+  return apiFetch<{ message: string; job: JobPost }>(`/api/jobs/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export interface AdminStats {
+  totalJobs: number;
+  pendingJobs: number;
+  approvedJobs: number;
+  totalCandidates: number;
+  totalEmployers: number;
+  totalApplications: number;
+}
+
+export function getAdminStats() {
+  return apiFetch<AdminStats>("/api/admin/stats");
+}
+
+// --- Applications ---
+export function applyToJob(jobId: string, resumeId?: string) {
+  return apiFetch<{ success: boolean; message: string }>(`/api/applications/apply/${jobId}`, {
+    method: "POST",
+    body: JSON.stringify(resumeId ? { resumeId } : {}),
+  });
+}
+
+export function getMyApplications() {
+  return apiFetch<{ success: boolean; count: number; data: unknown[] }>("/api/applications/my");
 }
 
 export { apiFetch, API_URL };
