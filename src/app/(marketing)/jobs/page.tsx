@@ -1,65 +1,66 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { 
-  Search, 
-  MapPin, 
-  Briefcase, 
-  Filter, 
-  ArrowRight, 
-  Heart, 
-  MessageCircle, 
-  Phone, 
+import {
+  Search,
+  MapPin,
+  Briefcase,
+  ArrowRight,
+  MessageCircle,
   Building,
   LayoutGrid,
   List as ListIcon,
-  X
 } from "lucide-react";
-import { featuredJobs, type Job } from "@/data/jobs";
+import { getJobs, type JobPost, ApiError } from "@/lib/api";
+import JobPosterImage from "@/components/common/JobPosterImage";
+import { useIsRecent } from "@/hooks/useIsRecent";
 
 function JobsListingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
-  // State for search and filters
+
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
   const [selectedLocation, setSelectedLocation] = useState(searchParams.get("location") || "Any Location");
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "Any Category");
-  const [activeType, setActiveType] = useState(searchParams.get("type") || "any");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [jobs, setJobs] = useState<JobPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Derived filtered jobs
-  const filteredJobs = featuredJobs.filter(job => {
-    const matchesSearch = !searchTerm || 
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.category.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Detailed location/region matching
-    const matchesLocation = selectedLocation === "Any Location" || 
-      job.location?.toLowerCase().includes(selectedLocation.toLowerCase()) ||
-      (selectedLocation === "GCC" && job.location?.includes("UAE")) ||
-      (selectedLocation === "GCC" && job.location?.includes("Saudi")) ||
-      (selectedLocation === "GCC" && job.location?.includes("Qatar"));
-    
-    const matchesCategory = selectedCategory === "Any Category" || 
-      job.category.toLowerCase().includes(selectedCategory.toLowerCase());
+  const loadJobs = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      setJobs(await getJobs());
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to load jobs.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    // Basic type handling (vacancies usually map to certain categories)
-    const matchesType = activeType === "any" || 
-      (activeType === "vacancy" && job.badges.includes("New")) ||
-      (activeType === "nearby" && (job.location?.includes("India") || job.location?.includes("GCC")));
-    
-    return matchesSearch && matchesLocation && matchesCategory && matchesType;
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
+
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      !searchTerm ||
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.location.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesLocation =
+      selectedLocation === "Any Location" ||
+      job.location.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+      (selectedLocation === "GCC" && /uae|saudi|qatar/i.test(job.location));
+
+    return matchesSearch && matchesLocation;
   });
 
-  // Sync state with URL if needed (optional but good for UX)
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== "Any Location" && value !== "Any Category") {
+    if (value && value !== "Any Location") {
       params.set(key, value);
     } else {
       params.delete(key);
@@ -69,16 +70,11 @@ function JobsListingContent() {
 
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
-      
-      {/* Search Header Banner */}
       <div className="bg-hero-gradient text-white pt-16 pb-24 md:pt-20 md:pb-28 border-b border-white/10 relative overflow-hidden">
-        {/* Decor */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="container-site relative text-center px-4">
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-            {selectedLocation !== "Any Location" ? `Jobs in ${selectedLocation}` : 
-             selectedCategory !== "Any Category" ? `${selectedCategory} Opportunities` : 
-             "Find Your Dream Job Today"}
+            {selectedLocation !== "Any Location" ? `Jobs in ${selectedLocation}` : "Find Your Dream Job Today"}
           </h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg">
             Browse verified overseas job vacancies across the Middle East, Europe, and Asia.
@@ -86,15 +82,14 @@ function JobsListingContent() {
         </div>
       </div>
 
-      {/* Main Search Interface overlapping the banner */}
       <div className="container-site relative -mt-10 mb-10 z-10 px-4">
         <div className="bg-white rounded-2xl p-4 shadow-xl border border-border/60">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Job title, keywords, or company..." 
+              <input
+                type="text"
+                placeholder="Job title, company, or location..."
                 className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-secondary/50 border-none outline-none focus:ring-2 focus:ring-brand-blue transition-all font-medium text-foreground h-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -102,10 +97,10 @@ function JobsListingContent() {
             </div>
             <div className="md:w-64 relative shrink-0">
               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <select 
+              <select
                 className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-secondary/50 border-none outline-none focus:ring-2 focus:ring-brand-blue transition-all font-medium text-foreground appearance-none h-full cursor-pointer"
                 value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
+                onChange={(e) => { setSelectedLocation(e.target.value); updateFilters("location", e.target.value); }}
               >
                 <option>Any Location</option>
                 <option>Dubai, UAE</option>
@@ -115,222 +110,110 @@ function JobsListingContent() {
                 <option>India</option>
               </select>
             </div>
-            <button className="md:w-36 flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium rounded-xl font-bold py-3.5 px-6 transition-colors shadow-sm shrink-0 uppercase tracking-widest text-[13px]">
-              Search
-            </button>
           </div>
         </div>
       </div>
 
       <div className="container-site px-4">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* Sidebar Filters (Desktop) */}
-          <aside className="hidden lg:block w-72 shrink-0 space-y-6">
-            <div className="bg-white p-6 rounded-2xl border border-border/60 shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-foreground">Filters</h3>
-                <Filter className="w-4 h-4 text-muted-foreground" />
-              </div>
+        <div className="flex-1 w-full space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-bold text-foreground">
+              Showing <span className="text-brand-blue">{filteredJobs.length}</span> jobs
+            </h2>
 
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-sm font-bold text-foreground mb-3">Category</h4>
-                  <div className="space-y-2">
-                    {["Any Category", "Gulf Jobs", "Europe Jobs", "Asia Jobs", "Construction", "Saudi Arabia"].map((cat) => (
-                      <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                        <input 
-                          type="radio" 
-                          name="category"
-                          checked={selectedCategory === cat}
-                          onChange={() => setSelectedCategory(cat)}
-                          className="w-4 h-4 text-brand-blue focus:ring-brand-blue border-brand-blue/20" 
-                        />
-                        <span className="text-sm text-muted-foreground group-hover:text-brand-blue transition-colors font-medium">{cat}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-border/60">
-                  <h4 className="text-sm font-bold text-foreground mb-3">Job Type</h4>
-                  <div className="space-y-2">
-                    {["Full-time", "Contract", "Part-time"].map((type) => (
-                      <label key={type} className="flex items-center gap-3 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue border-brand-blue/20" />
-                        <span className="text-sm text-muted-foreground group-hover:text-brand-blue transition-colors font-medium">{type}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* Job Listings Area */}
-          <div className="flex-1 w-full space-y-4">
-            
-            {/* View Controls */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-4">
-                 <h2 className="font-bold text-foreground">
-                  Showing <span className="text-brand-blue">{filteredJobs.length}</span> jobs
-                </h2>
-                {/* Mobile Filter Toggle */}
-                <button 
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border/60 text-sm font-bold shadow-sm"
-                >
-                  <Filter className="w-4 h-4" /> Filter
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="flex items-center bg-white rounded-lg border border-border/60 p-0.5 shadow-sm">
-                  <button 
-                    onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-brand-blue/5 text-brand-blue shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
-                    title="Grid View"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-brand-blue/5 text-brand-blue shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
-                    title="List View"
-                  >
-                    <ListIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                
-                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground font-medium ml-2">
-                  Sort by:
-                  <select className="bg-transparent font-bold text-foreground outline-none cursor-pointer">
-                    <option>Newest First</option>
-                    <option>Most Popular</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {filteredJobs.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-border/40 p-12 text-center shadow-sm">
-                <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-foreground">No jobs found matching your criteria</h3>
-                <p className="text-muted-foreground mt-2">Try adjusting your filters or search terms.</p>
-                <button 
-                  onClick={() => { setSearchTerm(""); setSelectedLocation("Any Location"); setSelectedCategory("Any Category"); }}
-                  className="mt-6 text-brand-blue font-bold hover:underline"
-                >
-                  Clear all filters
-                </button>
-              </div>
-            ) : (
-              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5" : "space-y-4"}>
-                {filteredJobs.map((job) => (
-                  <JobCardView key={job.id} job={job} mode={viewMode} />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination Placeholder */}
-            {filteredJobs.length > 0 && (
-              <div className="flex justify-center mt-12">
-                <nav className="flex items-center gap-1">
-                  <button className="px-4 py-2 rounded-xl border border-brand-blue/10 bg-white font-bold text-sm text-muted-foreground hover:bg-brand-blue/5 transition-colors disabled:opacity-50" disabled>Previous</button>
-                  <button className="px-4 py-2 rounded-xl bg-brand-blue text-white font-bold text-sm shadow-md">1</button>
-                  <button className="px-4 py-2 rounded-xl border border-brand-blue/10 bg-white font-bold text-sm text-muted-foreground hover:bg-brand-blue/5 transition-colors">2</button>
-                  <button className="px-4 py-2 rounded-xl border border-brand-blue/10 bg-white font-bold text-sm text-muted-foreground hover:bg-brand-blue/5 transition-colors">Next</button>
-                </nav>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-[280px] bg-white p-6 shadow-2xl animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="font-extrabold text-xl">Filters</h3>
-              <button onClick={() => setIsSidebarOpen(false)} className="p-2 -mr-2 rounded-full hover:bg-secondary">
-                <X className="w-5 h-5" />
+            <div className="flex items-center bg-white rounded-lg border border-border/60 p-0.5 shadow-sm">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-brand-blue/5 text-brand-blue shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
+                title="Grid View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-brand-blue/5 text-brand-blue shadow-inner" : "text-muted-foreground hover:text-foreground"}`}
+                title="List View"
+              >
+                <ListIcon className="w-4 h-4" />
               </button>
             </div>
-            {/* Mobile filters would go here */}
-            <div className="space-y-8">
-               <div>
-                  <h4 className="text-sm font-bold text-foreground mb-3">Category</h4>
-                  <div className="space-y-3">
-                    {["Any Category", "Gulf Jobs", "Europe Jobs", "Asia Jobs"].map((cat) => (
-                      <label key={cat} className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="mobile-cat"
-                          checked={selectedCategory === cat}
-                          onChange={() => { setSelectedCategory(cat); setIsSidebarOpen(false); }}
-                          className="w-5 h-5 text-brand-blue focus:ring-brand-blue border-brand-blue/20" 
-                        />
-                        <span className="text-base font-medium group-hover:text-brand-blue transition-colors">{cat}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-            </div>
           </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">{error}</div>
+          )}
+
+          {isLoading ? (
+            <div className="bg-white rounded-2xl border border-border/40 p-12 text-center shadow-sm text-muted-foreground font-medium">
+              Loading jobs...
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-border/40 p-12 text-center shadow-sm">
+              <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-foreground">No jobs found</h3>
+              <p className="text-muted-foreground mt-2">
+                {jobs.length === 0 ? "There are no approved jobs yet — check back soon." : "Try adjusting your search or location filter."}
+              </p>
+            </div>
+          ) : (
+            <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5" : "space-y-4"}>
+              {filteredJobs.map((job) => (
+                <JobCardView key={job.id} job={job} mode={viewMode} />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-function JobCardView({ job, mode }: { job: Job; mode: "grid" | "list" }) {
-  const [imgError, setImgError] = useState(false);
-  const fallbackImg = "https://placehold.co/600x450/f8fafc/94a3b8?text=Image+Not+Available";
-  const posterImg = imgError ? fallbackImg : (job.image || fallbackImg);
+function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
+  const router = useRouter();
+  const isNew = useIsRecent(job.createdAt);
+  const goToJob = () => router.push(`/jobs/${job.id}`);
 
   if (mode === "grid") {
     return (
-      <div className="group bg-white rounded-2xl border border-brand-blue/15 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
+      <div
+        onClick={goToJob}
+        className="group bg-white rounded-2xl border border-brand-blue/15 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer"
+      >
         <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-brand-blue/10">
-           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={posterImg}
-            alt={job.imageAlt || job.title}
-            className="w-full h-full object-cover transition-transform duration-500"
-            onError={() => setImgError(true)}
-          />
+          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-            {job.badges.slice(0, 2).map(badge => (
-              <span key={badge} className="text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-black/80 text-white backdrop-blur-sm">
-                {badge}
-              </span>
-            ))}
+            {isNew && (
+              <span className="text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-black/80 text-white backdrop-blur-sm">New</span>
+            )}
+            {job.type === "FEATURED" && (
+              <span className="text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-brand-blue text-white backdrop-blur-sm">Featured</span>
+            )}
           </div>
         </div>
         <div className="p-5 flex flex-col flex-1">
-          <Link href={`/jobs/${job.id}`} className="block mb-3">
+          <div className="block mb-3">
             <h3 className="font-extrabold text-lg leading-tight group-hover:text-brand-blue transition-colors line-clamp-2">
               {job.title}
             </h3>
-          </Link>
+          </div>
           <div className="space-y-2 mb-4 text-sm font-medium text-muted-foreground group-hover:text-brand-blue transition-colors">
             <div className="flex items-center gap-1.5"><Building className="w-4 h-4 text-brand-blue/40" /> {job.company}</div>
             <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-brand-blue/40" /> {job.location}</div>
           </div>
-          <div className="mt-auto pt-4 border-t border-brand-blue/10 flex items-center justify-between">
-            <span className="text-xs font-bold px-2 py-1 bg-brand-blue/5 rounded text-brand-blue">{job.category}</span>
-            <div className="flex items-center gap-2">
-               {job.whatsapp && (
-                <a href={job.whatsapp} target="_blank" className="p-2 rounded-lg bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors">
-                  <MessageCircle className="w-4 h-4" />
-                </a>
-              )}
-               <Link href={`/jobs/${job.id}`} className="p-2 rounded-lg bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white transition-all">
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+          <div className="mt-auto pt-4 border-t border-brand-blue/10 flex items-center justify-end gap-2">
+            {job.contactWhatsapp && (
+              <a
+                href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="p-2 rounded-lg bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            )}
+            <div className="p-2 rounded-lg bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all">
+              <ArrowRight className="w-4 h-4" />
             </div>
           </div>
         </div>
@@ -339,50 +222,42 @@ function JobCardView({ job, mode }: { job: Job; mode: "grid" | "list" }) {
   }
 
   return (
-    <div className="group bg-white rounded-2xl border border-brand-blue/15 p-4 sm:p-5 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300">
+    <div
+      onClick={goToJob}
+      className="group bg-white rounded-2xl border border-brand-blue/15 p-4 sm:p-5 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300 cursor-pointer"
+    >
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
-        <div className="w-full sm:w-24 h-32 sm:h-24 shrink-0 rounded-xl overflow-hidden border border-brand-blue/10">
-           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={posterImg}
-            alt={job.title}
-            className="w-full h-full object-cover transition-transform duration-500"
-            onError={() => setImgError(true)}
-          />
-        </div>
+        <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full sm:w-24 h-32 sm:h-24 shrink-0 rounded-xl border border-brand-blue/10" />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-1">
-            <Link href={`/jobs/${job.id}`}>
-              <h3 className="text-lg sm:text-xl font-extrabold text-brand-blue group-hover:text-brand-blue-medium transition-colors line-clamp-1 leading-snug">
-                {job.title}
-              </h3>
-            </Link>
-            <button className="shrink-0 w-8 h-8 rounded-full border border-brand-blue/10 text-muted-foreground flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors">
-              <Heart className="w-4 h-4" />
-            </button>
+            <h3 className="text-lg sm:text-xl font-extrabold text-brand-blue group-hover:text-brand-blue-medium transition-colors line-clamp-1 leading-snug">
+              {job.title}
+            </h3>
           </div>
           <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-sm font-bold text-muted-foreground group-hover:text-brand-blue transition-colors mb-4">
             <span className="flex items-center gap-1.5"><Building className="w-4 h-4 opacity-50 text-brand-blue" /> {job.company}</span>
             <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 opacity-50 text-brand-blue" /> {job.location}</span>
-            <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-50 text-brand-blue" /> {job.type || "Full-time"}</span>
+            <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-50 text-brand-blue" /> {job.type}</span>
           </div>
           <div className="flex items-center gap-2">
-            {job.badges.map(badge => (
-              <span key={badge} className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-secondary text-muted-foreground">
-                {badge}
-              </span>
-            ))}
+            {isNew && <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-secondary text-muted-foreground">New</span>}
           </div>
         </div>
         <div className="w-full sm:w-auto sm:border-l sm:border-brand-blue/10 sm:pl-6 flex flex-row sm:flex-col gap-2 shrink-0">
-          {job.whatsapp && (
-            <a href={job.whatsapp} target="_blank" className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 font-bold text-[13px] transition-colors">
+          {job.contactWhatsapp && (
+            <a
+              href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 font-bold text-[13px] transition-colors"
+            >
               <MessageCircle className="w-4 h-4" /> WhatsApp
             </a>
           )}
-          <Link href={`/jobs/${job.id}`} className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white font-bold text-[13px] transition-all">
+          <div className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white font-bold text-[13px] transition-all">
             Details <ArrowRight className="w-4 h-4" />
-          </Link>
+          </div>
         </div>
       </div>
     </div>

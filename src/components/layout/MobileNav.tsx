@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import { siteConfig } from "@/data/branding";
-import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe } from "lucide-react";
+import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 function MobileNavSubSection({ item, depth = 0 }: { item: NavDropdownItem, depth?: number }) {
   const [open, setOpen] = useState(false);
@@ -92,6 +93,9 @@ interface MobileNavProps {
 }
 
 export default function MobileNav({ open, onClose }: MobileNavProps) {
+  const { user, logout } = useAuth();
+  const visibleNavItems = user ? mainNavItems.filter((item) => item.href !== "/login") : mainNavItems;
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -115,7 +119,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
       <div className="fixed inset-y-0 right-0 z-[70] w-full max-w-[340px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-white sticky top-0 z-10">
-          <Link href="/" onClick={onClose} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
+          <Link href={user ? "/dashboard" : "/"} onClick={onClose} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
             <img 
               src={siteConfig.logo.url} 
               alt={siteConfig.logo.alt} 
@@ -133,7 +137,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto no-scrollbar py-2">
-          {mainNavItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <MobileNavSection key={item.label} item={item} onClose={onClose} />
           ))}
           
@@ -160,20 +164,40 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
         {/* Footer Actions */}
         <div className="p-6 border-t border-border/40 bg-white/80 backdrop-blur-lg">
           <div className="grid grid-cols-2 gap-4">
-            <Link
-              href="/login"
-              onClick={onClose}
-              className="flex items-center justify-center py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/post-job"
-              onClick={onClose}
-              className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
-            >
-              Post Job
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={onClose}
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => { logout(); onClose(); }}
+                  className="flex items-center justify-center gap-2 py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95"
+                >
+                  <LogOut className="w-4 h-4" /> Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={onClose}
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/post-job"
+                  onClick={onClose}
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+                >
+                  Post Job
+                </Link>
+              </>
+            )}
           </div>
           
           <div className="mt-6 flex items-center justify-center gap-2">

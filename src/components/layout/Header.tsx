@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Menu, ArrowRight, ChevronRight } from "lucide-react";
+import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import { siteConfig } from "@/data/branding";
 import { Globe } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import MobileNav from "./MobileNav";
 
 function Submenu({ items, active }: { items: NavDropdownItem[], active: boolean }) {
@@ -131,12 +132,18 @@ function NavItemComponent({ item }: { item: NavItem }) {
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Logged-in users already have an account — never show the guest
+  // "Candidates Login" link, which used to send an authenticated user back
+  // through the login form.
+  const visibleNavItems = user ? mainNavItems.filter((item) => item.href !== "/login") : mainNavItems;
 
   return (
     <>
@@ -147,27 +154,45 @@ export default function Header() {
       >
         <div className="container-site flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
-              <img 
-                src={siteConfig.logo.url} 
-                alt={siteConfig.logo.alt} 
+            <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
+              <img
+                src={siteConfig.logo.url}
+                alt={siteConfig.logo.alt}
                 className="h-12 w-auto"
               />
             </Link>
 
           <nav className="hidden lg:flex items-center gap-0 xl:gap-0.5">
-            {mainNavItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavItemComponent key={item.label} item={item} />
             ))}
           </nav>
 
           <div className="hidden lg:flex items-center gap-2 xl:gap-4">
-            <Link
-              href="/post-job"
-              className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
-            >
-              Post Jobs
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={logout}
+                  title="Sign out"
+                  className="p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors shrink-0"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/post-job"
+                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+              >
+                Post Jobs
+              </Link>
+            )}
           </div>
 
           <button
