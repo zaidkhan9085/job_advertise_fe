@@ -13,6 +13,7 @@ import {
   HelpCircle,
   ShieldCheck,
   Search,
+  PlayCircle,
 } from "lucide-react";
 
 import { siteConfig } from "@/data/branding";
@@ -28,15 +29,16 @@ interface SidebarLink {
 
 const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
   admin: [
-    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: Briefcase },
     { label: "Employers", href: "/dashboard/coming-soon", icon: Building },
     { label: "Candidates", href: "/dashboard/coming-soon", icon: Users },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
   employer: [
-    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
+    { label: "Stories", href: "/dashboard/stories", icon: PlayCircle },
     { label: "Applicants", href: "/dashboard/coming-soon", icon: Users },
     { label: "Company Profile", href: "/dashboard/coming-soon", icon: Building },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
@@ -44,13 +46,13 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
   // sub_admin has no dedicated nav yet — it's promoted from Employer and
   // gains moderation permissions, not a distinct dashboard (see [[api.ts]]).
   sub_admin: [
-    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: ShieldCheck },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
   candidate: [
-    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
     { label: "Browse Jobs", href: "/dashboard/browse-jobs", icon: Search },
     { label: "My Applications", href: "/dashboard/applications", icon: Briefcase },
     { label: "My Resume", href: "/dashboard/coming-soon", icon: Users },
@@ -92,7 +94,7 @@ export default function DashboardSidebar() {
       <div className={`h-16 flex items-center border-b border-border/60 shrink-0 transition-all duration-300 ${
         isCollapsed ? "px-0 justify-center" : "px-6"
       }`}>
-        <Link href="/" className="flex items-center gap-2 overflow-hidden">
+        <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
           <img
             src={siteConfig.logo.url}
             alt={siteConfig.logo.alt}

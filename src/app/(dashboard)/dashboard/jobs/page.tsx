@@ -4,12 +4,14 @@ import Link from "next/link";
 import { Plus, Search, Trash2, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { getMyJobs, deleteJob, type JobPost, ApiError } from "@/lib/api";
 
 const STATUS_STYLES: Record<JobPost["status"], string> = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   REJECTED: "bg-rose-50 text-rose-700 border-rose-200",
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+  EXPIRED: "bg-secondary text-muted-foreground border-border/60",
 };
 
 export default function ManageJobsPage() {
@@ -37,10 +39,11 @@ export default function ManageJobsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this job posting? This cannot be undone.")) return;
     try {
-      await deleteJob(id);
+      const result = await deleteJob(id);
+      toast.success(result.message);
       setJobs((prev) => prev.filter((j) => j.id !== id));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to delete job.");
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete job.");
     }
   };
 

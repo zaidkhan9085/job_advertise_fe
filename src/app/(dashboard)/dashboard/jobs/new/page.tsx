@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,25 +10,40 @@ import {
   Info,
   BadgeCheck,
   Zap,
+  ImagePlus,
+  Phone,
+  MessageSquare,
+  Mail,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createJob, ApiError } from "@/lib/api";
 
 export default function PostJobPage() {
   const router = useRouter();
   const [listingType, setListingType] = useState<"General" | "Premium">("General");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactWhatsapp, setContactWhatsapp] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+
+  const [poster, setPoster] = useState<File | null>(null);
+  const [posterPreview, setPosterPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePosterChange = (file: File | null) => {
+    setPoster(file);
+    setPosterPreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsSubmitting(true);
 
     try {
@@ -36,17 +51,22 @@ export default function PostJobPage() {
         ? `${description}\n\nRequirements:\n${requirements}`
         : description;
 
-      await createJob({
+      const result = await createJob({
         title,
         company,
         location,
         description: fullDescription,
         type: listingType === "Premium" ? "FEATURED" : "NORMAL",
+        contactPhone: contactPhone || undefined,
+        contactWhatsapp: contactWhatsapp || undefined,
+        contactEmail: contactEmail || undefined,
+        poster: poster || undefined,
       });
 
+      toast.success(result.message);
       router.push("/dashboard/jobs");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      toast.error(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -89,12 +109,6 @@ export default function PostJobPage() {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-white rounded-3xl border border-border/60 shadow-sm overflow-hidden p-8 space-y-8">
@@ -140,6 +154,87 @@ export default function PostJobPage() {
                 placeholder="e.g. Dubai, UAE"
                 className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
               />
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Poster Image (optional)</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => handlePosterChange(e.target.files?.[0] ?? null)}
+              />
+              {posterPreview ? (
+                <div className="relative w-full max-w-xs">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={posterPreview} alt="Poster preview" className="w-full rounded-2xl border border-border/60 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => { handlePosterChange(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                    className="absolute top-2 right-2 bg-white/90 text-foreground text-xs font-bold px-3 py-1.5 rounded-full border border-border/60 hover:bg-white"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full max-w-xs flex flex-col items-center justify-center gap-2 py-8 rounded-2xl bg-secondary/30 border-2 border-dashed border-border/60 hover:border-brand-blue hover:bg-brand-blue/5 transition-all text-muted-foreground hover:text-brand-blue"
+                >
+                  <ImagePlus className="w-6 h-6" />
+                  <span className="text-sm font-semibold">Upload a poster image</span>
+                  <span className="text-xs">JPG, PNG, WebP</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl border border-border/60 shadow-sm overflow-hidden p-8 space-y-6">
+          <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Contact Details (optional)</h2>
+          <p className="text-sm text-muted-foreground -mt-4">Shown as Call/WhatsApp/Email buttons on the job listing.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Phone</label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  type="tel"
+                  placeholder="+1 234 567 890"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">WhatsApp</label>
+              <div className="relative">
+                <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                <input
+                  value={contactWhatsapp}
+                  onChange={(e) => setContactWhatsapp(e.target.value)}
+                  type="tel"
+                  placeholder="+1 234 567 890"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  type="email"
+                  placeholder="recruiter@company.com"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+                />
+              </div>
             </div>
           </div>
         </div>

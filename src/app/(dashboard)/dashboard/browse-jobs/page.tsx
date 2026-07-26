@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { MapPin, Building2, CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { getJobs, applyToJob, type JobPost, ApiError } from "@/lib/api";
 
 export default function BrowseJobsPage() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<JobPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +33,12 @@ export default function BrowseJobsPage() {
 
   const handleApply = async (jobId: string) => {
     setApplyingId(jobId);
-    setError(null);
     try {
-      await applyToJob(jobId);
+      const result = await applyToJob(jobId);
+      toast.success(result.message);
       setAppliedIds((prev) => new Set(prev).add(jobId));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to apply.");
+      toast.error(err instanceof ApiError ? err.message : "Failed to apply.");
     } finally {
       setApplyingId(null);
     }
@@ -65,8 +68,12 @@ export default function BrowseJobsPage() {
           {jobs.map((job) => {
             const hasApplied = appliedIds.has(job.id);
             return (
-              <div key={job.id} className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
+              <div
+                key={job.id}
+                onClick={() => router.push(`/jobs/${job.id}`)}
+                className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:border-brand-blue/40 hover:shadow-md transition-all"
+              >
+                <div className="space-y-1 min-w-0">
                   <div className="font-bold text-foreground flex items-center gap-2">
                     {job.title}
                     {job.type === "FEATURED" && (
@@ -77,14 +84,14 @@ export default function BrowseJobsPage() {
                     <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{job.company}</span>
                     <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{job.location}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl">{job.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl wrap-break-word">{job.description}</p>
                   <div className="text-xs text-muted-foreground">
                     Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
                   </div>
                 </div>
                 <button
                   disabled={applyingId === job.id || hasApplied}
-                  onClick={() => handleApply(job.id)}
+                  onClick={(e) => { e.stopPropagation(); handleApply(job.id); }}
                   className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-colors shrink-0 disabled:opacity-70 ${
                     hasApplied
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"

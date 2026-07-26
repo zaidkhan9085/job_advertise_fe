@@ -13,11 +13,14 @@ export class ApiError extends Error {
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getTokenFromDocumentCookie();
+  const isFormData = options.body instanceof FormData;
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      // Skip Content-Type for FormData — the browser sets its own multipart
+      // boundary, and overriding it here would break the upload.
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -103,7 +106,8 @@ export function resetPasswordRequest(token: string, password: string) {
 
 // --- Jobs ---
 export type JobPostType = "FEATURED" | "NORMAL" | "STORY";
-export type JobPostStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type JobPostStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
+export type StoryTag = "Long Term" | "Short Term" | "Urgent" | "Contract";
 
 export interface JobPost {
   id: string;
@@ -111,6 +115,11 @@ export interface JobPost {
   company: string;
   location: string;
   description: string;
+  image: string | null;
+  tag: string | null;
+  contactPhone: string | null;
+  contactWhatsapp: string | null;
+  contactEmail: string | null;
   type: JobPostType;
   status: JobPostStatus;
   views: number;
@@ -126,24 +135,60 @@ export interface CreateJobPayload {
   location: string;
   description: string;
   type?: JobPostType;
+  tag?: string;
+  contactPhone?: string;
+  contactWhatsapp?: string;
+  contactEmail?: string;
+  poster?: File;
 }
 
 export function getJobs() {
   return apiFetch<JobPost[]>("/api/jobs");
 }
 
+export function getFeaturedJobs() {
+  return apiFetch<JobPost[]>("/api/jobs?type=FEATURED");
+}
+
+export function getNormalJobs() {
+  return apiFetch<JobPost[]>("/api/jobs?type=NORMAL");
+}
+
+export function getJobStories() {
+  return apiFetch<JobPost[]>("/api/jobs?type=STORY");
+}
+
 export function getJobById(id: string) {
   return apiFetch<JobPost>(`/api/jobs/${id}`);
+}
+
+export function getRelatedJobs(id: string) {
+  return apiFetch<JobPost[]>(`/api/jobs/${id}/related`);
 }
 
 export function getMyJobs() {
   return apiFetch<JobPost[]>("/api/jobs/mine");
 }
 
+function buildJobBody(payload: CreateJobPayload): BodyInit {
+  const { poster, ...fields } = payload;
+
+  if (!poster) {
+    return JSON.stringify(fields);
+  }
+
+  const form = new FormData();
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value !== undefined) form.append(key, value);
+  });
+  form.append("poster", poster);
+  return form;
+}
+
 export function createJob(payload: CreateJobPayload) {
   return apiFetch<{ message: string; job: JobPost }>("/api/jobs", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: buildJobBody(payload),
   });
 }
 

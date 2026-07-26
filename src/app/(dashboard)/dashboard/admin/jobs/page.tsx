@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { MapPin, Building2, Check, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { getPendingJobs, updateJobStatus, ApiError } from "@/lib/api";
 import type { JobPost } from "@/lib/api";
@@ -42,10 +43,11 @@ export default function AdminPendingJobsPage() {
   const handleDecision = async (id: string, status: "APPROVED" | "REJECTED") => {
     setActioningId(id);
     try {
-      await updateJobStatus(id, status);
+      const result = await updateJobStatus(id, status);
+      toast.success(result.message);
       setJobs((prev) => prev.filter((j) => j.id !== id));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to update job status.");
+      toast.error(err instanceof ApiError ? err.message : "Failed to update job status.");
     } finally {
       setActioningId(null);
     }
