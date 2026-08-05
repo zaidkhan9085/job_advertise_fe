@@ -235,4 +235,50 @@ export function getMyApplications() {
   return apiFetch<{ success: boolean; count: number; data: unknown[] }>("/api/applications/my");
 }
 
+// --- Company / Region ---
+export interface Region {
+  id: string;
+  name: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  description: string | null;
+  logo: string | null;
+  regionId: string | null;
+  region: Region | null;
+}
+
+export function getRegions() {
+  return apiFetch<Region[]>("/api/regions");
+}
+
+export function getMyCompany() {
+  return apiFetch<Company | null>("/api/companies/me");
+}
+
+export function updateMyCompany(payload: {
+  name: string;
+  description?: string;
+  regionId: string;
+  logo?: File;
+}) {
+  if (payload.logo) {
+    const formData = new FormData();
+    formData.append("name", payload.name);
+    if (payload.description) formData.append("description", payload.description);
+    formData.append("regionId", payload.regionId);
+    formData.append("logo", payload.logo);
+    return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
+      method: "PUT",
+      body: formData,
+    });
+  }
+  return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
+    method: "PUT",
+    body: JSON.stringify({ name: payload.name, description: payload.description, regionId: payload.regionId }),
+  });
+}
+
 export { apiFetch, API_URL };

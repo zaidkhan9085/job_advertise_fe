@@ -40,7 +40,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
     { label: "Stories", href: "/dashboard/stories", icon: PlayCircle },
     { label: "Applicants", href: "/dashboard/coming-soon", icon: Users },
-    { label: "Company Profile", href: "/dashboard/coming-soon", icon: Building },
+    { label: "Company Profile", href: "/dashboard/profile", icon: Building },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
   // sub_admin has no dedicated nav yet — it's promoted from Employer and
