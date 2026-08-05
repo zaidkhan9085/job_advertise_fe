@@ -162,6 +162,12 @@ export function getJobById(id: string) {
   return apiFetch<JobPost>(`/api/jobs/${id}`);
 }
 
+// Admin/sub_admin only — unlike getJobById, returns a job regardless of status
+// (public getJobById only returns APPROVED jobs).
+export function getJobByIdAdmin(id: string) {
+  return apiFetch<JobPost>(`/api/jobs/admin/${id}`);
+}
+
 export function getRelatedJobs(id: string) {
   return apiFetch<JobPost[]>(`/api/jobs/${id}/related`);
 }
@@ -196,6 +202,15 @@ export function deleteJob(id: string) {
   return apiFetch<{ message: string }>(`/api/jobs/${id}`, { method: "DELETE" });
 }
 
+export type UpdateJobPayload = Partial<CreateJobPayload>;
+
+export function updateJob(id: string, payload: UpdateJobPayload) {
+  return apiFetch<{ message: string; job: JobPost }>(`/api/jobs/${id}`, {
+    method: "PUT",
+    body: buildJobBody(payload as CreateJobPayload),
+  });
+}
+
 // --- Admin: job moderation ---
 export function getPendingJobs() {
   return apiFetch<(JobPost & { employer: { id: number; full_name: string | null; email: string } })[]>(
@@ -203,10 +218,20 @@ export function getPendingJobs() {
   );
 }
 
-export function updateJobStatus(id: string, status: "APPROVED" | "REJECTED") {
+export function getAllJobsAdmin(filters?: { status?: JobPostStatus; type?: JobPostType }) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.type) params.set("type", filters.type);
+  const query = params.toString();
+  return apiFetch<(JobPost & { employer: { id: number; full_name: string | null; email: string } })[]>(
+    `/api/jobs/admin/all${query ? `?${query}` : ""}`
+  );
+}
+
+export function updateJobStatus(id: string, status: "APPROVED" | "REJECTED", trustEmployer?: boolean) {
   return apiFetch<{ message: string; job: JobPost }>(`/api/jobs/${id}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, trustEmployer }),
   });
 }
 
