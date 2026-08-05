@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Trash2, MapPin } from "lucide-react";
+import { Plus, Search, Trash2, MapPin, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export default function ManageJobsPage() {
   const [jobs, setJobs] = useState<JobPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actioningId, setActioningId] = useState<string | null>(null);
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
@@ -38,12 +39,15 @@ export default function ManageJobsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this job posting? This cannot be undone.")) return;
+    setActioningId(id);
     try {
       const result = await deleteJob(id);
       toast.success(result.message);
       setJobs((prev) => prev.filter((j) => j.id !== id));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete job.");
+    } finally {
+      setActioningId(null);
     }
   };
 
@@ -138,13 +142,18 @@ export default function ManageJobsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className={`flex items-center justify-end gap-1 transition-opacity ${actioningId === job.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                         <button
                           title="Delete Job"
+                          disabled={actioningId === job.id}
                           onClick={() => handleDelete(job.id)}
-                          className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors"
+                          className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-50"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          {actioningId === job.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>

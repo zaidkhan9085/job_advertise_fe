@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MapPin, Building2, Check, X, ShieldCheck } from "lucide-react";
+import { MapPin, Building2, Check, X, ShieldCheck, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,7 @@ export default function AdminPendingJobsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [actioningAction, setActioningAction] = useState<"REJECT" | "APPROVE" | "TRUST" | null>(null);
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
@@ -42,6 +43,7 @@ export default function AdminPendingJobsPage() {
 
   const handleDecision = async (id: string, status: "APPROVED" | "REJECTED", trustEmployer = false) => {
     setActioningId(id);
+    setActioningAction(trustEmployer ? "TRUST" : status === "APPROVED" ? "APPROVE" : "REJECT");
     try {
       const result = await updateJobStatus(id, status, trustEmployer);
       toast.success(trustEmployer ? "Approved — this employer's future posts will skip review." : result.message);
@@ -50,6 +52,7 @@ export default function AdminPendingJobsPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to update job status.");
     } finally {
       setActioningId(null);
+      setActioningAction(null);
     }
   };
 
@@ -99,14 +102,24 @@ export default function AdminPendingJobsPage() {
                   onClick={() => handleDecision(job.id, "REJECTED")}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-sm transition-colors disabled:opacity-50"
                 >
-                  <X className="w-4 h-4" /> Reject
+                  {actioningId === job.id && actioningAction === "REJECT" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <X className="w-4 h-4" />
+                  )}
+                  Reject
                 </button>
                 <button
                   disabled={actioningId === job.id}
                   onClick={() => handleDecision(job.id, "APPROVED")}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold text-sm transition-colors disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4" /> Approve
+                  {actioningId === job.id && actioningAction === "APPROVE" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  Approve
                 </button>
                 <button
                   disabled={actioningId === job.id}
@@ -114,7 +127,12 @@ export default function AdminPendingJobsPage() {
                   title="Approve this job and skip the review queue for all of this employer's future posts"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-brand-blue/30 text-brand-blue hover:bg-brand-blue/5 font-bold text-sm transition-colors disabled:opacity-50"
                 >
-                  <ShieldCheck className="w-4 h-4" /> Approve & Trust
+                  {actioningId === job.id && actioningAction === "TRUST" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="w-4 h-4" />
+                  )}
+                  Approve & Trust
                 </button>
               </div>
             </div>
