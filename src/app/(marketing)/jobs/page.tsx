@@ -44,16 +44,17 @@ function JobsListingContent() {
   }, [loadJobs]);
 
   const filteredJobs = jobs.filter((job) => {
+    const location = job.location ?? "";
     const matchesSearch =
       !searchTerm ||
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase());
+      location.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesLocation =
       selectedLocation === "Any Location" ||
-      job.location.toLowerCase().includes(selectedLocation.toLowerCase()) ||
-      (selectedLocation === "GCC" && /uae|saudi|qatar/i.test(job.location));
+      location.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+      (selectedLocation === "GCC" && /uae|saudi|qatar/i.test(location));
 
     return matchesSearch && matchesLocation;
   });

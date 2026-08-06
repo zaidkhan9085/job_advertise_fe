@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -14,28 +14,80 @@ import {
   Phone,
   MessageSquare,
   Mail,
+  Globe,
+  MapPin,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createJob, ApiError } from "@/lib/api";
+import {
+  createJob,
+  getMyCompany,
+  getJobLocations,
+  getJobTypes,
+  getIndustries,
+  ApiError,
+  type JobLocation,
+  type JobType,
+  type Industry,
+} from "@/lib/api";
+import LocationPicker from "@/components/dashboard/LocationPicker";
 
 export default function PostJobPage() {
   const router = useRouter();
   const [listingType, setListingType] = useState<"General" | "Premium">("General");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingCompany, setIsCheckingCompany] = useState(true);
 
   const [title, setTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [contactWebsite, setContactWebsite] = useState("");
+  const [isFreeRecruitment, setIsFreeRecruitment] = useState(false);
+
+  const [locations, setLocations] = useState<JobLocation[]>([]);
+  const [jobLocationId, setJobLocationId] = useState<string | null>(null);
+  const [jobLocationLabel, setJobLocationLabel] = useState<string | null>(null);
+
+  const [jobTypes, setJobTypes] = useState<JobType[]>([]);
+  const [jobTypeId, setJobTypeId] = useState("");
+
+  const [industries, setIndustries] = useState<Industry[]>([]);
+  const [industryId, setIndustryId] = useState("");
 
   const [poster, setPoster] = useState<File | null>(null);
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadFormData = useCallback(async () => {
+    setIsCheckingCompany(true);
+    try {
+      const company = await getMyCompany();
+      if (!company) {
+        toast.error("Complete your company profile before posting a job.");
+        router.push("/dashboard/profile");
+        return;
+      }
+      const [locationData, jobTypeData, industryData] = await Promise.all([
+        getJobLocations(),
+        getJobTypes(),
+        getIndustries(),
+      ]);
+      setLocations(locationData);
+      setJobTypes(jobTypeData);
+      setIndustries(industryData);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to load the posting form.");
+    } finally {
+      setIsCheckingCompany(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    loadFormData();
+  }, [loadFormData]);
 
   const handlePosterChange = (file: File | null) => {
     setPoster(file);
@@ -53,13 +105,16 @@ export default function PostJobPage() {
 
       const result = await createJob({
         title,
-        company,
-        location,
-        description: fullDescription,
+        description: fullDescription || undefined,
         type: listingType === "Premium" ? "FEATURED" : "NORMAL",
         contactPhone: contactPhone || undefined,
-        contactWhatsapp: contactWhatsapp || undefined,
-        contactEmail: contactEmail || undefined,
+        contactWhatsapp,
+        contactEmail,
+        contactWebsite: contactWebsite || undefined,
+        isFreeRecruitment,
+        jobLocationId: jobLocationId || undefined,
+        jobTypeId: jobTypeId || undefined,
+        industryId: industryId || undefined,
         poster: poster || undefined,
       });
 
@@ -71,6 +126,14 @@ export default function PostJobPage() {
     }
   };
 
+  if (isCheckingCompany) {
+    return (
+      <div className="bg-white rounded-2xl border border-border/60 p-12 text-center text-muted-foreground font-medium">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
@@ -79,7 +142,7 @@ export default function PostJobPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Jobs
           </Link>
           <div>
-            <h1 className="text-3xl font-black text-foreground tracking-tight">Post a New Job</h1>
+            <h1 className="text-3xl font-black text-foreground tracking-tight">Post a Job</h1>
             <p className="text-muted-foreground mt-1 text-base font-medium">
               Submitted jobs go to an admin for approval before they appear on the site.
             </p>
@@ -120,40 +183,72 @@ export default function PostJobPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Company / Agency *</label>
-              <input
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                required
-                type="text"
-                placeholder="e.g. Acme Facilities Management"
-                className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
-              />
-            </div>
-
-            <div className="space-y-2">
+            <div className="md:col-span-2 space-y-2">
               <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Job Title *</label>
               <input
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => setTitle(e.target.value.slice(0, 100))}
                 required
                 type="text"
                 placeholder="e.g. Senior Site Engineer"
                 className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
               />
+              <div className="text-xs text-muted-foreground text-right">{title.length}/100</div>
             </div>
 
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Job Location *</label>
-              <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required
-                type="text"
-                placeholder="e.g. Dubai, UAE"
-                className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">
+                <MapPin className="w-4 h-4" /> Job Location (optional)
+              </label>
+              <LocationPicker
+                locations={locations}
+                selectedLabel={jobLocationLabel}
+                onSelect={(id, label) => {
+                  setJobLocationId(id);
+                  setJobLocationLabel(label);
+                }}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Industry (optional)</label>
+              <select
+                value={industryId}
+                onChange={(e) => setIndustryId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
+              >
+                <option value="">Other Industries</option>
+                {industries.map((i) => (
+                  <option key={i.id} value={i.id}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Job Type (optional)</label>
+              <select
+                value={jobTypeId}
+                onChange={(e) => setJobTypeId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
+              >
+                <option value="">Not specified</option>
+                {jobTypes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Free Recruitment</label>
+              <select
+                value={isFreeRecruitment ? "yes" : "no"}
+                onChange={(e) => setIsFreeRecruitment(e.target.value === "yes")}
+                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
+              >
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+              <p className="text-xs text-muted-foreground">Shown as a badge to candidates if the candidate pays nothing.</p>
             </div>
 
             <div className="md:col-span-2 space-y-2">
@@ -193,12 +288,12 @@ export default function PostJobPage() {
         </div>
 
         <div className="bg-white rounded-3xl border border-border/60 shadow-sm overflow-hidden p-8 space-y-6">
-          <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Contact Details (optional)</h2>
-          <p className="text-sm text-muted-foreground -mt-4">Shown as Call/WhatsApp/Email buttons on the job listing.</p>
+          <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Recruiter Details</h2>
+          <p className="text-sm text-muted-foreground -mt-4">Shown as Call/WhatsApp/Email/Website buttons on the job listing.</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Phone</label>
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Calling Number</label>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
@@ -211,12 +306,13 @@ export default function PostJobPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">WhatsApp</label>
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">WhatsApp Number *</label>
               <div className="relative">
                 <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
                 <input
                   value={contactWhatsapp}
                   onChange={(e) => setContactWhatsapp(e.target.value)}
+                  required
                   type="tel"
                   placeholder="+1 234 567 890"
                   className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
@@ -224,14 +320,28 @@ export default function PostJobPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Email</label>
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Email Address *</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
+                  required
                   type="email"
-                  placeholder="recruiter@company.com"
+                  placeholder="hr@company.com"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Website (optional)</label>
+              <div className="relative">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  value={contactWebsite}
+                  onChange={(e) => setContactWebsite(e.target.value)}
+                  type="url"
+                  placeholder="https://www.example.com"
                   className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
                 />
               </div>
@@ -249,15 +359,15 @@ export default function PostJobPage() {
 
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Job Description *</label>
+              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Job Description (optional)</label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
                 rows={6}
-                required
-                placeholder="Tell us more about the role..."
+                placeholder="Include job responsibilities, requirements, salary benefits, duty hours, and contract details."
                 className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium resize-none"
               />
+              <div className="text-xs text-muted-foreground text-right">{description.length}/1000</div>
             </div>
 
             <div className="space-y-2">
@@ -266,7 +376,7 @@ export default function PostJobPage() {
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}
                 rows={4}
-                placeholder="Skills, qualifications, and experience needed..."
+                placeholder="List requirements..."
                 className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium resize-none"
               />
             </div>

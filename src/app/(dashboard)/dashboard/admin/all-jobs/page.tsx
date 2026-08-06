@@ -23,7 +23,7 @@ function toCsv(jobs: AdminJob[]): string {
   const rows = jobs.map((j) => [
     j.title,
     j.company,
-    j.location,
+    j.location ?? "",
     j.type,
     j.status,
     String(j.views),
@@ -108,7 +108,7 @@ export default function AdminAllJobsPage() {
     (job) =>
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase())
+      (job.location ?? "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -178,7 +178,7 @@ export default function AdminAllJobsPage() {
                       <div className="font-bold text-foreground">{job.title}</div>
                       <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        {job.location}
+                        {job.location || "Not specified"}
                       </div>
                     </td>
                     <td className="px-6 py-5 text-muted-foreground font-medium">

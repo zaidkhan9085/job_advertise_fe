@@ -113,33 +113,45 @@ export interface JobPost {
   id: string;
   title: string;
   company: string;
-  location: string;
+  location: string | null;
   description: string;
   image: string | null;
   tag: string | null;
   contactPhone: string | null;
   contactWhatsapp: string | null;
   contactEmail: string | null;
+  contactWebsite: string | null;
+  isFreeRecruitment: boolean;
   type: JobPostType;
   status: JobPostStatus;
   views: number;
   clicks: number;
   employerId: number;
+  companyId: string | null;
+  jobLocationId: string | null;
+  jobTypeId: string | null;
+  industryId: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateJobPayload {
   title: string;
-  company: string;
-  location: string;
-  description: string;
+  description?: string;
   type?: JobPostType;
-  tag?: string;
   contactPhone?: string;
   contactWhatsapp?: string;
   contactEmail?: string;
+  contactWebsite?: string;
+  isFreeRecruitment?: boolean;
+  jobLocationId?: string;
+  jobTypeId?: string;
+  industryId?: string;
   poster?: File;
+  // Stories only — a free-text location/tag, separate from the structured
+  // JobLocation/JobType lookups used by regular job posts.
+  location?: string;
+  tag?: string;
 }
 
 export function getJobs() {
@@ -185,7 +197,7 @@ function buildJobBody(payload: CreateJobPayload): BodyInit {
 
   const form = new FormData();
   Object.entries(fields).forEach(([key, value]) => {
-    if (value !== undefined) form.append(key, value);
+    if (value !== undefined) form.append(key, typeof value === "boolean" ? String(value) : value);
   });
   form.append("poster", poster);
   return form;
@@ -304,6 +316,36 @@ export function updateMyCompany(payload: {
     method: "PUT",
     body: JSON.stringify({ name: payload.name, description: payload.description, regionId: payload.regionId }),
   });
+}
+
+// --- Job posting lookups: Location (hierarchical), Job Type, Industry ---
+export interface JobLocation {
+  id: string;
+  name: string;
+  parentId: string | null;
+  children: JobLocation[];
+}
+
+export interface JobType {
+  id: string;
+  name: string;
+}
+
+export interface Industry {
+  id: string;
+  name: string;
+}
+
+export function getJobLocations() {
+  return apiFetch<JobLocation[]>("/api/job-locations");
+}
+
+export function getJobTypes() {
+  return apiFetch<JobType[]>("/api/job-types");
+}
+
+export function getIndustries() {
+  return apiFetch<Industry[]>("/api/industries");
 }
 
 export { apiFetch, API_URL };

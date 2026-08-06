@@ -42,7 +42,6 @@ export default function PostStoryPage() {
     try {
       const result = await createJob({
         title,
-        company: "", // stories don't display a company card — backend still requires the field, filled server-side pattern not needed since title carries the message
         location: location || "Remote",
         description,
         type: "STORY",

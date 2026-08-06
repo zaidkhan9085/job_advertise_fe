@@ -54,7 +54,7 @@ export default function ManageJobsPage() {
   const filteredJobs = jobs.filter(
     (job) =>
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase())
+      (job.location ?? "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -126,7 +126,7 @@ export default function ManageJobsPage() {
                       </div>
                       <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        {job.location}
+                        {job.location || "Location not specified"}
                       </div>
                     </td>
                     <td className="px-6 py-5 font-semibold text-muted-foreground">
