@@ -2,12 +2,13 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Building, ImagePlus, MapPin } from "lucide-react";
+import { Building, ImagePlus, MapPin, Globe } from "lucide-react";
 import { getRegions, getMyCompany, updateMyCompany, ApiError, API_URL, type Region } from "@/lib/api";
 
 export default function CompanyProfilePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [website, setWebsite] = useState("");
   const [regionId, setRegionId] = useState("");
   const [regions, setRegions] = useState<Region[]>([]);
 
@@ -26,6 +27,7 @@ export default function CompanyProfilePage() {
       if (company) {
         setName(company.name);
         setDescription(company.description ?? "");
+        setWebsite(company.website ?? "");
         setRegionId(company.regionId ?? "");
         if (company.logo) setLogoPreview(`${API_URL}${company.logo}`);
       }
@@ -58,6 +60,7 @@ export default function CompanyProfilePage() {
       const result = await updateMyCompany({
         name,
         description: description || undefined,
+        website: website || undefined,
         regionId,
         logo: logo ?? undefined,
       });
@@ -142,6 +145,19 @@ export default function CompanyProfilePage() {
             rows={4}
             placeholder="What your company does, what candidates should know..."
             className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium resize-none"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
+            <Globe className="w-4 h-4" /> Website (optional)
+          </label>
+          <input
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            type="url"
+            placeholder="https://www.example.com"
+            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
           />
         </div>
 

@@ -14,7 +14,6 @@ import {
   Phone,
   MessageSquare,
   Mail,
-  Globe,
   MapPin,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -44,7 +43,6 @@ export default function PostJobPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [contactWebsite, setContactWebsite] = useState("");
   const [isFreeRecruitment, setIsFreeRecruitment] = useState(false);
 
   const [locations, setLocations] = useState<JobLocation[]>([]);
@@ -110,7 +108,6 @@ export default function PostJobPage() {
         contactPhone: contactPhone || undefined,
         contactWhatsapp,
         contactEmail,
-        contactWebsite: contactWebsite || undefined,
         isFreeRecruitment,
         jobLocationId: jobLocationId || undefined,
         jobTypeId: jobTypeId || undefined,
@@ -289,7 +286,7 @@ export default function PostJobPage() {
 
         <div className="bg-white rounded-3xl border border-border/60 shadow-sm overflow-hidden p-8 space-y-6">
           <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Recruiter Details</h2>
-          <p className="text-sm text-muted-foreground -mt-4">Shown as Call/WhatsApp/Email/Website buttons on the job listing.</p>
+          <p className="text-sm text-muted-foreground -mt-4">Shown as Call/WhatsApp/Email buttons on the job listing.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
@@ -329,19 +326,6 @@ export default function PostJobPage() {
                   required
                   type="email"
                   placeholder="hr@company.com"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Website (optional)</label>
-              <div className="relative">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  value={contactWebsite}
-                  onChange={(e) => setContactWebsite(e.target.value)}
-                  type="url"
-                  placeholder="https://www.example.com"
                   className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
                 />
               </div>

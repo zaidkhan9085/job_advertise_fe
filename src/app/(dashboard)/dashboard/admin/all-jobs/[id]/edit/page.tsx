@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Phone, MessageSquare, Mail, Globe } from "lucide-react";
+import { ArrowLeft, Save, Phone, MessageSquare, Mail } from "lucide-react";
 import {
   getJobByIdAdmin,
   updateJob,
@@ -30,7 +30,6 @@ export default function AdminEditJobPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [contactWebsite, setContactWebsite] = useState("");
   const [isFreeRecruitment, setIsFreeRecruitment] = useState(false);
 
   const [locations, setLocations] = useState<JobLocation[]>([]);
@@ -62,7 +61,6 @@ export default function AdminEditJobPage() {
       setContactPhone(job.contactPhone ?? "");
       setContactWhatsapp(job.contactWhatsapp ?? "");
       setContactEmail(job.contactEmail ?? "");
-      setContactWebsite(job.contactWebsite ?? "");
       setIsFreeRecruitment(job.isFreeRecruitment);
       setJobLocationId(job.jobLocationId);
       setJobLocationLabel(job.location);
@@ -93,7 +91,6 @@ export default function AdminEditJobPage() {
         contactPhone: contactPhone || undefined,
         contactWhatsapp: contactWhatsapp || undefined,
         contactEmail: contactEmail || undefined,
-        contactWebsite: contactWebsite || undefined,
         isFreeRecruitment,
         jobLocationId: jobLocationId || undefined,
         jobTypeId: jobTypeId || undefined,
@@ -255,18 +252,6 @@ export default function AdminEditJobPage() {
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
                 type="email"
-                className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Website</label>
-            <div className="relative">
-              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                value={contactWebsite}
-                onChange={(e) => setContactWebsite(e.target.value)}
-                type="url"
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
               />
             </div>

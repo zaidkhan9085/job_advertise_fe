@@ -120,7 +120,6 @@ export interface JobPost {
   contactPhone: string | null;
   contactWhatsapp: string | null;
   contactEmail: string | null;
-  contactWebsite: string | null;
   isFreeRecruitment: boolean;
   type: JobPostType;
   status: JobPostStatus;
@@ -142,7 +141,6 @@ export interface CreateJobPayload {
   contactPhone?: string;
   contactWhatsapp?: string;
   contactEmail?: string;
-  contactWebsite?: string;
   isFreeRecruitment?: boolean;
   jobLocationId?: string;
   jobTypeId?: string;
@@ -283,8 +281,17 @@ export interface Company {
   name: string;
   description: string | null;
   logo: string | null;
+  website: string | null;
   regionId: string | null;
   region: Region | null;
+}
+
+export interface CompanyDetail extends Company {
+  followerCount: number;
+  averageRating: number;
+  ratingCount: number;
+  isFollowing: boolean;
+  isBlocked: boolean;
 }
 
 export function getRegions() {
@@ -295,10 +302,15 @@ export function getMyCompany() {
   return apiFetch<Company | null>("/api/companies/me");
 }
 
+export function getCompanyById(id: string) {
+  return apiFetch<CompanyDetail>(`/api/companies/${id}`);
+}
+
 export function updateMyCompany(payload: {
   name: string;
   description?: string;
   regionId: string;
+  website?: string;
   logo?: File;
 }) {
   if (payload.logo) {
@@ -306,6 +318,7 @@ export function updateMyCompany(payload: {
     formData.append("name", payload.name);
     if (payload.description) formData.append("description", payload.description);
     formData.append("regionId", payload.regionId);
+    if (payload.website) formData.append("website", payload.website);
     formData.append("logo", payload.logo);
     return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
       method: "PUT",
@@ -314,7 +327,42 @@ export function updateMyCompany(payload: {
   }
   return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
     method: "PUT",
-    body: JSON.stringify({ name: payload.name, description: payload.description, regionId: payload.regionId }),
+    body: JSON.stringify({
+      name: payload.name,
+      description: payload.description,
+      regionId: payload.regionId,
+      website: payload.website,
+    }),
+  });
+}
+
+export function followCompany(id: string) {
+  return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, { method: "POST" });
+}
+
+export function unfollowCompany(id: string) {
+  return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, { method: "DELETE" });
+}
+
+export function rateCompany(id: string, rating: number, review?: string) {
+  return apiFetch<{ message: string }>(`/api/companies/${id}/ratings`, {
+    method: "POST",
+    body: JSON.stringify({ rating, review }),
+  });
+}
+
+export function blockCompany(id: string) {
+  return apiFetch<{ message: string }>(`/api/companies/${id}/block`, { method: "POST" });
+}
+
+export function unblockCompany(id: string) {
+  return apiFetch<{ message: string }>(`/api/companies/${id}/block`, { method: "DELETE" });
+}
+
+export function reportContent(payload: { jobId?: string; companyId?: string; reason: string }) {
+  return apiFetch<{ message: string }>("/api/reports", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 
