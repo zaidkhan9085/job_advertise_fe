@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   MapPin,
@@ -21,10 +21,26 @@ import {
   Star,
   Users,
   CheckCircle2,
+  X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { getJobById, getRelatedJobs, applyToJob, type JobPost, ApiError } from "@/lib/api";
+import {
+  getJobById,
+  getRelatedJobs,
+  applyToJob,
+  getCompanyById,
+  followCompany,
+  unfollowCompany,
+  rateCompany,
+  blockCompany,
+  unblockCompany,
+  reportContent,
+  API_URL,
+  type JobPost,
+  type CompanyDetail,
+  ApiError,
+} from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import JobPosterImage from "@/components/common/JobPosterImage";
 
@@ -40,21 +56,76 @@ function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: stri
   );
 }
 
+function ReportModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void;
+  onSubmit: (reason: string) => Promise<void>;
+}) {
+  const [reason, setReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) {
+      toast.error("Please describe the issue.");
+      return;
+    }
+    setIsSubmitting(true);
+    await onSubmit(reason);
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg text-foreground">Report this job</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={4}
+          placeholder="What's wrong with this listing?"
+          className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium resize-none text-sm"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="w-full py-3 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-colors disabled:opacity-70"
+        >
+          {isSubmitting ? "Submitting..." : "Submit Report"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function JobDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const { user } = useAuth();
 
   const [job, setJob] = useState<JobPost | null>(null);
   const [related, setRelated] = useState<JobPost[]>([]);
+  const [company, setCompany] = useState<CompanyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [applyState, setApplyState] = useState<"idle" | "applying" | "applied" | "error">("idle");
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [myRating, setMyRating] = useState(0);
 
   const load = useCallback(async () => {
     try {
       const jobData = await getJobById(params.id);
       setJob(jobData);
       getRelatedJobs(params.id).then(setRelated).catch(() => {});
+      if (jobData.companyId) {
+        getCompanyById(jobData.companyId).then(setCompany).catch(() => {});
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) setNotFound(true);
     } finally {
@@ -65,6 +136,10 @@ export default function JobDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const requireLogin = () => {
+    router.push("/login");
+  };
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -93,6 +168,67 @@ export default function JobDetailPage() {
     }
   };
 
+  const handleToggleFollow = async () => {
+    if (!user) return requireLogin();
+    if (!company) return;
+    try {
+      if (company.isFollowing) {
+        await unfollowCompany(company.id);
+        setCompany({ ...company, isFollowing: false, followerCount: company.followerCount - 1 });
+      } else {
+        const result = await followCompany(company.id);
+        toast.success(result.message);
+        setCompany({ ...company, isFollowing: true, followerCount: company.followerCount + 1 });
+      }
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update follow status.");
+    }
+  };
+
+  const handleRate = async (rating: number) => {
+    if (!user) return requireLogin();
+    if (!company) return;
+    setMyRating(rating);
+    try {
+      const result = await rateCompany(company.id, rating);
+      toast.success(result.message);
+      const refreshed = await getCompanyById(company.id);
+      setCompany(refreshed);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to submit rating.");
+    }
+  };
+
+  const handleToggleBlock = async () => {
+    if (!user) return requireLogin();
+    if (!company) return;
+    if (!company.isBlocked && !confirm(`Block ${company.name}? Their jobs won't be shown to you anymore.`)) return;
+    try {
+      if (company.isBlocked) {
+        const result = await unblockCompany(company.id);
+        toast.success(result.message);
+        setCompany({ ...company, isBlocked: false });
+      } else {
+        const result = await blockCompany(company.id);
+        toast.success(result.message);
+        setCompany({ ...company, isBlocked: true });
+      }
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update block status.");
+    }
+  };
+
+  const handleReport = async (reason: string) => {
+    if (!job) return;
+    try {
+      const result = await reportContent({ jobId: job.id, reason });
+      toast.success(result.message);
+      setIsReportOpen(false);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to submit report.");
+    }
+  };
+
   if (isLoading) {
     return <div className="min-h-screen bg-muted/10 animate-pulse" />;
   }
@@ -111,6 +247,8 @@ export default function JobDetailPage() {
 
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
+      {isReportOpen && <ReportModal onClose={() => setIsReportOpen(false)} onSubmit={handleReport} />}
+
       <div className="bg-[oklch(0.12_0.02_260)] text-white pt-8 pb-32">
         <div className="container-site">
           <div className="flex items-center justify-between mb-8">
@@ -122,8 +260,24 @@ export default function JobDetailPage() {
                 <Share2 className="w-4 h-4" /> Share
               </button>
               <DisabledAction icon={Heart} label="Save" />
-              <DisabledAction icon={Flag} label="Report" />
-              <DisabledAction icon={Ban} label="Block" />
+              <button
+                onClick={() => (user ? setIsReportOpen(true) : requireLogin())}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold transition-colors"
+              >
+                <Flag className="w-4 h-4" /> Report
+              </button>
+              {company && (
+                <button
+                  onClick={handleToggleBlock}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
+                    company.isBlocked
+                      ? "bg-rose-500/20 border-rose-400/40 text-rose-200"
+                      : "bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                  }`}
+                >
+                  <Ban className="w-4 h-4" /> {company.isBlocked ? "Blocked" : "Block"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -138,7 +292,9 @@ export default function JobDetailPage() {
                 </h1>
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 text-sm sm:text-base font-medium text-white/80">
                   <span className="flex items-center gap-1.5"><Building className="w-5 h-5 opacity-70" /> {job.company}</span>
-                  <span className="flex items-center gap-1.5"><MapPin className="w-5 h-5 opacity-70" /> {job.location}</span>
+                  {job.location && (
+                    <span className="flex items-center gap-1.5"><MapPin className="w-5 h-5 opacity-70" /> {job.location}</span>
+                  )}
                   <span className="flex items-center gap-1.5"><Calendar className="w-5 h-5 opacity-70" /> Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}</span>
                 </div>
               </div>
@@ -153,7 +309,7 @@ export default function JobDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
                 { label: "Type", value: job.type, icon: Building },
-                { label: "Location", value: job.location, icon: MapPin },
+                { label: "Location", value: job.location || "Not specified", icon: MapPin },
                 { label: "Views", value: String(job.views), icon: Eye },
               ].map((stat) => (
                 <div key={stat.label} className="bg-white p-5 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
@@ -249,21 +405,70 @@ export default function JobDetailPage() {
 
             <div className="bg-white p-6 rounded-2xl border border-border/60 shadow-[var(--shadow-card)] space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-brand-blue/5 flex items-center justify-center text-brand-blue font-black">
-                  {job.company.slice(0, 1).toUpperCase()}
+                <div className="w-12 h-12 rounded-xl bg-brand-blue/5 flex items-center justify-center text-brand-blue font-black overflow-hidden shrink-0">
+                  {company?.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={`${API_URL}${company.logo}`} alt={company.name} className="w-full h-full object-cover" />
+                  ) : (
+                    job.company.slice(0, 1).toUpperCase()
+                  )}
                 </div>
-                <div>
-                  <p className="font-bold text-foreground text-sm">{job.company}</p>
-                  <p className="text-xs text-muted-foreground">Recruiter</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground text-sm truncate">{job.company}</p>
+                  {company?.website ? (
+                    <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-blue hover:underline truncate block">
+                      {company.website}
+                    </a>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Recruiter</p>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> Followers coming soon</span>
-                <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5" /> Ratings coming soon</span>
-              </div>
-              <button disabled title="Coming soon" className="w-full py-2.5 rounded-xl bg-secondary text-muted-foreground font-bold text-sm cursor-not-allowed">
-                Follow
-              </button>
+
+              {company && (
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {company.followerCount} followers</span>
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5" />
+                    {company.ratingCount > 0 ? `${company.averageRating.toFixed(1)} (${company.ratingCount})` : "No ratings yet"}
+                  </span>
+                </div>
+              )}
+
+              {company ? (
+                <>
+                  <button
+                    onClick={handleToggleFollow}
+                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
+                      company.isFollowing
+                        ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
+                        : "bg-brand-blue text-white hover:bg-brand-blue-medium"
+                    }`}
+                  >
+                    {company.isFollowing ? "Following" : "Follow"}
+                  </button>
+
+                  <div className="pt-2 border-t border-border/60">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button key={n} onClick={() => handleRate(n)} title={`${n} star${n > 1 ? "s" : ""}`}>
+                          <Star
+                            className={`w-6 h-6 transition-colors ${
+                              n <= myRating ? "text-amber-400" : "text-border hover:text-amber-300"
+                            }`}
+                            fill={n <= myRating ? "currentColor" : "none"}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <button disabled title="This job wasn't linked to a company profile" className="w-full py-2.5 rounded-xl bg-secondary text-muted-foreground font-bold text-sm cursor-not-allowed">
+                  Follow
+                </button>
+              )}
             </div>
 
             <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5 flex items-start gap-3">
