@@ -36,7 +36,7 @@ import {
   blockCompany,
   unblockCompany,
   reportContent,
-  API_URL,
+  resolveImageUrl,
   type JobPost,
   type CompanyDetail,
   ApiError,
@@ -408,7 +408,7 @@ export default function JobDetailPage() {
                 <div className="w-12 h-12 rounded-xl bg-brand-blue/5 flex items-center justify-center text-brand-blue font-black overflow-hidden shrink-0">
                   {company?.logo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={`${API_URL}${company.logo}`} alt={company.name} className="w-full h-full object-cover" />
+                    <img src={resolveImageUrl(company.logo)} alt={company.name} className="w-full h-full object-cover" />
                   ) : (
                     job.company.slice(0, 1).toUpperCase()
                   )}

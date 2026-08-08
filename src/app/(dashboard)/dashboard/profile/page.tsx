@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Building, ImagePlus, MapPin, Globe } from "lucide-react";
-import { getRegions, getMyCompany, updateMyCompany, ApiError, API_URL, type Region } from "@/lib/api";
+import { getRegions, getMyCompany, updateMyCompany, ApiError, resolveImageUrl, type Region } from "@/lib/api";
 
 export default function CompanyProfilePage() {
   const [name, setName] = useState("");
@@ -29,7 +29,7 @@ export default function CompanyProfilePage() {
         setDescription(company.description ?? "");
         setWebsite(company.website ?? "");
         setRegionId(company.regionId ?? "");
-        if (company.logo) setLogoPreview(`${API_URL}${company.logo}`);
+        if (company.logo) setLogoPreview(resolveImageUrl(company.logo));
       }
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to load company profile.");
