@@ -13,10 +13,14 @@ export function resolveImageUrl(path: string | null | undefined): string {
 
 export class ApiError extends Error {
   status: number;
+  // Full parsed JSON error body, when present — some endpoints (e.g. the
+  // employer-delete 409) attach extra structured data beyond just a message.
+  body: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, body?: unknown) {
     super(message);
     this.status = status;
+    this.body = body;
   }
 }
 
@@ -40,10 +44,44 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
   if (!res.ok) {
     const message = (isJson && body?.message) || (isJson && body?.error) || "Request failed";
-    throw new ApiError(message, res.status);
+    throw new ApiError(message, res.status, isJson ? body : undefined);
   }
 
   return body as T;
+}
+
+export interface PaginatedMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface Paginated<T> {
+  data: T[];
+  meta: PaginatedMeta;
+}
+
+export interface AdminListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  all?: boolean;
+}
+
+export type BulkDeletePayload =
+  | { ids: (string | number)[] }
+  | { selectAllMatching: true; filters: Record<string, unknown>; excludeIds: (string | number)[] };
+
+function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+  const usp = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") usp.set(key, String(value));
+  });
+  const query = usp.toString();
+  return query ? `?${query}` : "";
 }
 
 // Backend uses lowercase enum values (candidate/employer/sub_admin/admin); the
@@ -237,14 +275,27 @@ export function getPendingJobs() {
   );
 }
 
-export function getAllJobsAdmin(filters?: { status?: JobPostStatus; type?: JobPostType }) {
-  const params = new URLSearchParams();
-  if (filters?.status) params.set("status", filters.status);
-  if (filters?.type) params.set("type", filters.type);
-  const query = params.toString();
-  return apiFetch<(JobPost & { employer: { id: number; full_name: string | null; email: string } })[]>(
-    `/api/jobs/admin/all${query ? `?${query}` : ""}`
-  );
+export type AdminJob = JobPost & { employer: { id: number; full_name: string | null; email: string } };
+
+export function getAllJobsAdmin(filters?: AdminListParams & { status?: JobPostStatus; type?: JobPostType }) {
+  const query = buildQuery({
+    status: filters?.status,
+    type: filters?.type,
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+  });
+  return apiFetch<Paginated<AdminJob>>(`/api/jobs/admin/all${query}`);
+}
+
+export function bulkDeleteJobs(payload: BulkDeletePayload) {
+  return apiFetch<{ deleted: string[]; count: number }>("/api/jobs/admin/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function updateJobStatus(id: string, status: "APPROVED" | "REJECTED", trustEmployer?: boolean) {
@@ -318,8 +369,25 @@ export interface CandidateUserAdmin {
   created_at: string;
 }
 
-export function getAllCandidateUsers() {
-  return apiFetch<CandidateUserAdmin[]>("/api/candidate/admin/users");
+export function getAllCandidateUsers(filters?: AdminListParams & { dateFrom?: string; dateTo?: string }) {
+  const query = buildQuery({
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+    dateFrom: filters?.dateFrom,
+    dateTo: filters?.dateTo,
+  });
+  return apiFetch<Paginated<CandidateUserAdmin>>(`/api/candidate/admin/users${query}`);
+}
+
+export function bulkDeleteCandidateUsers(payload: BulkDeletePayload) {
+  return apiFetch<{ deleted: number[]; failed: { id: number; reason: string }[] }>(
+    "/api/candidate/admin/users/bulk-delete",
+    { method: "POST", body: JSON.stringify(payload) }
+  );
 }
 
 export function updateCandidateUser(
@@ -369,12 +437,36 @@ export interface CompanyAdminDetail extends CompanyDetail {
   }[];
 }
 
-export function getAllCompaniesAdmin() {
-  return apiFetch<CompanyAdminListItem[]>("/api/admin/companies");
+export function getAllCompaniesAdmin(filters?: AdminListParams) {
+  const query = buildQuery({
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+  });
+  return apiFetch<Paginated<CompanyAdminListItem>>(`/api/admin/companies${query}`);
 }
 
 export function getCompanyAdminDetail(id: string) {
   return apiFetch<CompanyAdminDetail>(`/api/admin/companies/${id}`);
+}
+
+// Throws ApiError with status 409 and body { jobCount, requiresConfirmation }
+// if the company has jobs and confirm wasn't passed — callers should catch
+// that specific case and re-call with confirm=true after the admin confirms.
+export function deleteCompanyAdmin(id: string, confirm?: boolean) {
+  return apiFetch<{ message: string }>(`/api/admin/companies/${id}${confirm ? "?confirm=true" : ""}`, {
+    method: "DELETE",
+  });
+}
+
+export function bulkDeleteCompanies(payload: BulkDeletePayload) {
+  return apiFetch<{ deleted: string[]; failed: { id: string; reason: string }[] }>(
+    "/api/admin/companies/bulk-delete",
+    { method: "POST", body: JSON.stringify(payload) }
+  );
 }
 
 // --- Admin: reports queue ---
@@ -390,11 +482,17 @@ export interface AdminReport {
   company: { id: string; name: string } | null;
 }
 
-export function getReports(filters?: { status?: ReportStatus }) {
-  const params = new URLSearchParams();
-  if (filters?.status) params.set("status", filters.status);
-  const query = params.toString();
-  return apiFetch<AdminReport[]>(`/api/reports${query ? `?${query}` : ""}`);
+export function getReports(filters?: AdminListParams & { status?: ReportStatus }) {
+  const query = buildQuery({
+    status: filters?.status,
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+  });
+  return apiFetch<Paginated<AdminReport>>(`/api/reports${query}`);
 }
 
 export function updateReportStatus(id: string, status: ReportStatus) {

@@ -20,6 +20,7 @@
     "framer-motion": "^12.35.2",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
+    "rc-table": "^7.55.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-to-print": "^3.3.0",
