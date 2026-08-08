@@ -303,6 +303,53 @@ export function rejectCandidateProfile(id: number) {
   return apiFetch<CandidateProfileAdmin>(`/api/candidate/admin/profile/reject/${id}`, { method: "PUT" });
 }
 
+// --- Admin: candidate accounts ---
+// Registration only collects name/email/phone (no separate profile-completion
+// form exists yet — see CandidateProfileAdmin above), so admin candidate
+// management works directly off the account, not the mostly-empty profile.
+export interface CandidateUserAdmin {
+  id: number;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  location: string | null;
+  is_verified: boolean;
+  isBlocked: boolean;
+  created_at: string;
+}
+
+export function getAllCandidateUsers() {
+  return apiFetch<CandidateUserAdmin[]>("/api/candidate/admin/users");
+}
+
+export function updateCandidateUser(
+  id: number,
+  payload: { full_name?: string; email?: string; phone?: string; location?: string }
+) {
+  return apiFetch<CandidateUserAdmin>(`/api/candidate/admin/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteCandidateUser(id: number) {
+  return apiFetch<{ message: string }>(`/api/candidate/admin/users/${id}`, { method: "DELETE" });
+}
+
+export function setCandidateBlocked(id: number, isBlocked: boolean) {
+  return apiFetch<{ message: string; user: CandidateUserAdmin }>(`/api/candidate/admin/users/${id}/block`, {
+    method: "PATCH",
+    body: JSON.stringify({ isBlocked }),
+  });
+}
+
+export function resetCandidatePassword(id: number, password: string) {
+  return apiFetch<{ message: string }>(`/api/candidate/admin/users/${id}/password`, {
+    method: "PUT",
+    body: JSON.stringify({ password }),
+  });
+}
+
 // --- Admin: employer/company moderation ---
 export interface CompanyAdminListItem extends Company {
   owner: { id: number; full_name: string | null; email: string };
