@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Search,
   PlayCircle,
+  Flag,
 } from "lucide-react";
 
 import { siteConfig } from "@/data/branding";
@@ -32,8 +33,9 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: Briefcase },
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
-    { label: "Employers", href: "/dashboard/coming-soon", icon: Building },
-    { label: "Candidates", href: "/dashboard/coming-soon", icon: Users },
+    { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
+    { label: "Employers", href: "/dashboard/admin/employers", icon: Building },
+    { label: "Candidates", href: "/dashboard/admin/candidates", icon: Users },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
   employer: [
@@ -51,6 +53,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: ShieldCheck },
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
+    { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
   candidate: [

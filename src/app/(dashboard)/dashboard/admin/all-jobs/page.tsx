@@ -6,10 +6,14 @@ import { MapPin, Search, Trash2, Pencil, Star, Download, Loader2 } from "lucide-
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { getAllJobsAdmin, updateJob, deleteJob, type JobPost, ApiError } from "@/lib/api";
+import { getAllJobsAdmin, updateJob, deleteJob, type JobPost, type JobPostStatus, ApiError } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
+import { StatusFilterPills } from "@/components/dashboard/StatusFilterPills";
 
 type AdminJob = JobPost & { employer: { id: number; full_name: string | null; email: string } };
+
+const STATUS_FILTER_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "EXPIRED"] as const;
+type StatusFilterOption = (typeof STATUS_FILTER_OPTIONS)[number];
 
 const STATUS_STYLES: Record<JobPost["status"], string> = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -41,19 +45,20 @@ export default function AdminAllJobsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilterOption>("ALL");
   const [actioningId, setActioningId] = useState<string | null>(null);
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      setJobs(await getAllJobsAdmin());
+      setJobs(await getAllJobsAdmin(statusFilter === "ALL" ? undefined : { status: statusFilter as JobPostStatus }));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load jobs.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     if (user?.role === "admin" || user?.role === "sub_admin") {
@@ -129,15 +134,18 @@ export default function AdminAllJobsPage() {
         </button>
       </div>
 
-      <div className="relative flex-1 max-w-md group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-blue transition-colors" />
-        <input
-          type="text"
-          placeholder="Search by title, company, or location..."
-          className="w-full pl-11 pr-4 py-3 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none transition-all text-sm font-medium"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="space-y-4">
+        <div className="relative flex-1 max-w-md group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-blue transition-colors" />
+          <input
+            type="text"
+            placeholder="Search by title, company, or location..."
+            className="w-full pl-11 pr-4 py-3 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none transition-all text-sm font-medium"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <StatusFilterPills options={STATUS_FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
       </div>
 
       {error && (
