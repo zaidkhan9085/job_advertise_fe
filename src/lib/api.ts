@@ -267,6 +267,96 @@ export function getAdminStats() {
   return apiFetch<AdminStats>("/api/admin/stats");
 }
 
+// --- Admin: candidate profile moderation ---
+export type ProfileStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface CandidateProfileAdmin {
+  id: number;
+  userId: number;
+  name: string;
+  position: string;
+  nationality: string | null;
+  qualification: string | null;
+  industry: string | null;
+  whatsapp: string;
+  email: string;
+  currentLocation: string | null;
+  preferredLocation: string | null;
+  resumeUrl: string | null;
+  status: ProfileStatus;
+  createdAt: string;
+  user: { id: number; full_name: string | null; email: string };
+}
+
+export function getAllCandidateProfilesAdmin(filters?: { status?: ProfileStatus }) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  const query = params.toString();
+  return apiFetch<CandidateProfileAdmin[]>(`/api/candidate/admin/profiles${query ? `?${query}` : ""}`);
+}
+
+export function approveCandidateProfile(id: number) {
+  return apiFetch<CandidateProfileAdmin>(`/api/candidate/admin/profile/approve/${id}`, { method: "PUT" });
+}
+
+export function rejectCandidateProfile(id: number) {
+  return apiFetch<CandidateProfileAdmin>(`/api/candidate/admin/profile/reject/${id}`, { method: "PUT" });
+}
+
+// --- Admin: employer/company moderation ---
+export interface CompanyAdminListItem extends Company {
+  owner: { id: number; full_name: string | null; email: string };
+  _count: { jobs: number; follows: number; reports: number };
+  pendingReportCount: number;
+}
+
+export interface CompanyAdminDetail extends CompanyDetail {
+  owner: { id: number; full_name: string | null; email: string };
+  jobs: { id: string; title: string; status: JobPostStatus; createdAt: string }[];
+  reports: {
+    id: string;
+    reason: string;
+    status: ReportStatus;
+    createdAt: string;
+    reporter: { id: number; full_name: string | null; email: string };
+  }[];
+}
+
+export function getAllCompaniesAdmin() {
+  return apiFetch<CompanyAdminListItem[]>("/api/admin/companies");
+}
+
+export function getCompanyAdminDetail(id: string) {
+  return apiFetch<CompanyAdminDetail>(`/api/admin/companies/${id}`);
+}
+
+// --- Admin: reports queue ---
+export type ReportStatus = "PENDING" | "VIEWED" | "DISMISSED";
+
+export interface AdminReport {
+  id: string;
+  reason: string;
+  status: ReportStatus;
+  createdAt: string;
+  reporter: { id: number; full_name: string | null; email: string };
+  job: { id: string; title: string; company: string; status: JobPostStatus } | null;
+  company: { id: string; name: string } | null;
+}
+
+export function getReports(filters?: { status?: ReportStatus }) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  const query = params.toString();
+  return apiFetch<AdminReport[]>(`/api/reports${query ? `?${query}` : ""}`);
+}
+
+export function updateReportStatus(id: string, status: ReportStatus) {
+  return apiFetch<{ message: string; report: AdminReport }>(`/api/reports/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
 // --- Applications ---
 export function applyToJob(jobId: string, resumeId?: string) {
   return apiFetch<{ success: boolean; message: string }>(`/api/applications/apply/${jobId}`, {
@@ -293,6 +383,7 @@ export interface Company {
   website: string | null;
   regionId: string | null;
   region: Region | null;
+  createdAt: string;
 }
 
 export interface CompanyDetail extends Company {
