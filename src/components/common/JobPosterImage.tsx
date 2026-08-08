@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/api";
 
 function initials(text: string) {
   return text
@@ -28,7 +28,7 @@ export default function JobPosterImage({
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={`${API_URL}${image}`}
+        src={resolveImageUrl(image)}
         alt={`${title} at ${company}`}
         className={`object-cover ${className}`}
       />

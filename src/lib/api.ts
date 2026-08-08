@@ -2,6 +2,15 @@ import { getTokenFromDocumentCookie } from "./auth-token";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+// File URLs are now Cloudinary URLs (already absolute, e.g.
+// "https://res.cloudinary.com/..."), but records created before that
+// migration still have old local paths like "/uploads/jobs/xyz.png" that
+// need the API_URL prefix. This handles both without a data backfill.
+export function resolveImageUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  return /^https?:\/\//.test(path) ? path : `${API_URL}${path}`;
+}
+
 export class ApiError extends Error {
   status: number;
 

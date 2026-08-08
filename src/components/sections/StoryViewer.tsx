@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { X, Phone, MessageSquare, ArrowUpRight } from "lucide-react";
-import { API_URL, type JobPost } from "@/lib/api";
+import { resolveImageUrl, type JobPost } from "@/lib/api";
 
 const STORY_DURATION_MS = 5000;
 
@@ -102,7 +102,7 @@ export default function StoryViewer({
 
         {story.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`${API_URL}${story.image}`} alt={story.title} className="w-full h-full object-cover" />
+          <img src={resolveImageUrl(story.image)} alt={story.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-brand-blue/10 text-brand-blue p-8 text-center">
             <span className="text-xl font-black">{story.title}</span>
