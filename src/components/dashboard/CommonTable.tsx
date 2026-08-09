@@ -2,13 +2,18 @@
 
 import Table, { type ColumnType } from "rc-table";
 import { Search, ChevronLeft, ChevronRight, Download, Trash2 } from "lucide-react";
-import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
+import type { ReactNode, TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 
 export interface CommonTableColumn<T> {
   key: string;
   title: string;
   dataIndex?: string;
+  // A hard pixel width (rarely needed — prefer minWidth so the column can
+  // still grow on wider screens instead of leaving dead space elsewhere).
   width?: number | string;
+  // Minimum pixel width — the column won't shrink below this on narrow
+  // screens, but grows to share out any extra row width on wide ones.
+  minWidth?: number;
   render?: (value: unknown, record: T, index: number) => ReactNode;
   align?: "left" | "right" | "center";
 }
@@ -73,6 +78,16 @@ function BodyCell(props: TdHTMLAttributes<HTMLTableCellElement>) {
   return <td {...rest} className={`px-6 py-5 ${className ?? ""}`} />;
 }
 
+// rc-table's `className`/`style` props on <Table> only reach an outer
+// wrapper div, not the actual <table> element — that element defaults to
+// content-sized (auto) width regardless, leaving dead space in the (truly
+// full-width) wrapper. Force the real <table> to fill its container so
+// columns can share out the full row width instead of leaving a gap.
+function TableRoot(props: TableHTMLAttributes<HTMLTableElement>) {
+  const { className, ...rest } = props;
+  return <table {...rest} className={`w-full text-sm text-left whitespace-nowrap ${className ?? ""}`} />;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
 export default function CommonTable<T extends Record<string, any>, TId extends string | number>({
   columns,
@@ -121,6 +136,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
       title: col.title,
       dataIndex: col.dataIndex,
       width: col.width,
+      minWidth: col.minWidth,
       align: col.align,
       render: col.render
         ? (value: unknown, record: T, index: number) => col.render!(value, record, index)
@@ -196,11 +212,12 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
             columns={rcColumns}
             data={loading ? [] : data}
             rowKey={(record) => rowKey(record)}
-            className="w-full text-sm text-left whitespace-nowrap"
+            tableLayout="auto"
             emptyText={loading ? "Loading..." : emptyMessage}
             onHeaderRow={() => ({ className: "bg-muted/30 text-muted-foreground border-b border-border/60" })}
             rowClassName={() => "hover:bg-muted/30 transition-colors group border-b border-border/60 last:border-b-0"}
             components={{
+              table: TableRoot,
               header: { cell: HeaderCell },
               body: { cell: BodyCell },
             }}
