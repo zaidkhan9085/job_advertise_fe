@@ -15,6 +15,7 @@ import {
   Search,
   PlayCircle,
   Flag,
+  FileText,
 } from "lucide-react";
 
 import { siteConfig } from "@/data/branding";
@@ -58,9 +59,10 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
   ],
   candidate: [
     { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
+    { label: "My Profile", href: "/dashboard/my-profile", icon: Users },
     { label: "Browse Jobs", href: "/dashboard/browse-jobs", icon: Search },
     { label: "My Applications", href: "/dashboard/applications", icon: Briefcase },
-    { label: "My Resume", href: "/dashboard/coming-soon", icon: Users },
+    { label: "My Resume", href: "/resume-builder", icon: FileText },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
 };

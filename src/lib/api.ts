@@ -609,6 +609,83 @@ export function updateMyCompany(payload: {
   });
 }
 
+// --- Candidate: My Profile ---
+// Structured screening data (nationality, passport, Gulf/India experience,
+// preferred location) — distinct from Resume, which is the formatted CV
+// document. See MyCandidateProfilePayload below for the editable fields.
+export interface MyCandidateProfile {
+  id: number;
+  userId: number;
+  name: string;
+  position: string;
+  passportNo: string | null;
+  dateOfBirth: string | null;
+  nationality: string | null;
+  gender: string | null;
+  indianExp: string | null;
+  gulfExp: string | null;
+  qualification: string | null;
+  industry: string | null;
+  whatsapp: string;
+  email: string;
+  currentLocation: string | null;
+  preferredLocation: string | null;
+  resumeUrl: string | null;
+  profileImage: string | null;
+  regionId: string | null;
+  region: Region | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MyCandidateProfilePayload {
+  name: string;
+  position: string;
+  whatsapp: string;
+  email: string;
+  regionId: string;
+  passportNo?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  gender?: string;
+  indianExp?: string;
+  gulfExp?: string;
+  qualification?: string;
+  industry?: string;
+  currentLocation?: string;
+  preferredLocation?: string;
+  profileImage?: File;
+}
+
+function buildCandidateProfileFormData(payload: MyCandidateProfilePayload): FormData {
+  const formData = new FormData();
+  const { profileImage, ...fields } = payload;
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value !== undefined) formData.append(key, value);
+  });
+  if (profileImage) formData.append("profileImage", profileImage);
+  return formData;
+}
+
+export function getMyCandidateProfile() {
+  return apiFetch<MyCandidateProfile | null>("/api/candidate/my-profile");
+}
+
+export function createCandidateProfile(payload: MyCandidateProfilePayload) {
+  return apiFetch<{ message: string; profile: MyCandidateProfile }>("/api/candidate/profile", {
+    method: "POST",
+    body: buildCandidateProfileFormData(payload),
+  });
+}
+
+export function updateCandidateProfile(payload: MyCandidateProfilePayload) {
+  return apiFetch<{ message: string }>("/api/candidate/profile", {
+    method: "PUT",
+    body: buildCandidateProfileFormData(payload),
+  });
+}
+
 export function followCompany(id: string) {
   return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, { method: "POST" });
 }
