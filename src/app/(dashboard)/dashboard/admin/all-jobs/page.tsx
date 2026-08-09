@@ -234,6 +234,7 @@ export default function AdminAllJobsPage() {
       key: "actions",
       title: "Actions",
       align: "right",
+      width: 140,
       render: (_, job) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${

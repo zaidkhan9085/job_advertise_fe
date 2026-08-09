@@ -358,6 +358,7 @@ export default function AdminCandidatesPage() {
       key: "actions",
       title: "Actions",
       align: "right",
+      width: 170,
       render: (_, candidate) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${
