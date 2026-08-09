@@ -98,11 +98,13 @@ export default function AdminReportsPage() {
     {
       key: "reason",
       title: "Reason",
+      minWidth: 220,
       render: (_, report) => <span className="text-foreground font-medium max-w-xs truncate block">{report.reason}</span>,
     },
     {
       key: "reported",
       title: "Reported",
+      minWidth: 160,
       render: (_, report) =>
         report.job ? (
           <Link href={`/dashboard/admin/all-jobs/${report.job.id}/edit`} className="text-brand-blue font-bold hover:underline">
@@ -119,6 +121,7 @@ export default function AdminReportsPage() {
     {
       key: "reporter",
       title: "Reporter",
+      minWidth: 180,
       render: (_, report) => (
         <span className="text-muted-foreground font-medium">{report.reporter.full_name || report.reporter.email}</span>
       ),
@@ -126,11 +129,13 @@ export default function AdminReportsPage() {
     {
       key: "status",
       title: "Status",
+      minWidth: 110,
       render: (_, report) => <StatusBadge status={report.status} styles={STATUS_STYLES} />,
     },
     {
       key: "date",
       title: "Date",
+      minWidth: 140,
       render: (_, report) => (
         <span className="text-muted-foreground font-medium">
           {formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}
@@ -141,7 +146,7 @@ export default function AdminReportsPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      width: 100,
+      minWidth: 100,
       render: (_, report) =>
         report.status !== "DISMISSED" ? (
           <div className="flex items-center justify-end gap-1">

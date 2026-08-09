@@ -319,21 +319,25 @@ export default function AdminCandidatesPage() {
     {
       key: "name",
       title: "Name",
+      minWidth: 160,
       render: (_, c) => <span className="font-bold text-foreground">{c.full_name || "—"}</span>,
     },
     {
       key: "email",
       title: "Email",
+      minWidth: 200,
       render: (_, c) => <span className="text-muted-foreground font-medium">{c.email}</span>,
     },
     {
       key: "phone",
       title: "Phone",
+      minWidth: 140,
       render: (_, c) => <span className="text-muted-foreground font-medium">{c.phone || "—"}</span>,
     },
     {
       key: "registered",
       title: "Registered",
+      minWidth: 140,
       render: (_, c) => (
         <span className="text-muted-foreground font-medium">
           {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
@@ -343,6 +347,7 @@ export default function AdminCandidatesPage() {
     {
       key: "status",
       title: "Status",
+      minWidth: 100,
       render: (_, c) =>
         c.isBlocked ? (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-rose-50 text-rose-700 border-rose-200">
@@ -358,7 +363,7 @@ export default function AdminCandidatesPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      width: 170,
+      minWidth: 170,
       render: (_, candidate) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${

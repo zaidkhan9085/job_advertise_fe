@@ -121,6 +121,7 @@ export default function AdminEmployersPage() {
     {
       key: "company",
       title: "Company",
+      minWidth: 220,
       render: (_, company) => (
         <div className="flex items-center gap-3">
           {company.logo ? (
@@ -142,6 +143,7 @@ export default function AdminEmployersPage() {
     {
       key: "owner",
       title: "Owner",
+      minWidth: 180,
       render: (_, company) => (
         <span className="text-muted-foreground font-medium">{company.owner.full_name || company.owner.email}</span>
       ),
@@ -149,21 +151,25 @@ export default function AdminEmployersPage() {
     {
       key: "region",
       title: "Region",
+      minWidth: 120,
       render: (_, company) => <span className="text-muted-foreground font-medium">{company.region?.name ?? "—"}</span>,
     },
     {
       key: "jobs",
       title: "Jobs",
+      minWidth: 70,
       render: (_, company) => <span className="font-bold text-foreground">{company._count.jobs}</span>,
     },
     {
       key: "followers",
       title: "Followers",
+      minWidth: 100,
       render: (_, company) => <span className="font-bold text-foreground">{company._count.follows}</span>,
     },
     {
       key: "reports",
       title: "Reports",
+      minWidth: 130,
       render: (_, company) =>
         company.pendingReportCount > 0 ? (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-rose-50 text-rose-700 border-rose-200">
@@ -176,6 +182,7 @@ export default function AdminEmployersPage() {
     {
       key: "created",
       title: "Created",
+      minWidth: 140,
       render: (_, company) => (
         <span className="text-muted-foreground font-medium">
           {formatDistanceToNow(new Date(company.createdAt), { addSuffix: true })}
@@ -186,7 +193,7 @@ export default function AdminEmployersPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      width: 100,
+      minWidth: 100,
       render: (_, company) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${

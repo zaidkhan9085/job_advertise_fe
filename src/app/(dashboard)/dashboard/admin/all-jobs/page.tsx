@@ -179,6 +179,7 @@ export default function AdminAllJobsPage() {
     {
       key: "title",
       title: "Job Title & Location",
+      minWidth: 220,
       render: (_, job) => (
         <>
           <div className="font-bold text-foreground">{job.title}</div>
@@ -192,6 +193,7 @@ export default function AdminAllJobsPage() {
     {
       key: "employer",
       title: "Employer",
+      minWidth: 180,
       render: (_, job) => (
         <span className="text-muted-foreground font-medium">{job.employer.full_name || job.employer.email}</span>
       ),
@@ -199,6 +201,7 @@ export default function AdminAllJobsPage() {
     {
       key: "type",
       title: "Type",
+      minWidth: 100,
       render: (_, job) => (
         <span className="bg-secondary/50 px-2 py-1 rounded-md text-[10px] uppercase font-semibold text-muted-foreground">
           {job.type}
@@ -208,6 +211,7 @@ export default function AdminAllJobsPage() {
     {
       key: "posted",
       title: "Posted",
+      minWidth: 140,
       render: (_, job) => (
         <span className="text-muted-foreground font-medium">
           {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
@@ -217,11 +221,13 @@ export default function AdminAllJobsPage() {
     {
       key: "views",
       title: "Views",
+      minWidth: 80,
       render: (_, job) => <span className="font-bold text-foreground">{job.views}</span>,
     },
     {
       key: "status",
       title: "Status",
+      minWidth: 110,
       render: (_, job) => (
         <span
           className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${STATUS_STYLES[job.status]}`}
@@ -234,7 +240,7 @@ export default function AdminAllJobsPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      width: 140,
+      minWidth: 140,
       render: (_, job) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${
