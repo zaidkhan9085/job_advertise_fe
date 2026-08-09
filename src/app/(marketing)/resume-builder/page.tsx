@@ -21,6 +21,8 @@ import {
   Maximize
 } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
+import { toast } from "sonner";
+import { getMyResume, upsertMyResume, ApiError } from "@/lib/api";
 import Editor from "@/components/resume-builder/Editor";
 import Preview from "@/components/resume-builder/Preview";
 
@@ -59,16 +61,40 @@ export default function ResumeBuilderPage() {
       setZoom(0.4); // 40% zoom as requested
     }
 
-    const saved = localStorage.getItem("resume-builder-v2");
-    if (saved) {
-      try { setResumeData(JSON.parse(saved)); } catch (e) { console.error(e); }
-    }
+    // Server data wins if it exists; localStorage is only a fallback for a
+    // draft made before this was wired up (or if the load request fails).
+    (async () => {
+      try {
+        const saved = await getMyResume();
+        if (saved && (saved.theme || saved.sections)) {
+          setResumeData((prev) => ({
+            theme: saved.theme ? (saved.theme as typeof prev.theme) : prev.theme,
+            sections: saved.sections ? (saved.sections as typeof prev.sections) : prev.sections,
+          }));
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load saved resume:", err);
+      }
+
+      const localDraft = localStorage.getItem("resume-builder-v2");
+      if (localDraft) {
+        try { setResumeData(JSON.parse(localDraft)); } catch (e) { console.error(e); }
+      }
+    })();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
     localStorage.setItem("resume-builder-v2", JSON.stringify(resumeData));
-    setTimeout(() => setIsSaving(false), 800);
+    try {
+      await upsertMyResume({ theme: resumeData.theme, sections: resumeData.sections });
+      toast.success("Resume saved");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to save resume.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePrint = useReactToPrint({

@@ -502,6 +502,34 @@ export function updateReportStatus(id: string, status: ReportStatus) {
   });
 }
 
+// --- Resume Builder ---
+// The builder's document is a loosely-typed { theme, sections } structure
+// (see Editor.tsx/resume-builder/page.tsx, which use `any` throughout) --
+// kept loose here too rather than introducing stricter typing the rest of
+// that feature doesn't have.
+export interface ResumeRecord {
+  id: string;
+  theme: unknown;
+  sections: unknown;
+  fullName: string | null;
+  jobTitle: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  updatedAt: string;
+}
+
+export function getMyResume() {
+  return apiFetch<ResumeRecord | null>("/api/resume/mine");
+}
+
+export function upsertMyResume(payload: { theme: unknown; sections: unknown }) {
+  return apiFetch<{ message: string; resume: ResumeRecord }>("/api/resume/mine", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
 // --- Applications ---
 export function applyToJob(jobId: string, resumeId?: string) {
   return apiFetch<{ success: boolean; message: string }>(`/api/applications/apply/${jobId}`, {
