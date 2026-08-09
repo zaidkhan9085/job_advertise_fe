@@ -27,7 +27,7 @@ const STATUS_STYLES: Record<ReportStatus, string> = {
   DISMISSED: "bg-secondary text-muted-foreground border-border/60",
 };
 
-const FILTER_OPTIONS = ["PENDING", "VIEWED", "DISMISSED", "ALL"] as const;
+const FILTER_OPTIONS = ["ALL", "PENDING", "VIEWED", "DISMISSED"] as const;
 type FilterOption = (typeof FILTER_OPTIONS)[number];
 
 export default function AdminReportsPage() {
@@ -141,6 +141,7 @@ export default function AdminReportsPage() {
       key: "actions",
       title: "Actions",
       align: "right",
+      width: 100,
       render: (_, report) =>
         report.status !== "DISMISSED" ? (
           <div className="flex items-center justify-end gap-1">
