@@ -152,7 +152,6 @@ export const mainNavItems: NavItem[] = [
   { label: "Nearby Jobs", href: "/jobs?type=nearby", dropdownItems: nearbyJobsItems },
   { label: "Jobs Opening", href: "/jobs?type=vacancy", dropdownItems: vacancyItems },
   { label: "Resume Builder", href: "/resume-builder" },
-  { label: "Submit Resume", href: "/resume" },
   { label: "Candidates Login", href: "/login" },
 ];
 

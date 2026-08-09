@@ -122,7 +122,7 @@ export default function ResumeBuilderPage() {
       <header className="flex flex-col lg:flex-row lg:h-16 bg-white border-b border-border/40 px-4 py-3 lg:px-6 lg:py-0 lg:items-center justify-between shrink-0 z-50 transition-all">
         <div className="flex items-center justify-between w-full lg:w-auto gap-4">
           <div className="flex items-center gap-3">
-            <Link href="/resume" className="p-2 hover:bg-secondary rounded-lg transition-all text-muted-foreground hover:text-foreground">
+            <Link href="/dashboard/my-profile" className="p-2 hover:bg-secondary rounded-lg transition-all text-muted-foreground hover:text-foreground">
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div className="flex items-baseline gap-2">
