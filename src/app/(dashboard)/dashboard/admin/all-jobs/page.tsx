@@ -302,6 +302,13 @@ export default function AdminAllJobsPage() {
         emptyMessage="No jobs found."
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by title, company, or location..." }}
         filters={<StatusFilterPills options={STATUS_FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />}
+        resetFilters={{
+          onReset: () => {
+            setSearchInput("");
+            setStatusFilter("ALL");
+          },
+          hasActiveFilters: !!searchInput || statusFilter !== "ALL",
+        }}
         exportButton={{ onClick: handleExport, disabled: isExporting || jobs.length === 0 }}
         pagination={
           meta

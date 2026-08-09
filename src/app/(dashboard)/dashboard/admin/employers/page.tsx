@@ -238,6 +238,7 @@ export default function AdminEmployersPage() {
         loading={isLoading}
         emptyMessage="No employers found."
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by company or owner..." }}
+        resetFilters={{ onReset: () => setSearchInput(""), hasActiveFilters: !!searchInput }}
         pagination={
           meta
             ? { page: meta.page, totalPages: meta.totalPages, total: meta.total, limit: meta.limit, onPageChange: setPage }

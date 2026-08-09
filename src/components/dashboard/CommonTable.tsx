@@ -1,7 +1,7 @@
 "use client";
 
 import Table, { type ColumnType } from "rc-table";
-import { Search, ChevronLeft, ChevronRight, Download, Trash2 } from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight, Download, Trash2, RotateCcw } from "lucide-react";
 import type { ReactNode, TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 
 export interface CommonTableColumn<T> {
@@ -54,6 +54,8 @@ interface CommonTableProps<T extends Record<string, any>, TId extends string | n
   emptyMessage?: string;
   search?: { value: string; onChange: (v: string) => void; placeholder?: string };
   filters?: ReactNode;
+  // Shows a "Reset" button that clears search + all other filters at once.
+  resetFilters?: { onReset: () => void; hasActiveFilters: boolean };
   pagination?: CommonTablePagination;
   selection?: CommonTableSelection<TId>;
   exportButton?: { label?: string; onClick: () => void; disabled?: boolean };
@@ -97,6 +99,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
   emptyMessage = "No records found.",
   search,
   filters,
+  resetFilters,
   pagination,
   selection,
   exportButton,
@@ -149,7 +152,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
 
   return (
     <div className="space-y-4">
-      {(search || filters || exportButton) && (
+      {(search || filters || exportButton || resetFilters) && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
             {search && (
@@ -158,13 +161,33 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
                 <input
                   type="text"
                   placeholder={search.placeholder ?? "Search..."}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none transition-all text-sm font-medium"
+                  className="w-full pl-11 pr-10 py-3 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none transition-all text-sm font-medium"
                   value={search.value}
                   onChange={(e) => search.onChange(e.target.value)}
                 />
+                {search.value && (
+                  <button
+                    type="button"
+                    title="Clear search"
+                    onClick={() => search.onChange("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             )}
             {filters}
+            {resetFilters && (
+              <button
+                type="button"
+                onClick={resetFilters.onReset}
+                disabled={!resetFilters.hasActiveFilters}
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Reset
+              </button>
+            )}
           </div>
           {exportButton && (
             <button

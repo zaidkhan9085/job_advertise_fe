@@ -453,6 +453,14 @@ export default function AdminCandidatesPage() {
             />
           </div>
         }
+        resetFilters={{
+          onReset: () => {
+            setSearchInput("");
+            setDateFrom("");
+            setDateTo("");
+          },
+          hasActiveFilters: !!searchInput || !!dateFrom || !!dateTo,
+        }}
         exportButton={{ onClick: handleExport, disabled: isExporting || candidates.length === 0 }}
         pagination={
           meta

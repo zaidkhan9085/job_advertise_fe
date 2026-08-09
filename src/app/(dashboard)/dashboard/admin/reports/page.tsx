@@ -190,6 +190,13 @@ export default function AdminReportsPage() {
         emptyMessage="No reports found."
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by reason..." }}
         filters={<StatusFilterPills options={FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />}
+        resetFilters={{
+          onReset: () => {
+            setSearchInput("");
+            setStatusFilter("PENDING");
+          },
+          hasActiveFilters: !!searchInput || statusFilter !== "PENDING",
+        }}
         pagination={
           meta
             ? { page: meta.page, totalPages: meta.totalPages, total: meta.total, limit: meta.limit, onPageChange: setPage }
