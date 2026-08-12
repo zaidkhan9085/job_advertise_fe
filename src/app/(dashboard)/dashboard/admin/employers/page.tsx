@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X } from "lucide-react";
+import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,7 @@ import {
   updateCandidateUser,
   setCandidateBlocked,
   resetCandidatePassword,
+  grantCreditsToCompany,
   resolveImageUrl,
   type CompanyAdminListItem,
   type PaginatedMeta,
@@ -178,6 +179,67 @@ function PasswordModal({ company, onClose }: { company: CompanyAdminListItem; on
   );
 }
 
+function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem; onClose: () => void }) {
+  const [amount, setAmount] = useState("5");
+  const [note, setNote] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    const amountNum = Number(amount);
+    if (!Number.isInteger(amountNum) || amountNum <= 0) {
+      toast.error("Amount must be a positive whole number.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const result = await grantCreditsToCompany(company.id, amountNum, note || undefined);
+      toast.success(result.message);
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to grant credits.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg text-foreground">Grant Credits</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Add credits to {company.name}&apos;s balance for ATS candidate unlocks.
+        </p>
+        <input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Amount"
+          type="number"
+          min={1}
+          className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+        />
+        <input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Note (optional)"
+          className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+        />
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-brand-blue/90 transition-colors disabled:opacity-70"
+        >
+          {isSaving ? "Granting..." : "Grant Credits"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminEmployersPage() {
   const { user } = useAuth();
   const [companies, setCompanies] = useState<CompanyAdminListItem[]>([]);
@@ -195,6 +257,7 @@ export default function AdminEmployersPage() {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [editingCompany, setEditingCompany] = useState<CompanyAdminListItem | null>(null);
   const [passwordCompany, setPasswordCompany] = useState<CompanyAdminListItem | null>(null);
+  const [creditsCompany, setCreditsCompany] = useState<CompanyAdminListItem | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const selection = useTableSelection<string>();
@@ -394,7 +457,7 @@ export default function AdminEmployersPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      minWidth: 210,
+      minWidth: 250,
       render: (_, company) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${
@@ -441,6 +504,14 @@ export default function AdminEmployersPage() {
             ) : (
               <ShieldOff className="w-4 h-4" />
             )}
+          </button>
+          <button
+            title="Grant Credits"
+            disabled={actioningId === company.id}
+            onClick={() => setCreditsCompany(company)}
+            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
+          >
+            <Coins className="w-4 h-4" />
           </button>
           <button
             title="Delete Employer"
@@ -540,6 +611,8 @@ export default function AdminEmployersPage() {
       )}
 
       {passwordCompany && <PasswordModal company={passwordCompany} onClose={() => setPasswordCompany(null)} />}
+
+      {creditsCompany && <GrantCreditsModal company={creditsCompany} onClose={() => setCreditsCompany(null)} />}
     </div>
   );
 }

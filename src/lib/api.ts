@@ -697,6 +697,70 @@ export function updateCandidateProfile(payload: MyCandidateProfilePayload) {
   });
 }
 
+// --- Employer: credits ---
+export interface CreditsSummary {
+  creditsTotal: number;
+  creditsUsed: number;
+  creditsRemaining: number;
+}
+
+export function getMyCredits() {
+  return apiFetch<CreditsSummary>("/api/employer/credits");
+}
+
+export function grantCreditsToCompany(companyId: string, amount: number, note?: string) {
+  return apiFetch<{ message: string }>(`/api/admin/companies/${companyId}/credits`, {
+    method: "POST",
+    body: JSON.stringify({ amount, note }),
+  });
+}
+
+// --- ATS: candidate search ---
+// Contact info (whatsapp/email) is null until this employer has unlocked
+// that candidate — the backend masks it per-row, not just the frontend.
+export interface ATSCandidate {
+  id: number;
+  userId: number;
+  name: string;
+  position: string;
+  nationality: string | null;
+  qualification: string | null;
+  industry: string | null;
+  indianExp: string | null;
+  gulfExp: string | null;
+  currentLocation: string | null;
+  preferredLocation: string | null;
+  region: Region | null;
+  hasResume: boolean;
+  isUnlocked: boolean;
+  whatsapp: string | null;
+  email: string | null;
+}
+
+export function searchCandidates(filters?: AdminListParams & { region?: string; nationality?: string }) {
+  const query = buildQuery({
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+    region: filters?.region,
+    nationality: filters?.nationality,
+  });
+  return apiFetch<Paginated<ATSCandidate>>(`/api/ats/search${query}`);
+}
+
+export interface UnlockCandidateResult {
+  candidate: { whatsapp: string | null; email: string | null };
+  resume: { theme: unknown; sections: unknown } | null;
+  creditsRemaining: number;
+}
+
+export function unlockCandidate(userId: number) {
+  return apiFetch<UnlockCandidateResult>(`/api/ats/candidates/${userId}/unlock`, { method: "POST" });
+}
+
 export function followCompany(id: string) {
   return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, { method: "POST" });
 }
