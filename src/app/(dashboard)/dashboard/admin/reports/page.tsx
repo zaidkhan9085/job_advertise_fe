@@ -11,6 +11,7 @@ import {
   updateReportStatus,
   type AdminReport,
   type ReportStatus,
+  type ReportTargetType,
   type PaginatedMeta,
   ApiError,
 } from "@/lib/api";
@@ -30,6 +31,9 @@ const STATUS_STYLES: Record<ReportStatus, string> = {
 const FILTER_OPTIONS = ["ALL", "PENDING", "VIEWED", "DISMISSED"] as const;
 type FilterOption = (typeof FILTER_OPTIONS)[number];
 
+const TARGET_TYPE_OPTIONS = ["ALL", "JOB", "COMPANY"] as const;
+type TargetTypeOption = (typeof TARGET_TYPE_OPTIONS)[number];
+
 export default function AdminReportsPage() {
   const { user } = useAuth();
   const [reports, setReports] = useState<AdminReport[]>([]);
@@ -40,6 +44,7 @@ export default function AdminReportsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterOption>("PENDING");
+  const [targetTypeFilter, setTargetTypeFilter] = useState<TargetTypeOption>("ALL");
   const [page, setPage] = useState(1);
   const [actioningId, setActioningId] = useState<string | null>(null);
 
@@ -50,11 +55,15 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, targetTypeFilter]);
 
   const filters = useMemo(
-    () => ({ search: search || undefined, status: statusFilter === "ALL" ? undefined : (statusFilter as ReportStatus) }),
-    [search, statusFilter]
+    () => ({
+      search: search || undefined,
+      status: statusFilter === "ALL" ? undefined : (statusFilter as ReportStatus),
+      targetType: targetTypeFilter === "ALL" ? undefined : (targetTypeFilter as ReportTargetType),
+    }),
+    [search, statusFilter, targetTypeFilter]
   );
 
   const loadReports = useCallback(async () => {
@@ -189,13 +198,19 @@ export default function AdminReportsPage() {
         loading={isLoading}
         emptyMessage="No reports found."
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by reason..." }}
-        filters={<StatusFilterPills options={FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />}
+        filters={
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <StatusFilterPills options={FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
+            <StatusFilterPills options={TARGET_TYPE_OPTIONS} value={targetTypeFilter} onChange={setTargetTypeFilter} />
+          </div>
+        }
         resetFilters={{
           onReset: () => {
             setSearchInput("");
             setStatusFilter("PENDING");
+            setTargetTypeFilter("ALL");
           },
-          hasActiveFilters: !!searchInput || statusFilter !== "PENDING",
+          hasActiveFilters: !!searchInput || statusFilter !== "PENDING" || targetTypeFilter !== "ALL",
         }}
         pagination={
           meta

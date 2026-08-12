@@ -419,14 +419,22 @@ export function resetCandidatePassword(id: number, password: string) {
 }
 
 // --- Admin: employer/company moderation ---
+export interface CompanyAdminOwner {
+  id: number;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  isBlocked: boolean;
+}
+
 export interface CompanyAdminListItem extends Company {
-  owner: { id: number; full_name: string | null; email: string };
+  owner: CompanyAdminOwner;
   _count: { jobs: number; follows: number; reports: number };
   pendingReportCount: number;
 }
 
 export interface CompanyAdminDetail extends CompanyDetail {
-  owner: { id: number; full_name: string | null; email: string };
+  owner: CompanyAdminOwner;
   jobs: { id: string; title: string; status: JobPostStatus; createdAt: string }[];
   reports: {
     id: string;
@@ -482,9 +490,12 @@ export interface AdminReport {
   company: { id: string; name: string } | null;
 }
 
-export function getReports(filters?: AdminListParams & { status?: ReportStatus }) {
+export type ReportTargetType = "JOB" | "COMPANY";
+
+export function getReports(filters?: AdminListParams & { status?: ReportStatus; targetType?: ReportTargetType }) {
   const query = buildQuery({
     status: filters?.status,
+    targetType: filters?.targetType,
     page: filters?.page,
     limit: filters?.limit,
     search: filters?.search,

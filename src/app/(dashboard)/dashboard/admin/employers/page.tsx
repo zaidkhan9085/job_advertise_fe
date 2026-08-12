@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, ExternalLink, Trash2 } from "lucide-react";
+import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +10,9 @@ import {
   getAllCompaniesAdmin,
   deleteCompanyAdmin,
   bulkDeleteCompanies,
+  updateCandidateUser,
+  setCandidateBlocked,
+  resetCandidatePassword,
   resolveImageUrl,
   type CompanyAdminListItem,
   type PaginatedMeta,
@@ -21,6 +24,159 @@ import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
 
 const PAGE_LIMIT = 20;
+
+function toCsv(companies: CompanyAdminListItem[]): string {
+  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Region", "Jobs", "Followers", "Pending Reports", "Blocked", "Created"];
+  const rows = companies.map((c) => [
+    c.name,
+    c.owner.full_name ?? "",
+    c.owner.email,
+    c.owner.phone ?? "",
+    c.region?.name ?? "",
+    String(c._count.jobs),
+    String(c._count.follows),
+    String(c.pendingReportCount),
+    c.owner.isBlocked ? "Yes" : "No",
+    c.createdAt,
+  ]);
+  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  return [header, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+}
+
+function downloadCsv(csv: string, filenamePrefix: string) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filenamePrefix}-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Edit/block/reset-password below act on the employer's account (the User
+// behind company.owner) via the same generic admin-user endpoints already
+// built for Candidates — those endpoints aren't role-restricted on the
+// target, just on the caller (admin/sub_admin).
+function EditOwnerModal({
+  company,
+  onClose,
+  onSaved,
+}: {
+  company: CompanyAdminListItem;
+  onClose: () => void;
+  onSaved: (owner: { id: number; full_name: string | null; email: string; phone: string | null }) => void;
+}) {
+  const [fullName, setFullName] = useState(company.owner.full_name ?? "");
+  const [email, setEmail] = useState(company.owner.email);
+  const [phone, setPhone] = useState(company.owner.phone ?? "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const updated = await updateCandidateUser(company.owner.id, { full_name: fullName, email, phone });
+      toast.success("Employer updated");
+      onSaved(updated);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update employer.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg text-foreground">Edit Employer</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="space-y-3">
+          <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Owner name"
+            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+          />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            type="email"
+            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+          />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone"
+            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-brand-blue/90 transition-colors disabled:opacity-70"
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PasswordModal({ company, onClose }: { company: CompanyAdminListItem; onClose: () => void }) {
+  const [password, setPassword] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await resetCandidatePassword(company.owner.id, password);
+      toast.success("Password updated");
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update password.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg text-foreground">Change Password</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Set a new password for {company.owner.full_name || company.owner.email} ({company.name}).
+        </p>
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="New password"
+          type="password"
+          className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+        />
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-brand-blue/90 transition-colors disabled:opacity-70"
+        >
+          {isSaving ? "Saving..." : "Update Password"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminEmployersPage() {
   const { user } = useAuth();
@@ -37,6 +193,9 @@ export default function AdminEmployersPage() {
   const [deleteTarget, setDeleteTarget] = useState<CompanyAdminListItem | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<CompanyAdminListItem | null>(null);
+  const [passwordCompany, setPasswordCompany] = useState<CompanyAdminListItem | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const selection = useTableSelection<string>();
 
@@ -117,6 +276,33 @@ export default function AdminEmployersPage() {
     }
   };
 
+  const handleToggleBlock = async (company: CompanyAdminListItem) => {
+    setActioningId(company.id);
+    try {
+      const result = await setCandidateBlocked(company.owner.id, !company.owner.isBlocked);
+      toast.success(result.message);
+      setCompanies((prev) =>
+        prev.map((c) => (c.id === company.id ? { ...c, owner: { ...c.owner, isBlocked: result.user.isBlocked } } : c))
+      );
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update employer.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const result = await getAllCompaniesAdmin({ ...filters, all: true });
+      downloadCsv(toCsv(result.data), "employers");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to export employers.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const columns: CommonTableColumn<CompanyAdminListItem>[] = [
     {
       key: "company",
@@ -190,10 +376,25 @@ export default function AdminEmployersPage() {
       ),
     },
     {
+      key: "status",
+      title: "Status",
+      minWidth: 100,
+      render: (_, company) =>
+        company.owner.isBlocked ? (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-rose-50 text-rose-700 border-rose-200">
+            Blocked
+          </span>
+        ) : (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-emerald-50 text-emerald-700 border-emerald-200">
+            Active
+          </span>
+        ),
+    },
+    {
       key: "actions",
       title: "Actions",
       align: "right",
-      minWidth: 100,
+      minWidth: 210,
       render: (_, company) => (
         <div
           className={`flex items-center justify-end gap-1 transition-opacity ${
@@ -207,6 +408,40 @@ export default function AdminEmployersPage() {
           >
             <ExternalLink className="w-4 h-4" />
           </Link>
+          <button
+            title="Edit"
+            disabled={actioningId === company.id}
+            onClick={() => setEditingCompany(company)}
+            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            title="Change Password"
+            disabled={actioningId === company.id}
+            onClick={() => setPasswordCompany(company)}
+            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
+          >
+            <Lock className="w-4 h-4" />
+          </button>
+          <button
+            title={company.owner.isBlocked ? "Unblock" : "Block"}
+            disabled={actioningId === company.id}
+            onClick={() => handleToggleBlock(company)}
+            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+              company.owner.isBlocked
+                ? "text-emerald-600 hover:bg-emerald-100"
+                : "text-muted-foreground hover:bg-amber-100 hover:text-amber-700"
+            }`}
+          >
+            {actioningId === company.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : company.owner.isBlocked ? (
+              <ShieldCheck className="w-4 h-4" />
+            ) : (
+              <ShieldOff className="w-4 h-4" />
+            )}
+          </button>
           <button
             title="Delete Employer"
             disabled={actioningId === company.id}
@@ -239,6 +474,7 @@ export default function AdminEmployersPage() {
         emptyMessage="No employers found."
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by company or owner..." }}
         resetFilters={{ onReset: () => setSearchInput(""), hasActiveFilters: !!searchInput }}
+        exportButton={{ onClick: handleExport, disabled: isExporting || companies.length === 0 }}
         pagination={
           meta
             ? { page: meta.page, totalPages: meta.totalPages, total: meta.total, limit: meta.limit, onPageChange: setPage }
@@ -291,6 +527,19 @@ export default function AdminEmployersPage() {
         onConfirm={handleBulkDelete}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />
+
+      {editingCompany && (
+        <EditOwnerModal
+          company={editingCompany}
+          onClose={() => setEditingCompany(null)}
+          onSaved={(owner) => {
+            setCompanies((prev) => prev.map((c) => (c.id === editingCompany.id ? { ...c, owner: { ...c.owner, ...owner } } : c)));
+            setEditingCompany(null);
+          }}
+        />
+      )}
+
+      {passwordCompany && <PasswordModal company={passwordCompany} onClose={() => setPasswordCompany(null)} />}
     </div>
   );
 }
