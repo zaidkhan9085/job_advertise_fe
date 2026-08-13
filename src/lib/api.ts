@@ -728,16 +728,30 @@ export interface ATSCandidate {
   industry: string | null;
   indianExp: string | null;
   gulfExp: string | null;
+  gender: string | null;
   currentLocation: string | null;
   preferredLocation: string | null;
   region: Region | null;
   hasResume: boolean;
+  resumeUpdatedAt: string | null;
   isUnlocked: boolean;
   whatsapp: string | null;
   email: string | null;
 }
 
-export function searchCandidates(filters?: AdminListParams & { region?: string; nationality?: string }) {
+export interface ATSSearchResult extends Paginated<ATSCandidate> {
+  stats: { totalCandidates: number; withResumeCount: number };
+}
+
+export interface ATSSearchFilters extends AdminListParams {
+  region?: string;
+  nationality?: string;
+  gender?: string;
+  keywordMode?: "all" | "any";
+  resumeWithinDays?: number;
+}
+
+export function searchCandidates(filters?: ATSSearchFilters) {
   const query = buildQuery({
     page: filters?.page,
     limit: filters?.limit,
@@ -747,8 +761,11 @@ export function searchCandidates(filters?: AdminListParams & { region?: string; 
     all: filters?.all,
     region: filters?.region,
     nationality: filters?.nationality,
+    gender: filters?.gender,
+    keywordMode: filters?.keywordMode,
+    resumeWithinDays: filters?.resumeWithinDays,
   });
-  return apiFetch<Paginated<ATSCandidate>>(`/api/ats/search${query}`);
+  return apiFetch<ATSSearchResult>(`/api/ats/search${query}`);
 }
 
 export interface UnlockCandidateResult {
