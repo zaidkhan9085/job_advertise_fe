@@ -26,7 +26,7 @@ export default function HomeCTASection() {
   ];
 
   return (
-    <section className="py-10 bg-brand-blue-muted/30">
+    <section className="py-6 bg-brand-blue-muted/30">
       <div className="container-site">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {ctas.map((cta) => {

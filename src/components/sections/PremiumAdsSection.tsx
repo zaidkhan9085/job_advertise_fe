@@ -53,11 +53,11 @@ export default function PremiumAdsSection() {
   if (premiumJobs.length === 0) return null;
 
   return (
-    <section className="pt-8 pb-24 bg-gradient-to-b from-[#f0f4ff] via-white to-[#f0f4ff] overflow-hidden relative">
+    <section className="pt-6 pb-10 md:pb-14 bg-gradient-to-b from-[#f0f4ff] via-white to-[#f0f4ff] overflow-hidden relative">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
       <div className="container-site relative">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-2.5 text-[#DAA520] font-black uppercase tracking-[0.3em] text-[11px]">
               <div className="p-1.5 rounded-lg bg-[#DAA520]/10 border border-[#DAA520]/20">
