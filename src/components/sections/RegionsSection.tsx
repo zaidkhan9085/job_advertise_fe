@@ -1,29 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Globe2 } from "lucide-react";
-import { nearbyRegions, vacancyCountries, type Region } from "@/data/regions";
+import { getJobs, getJobLocations, type JobLocation, ApiError } from "@/lib/api";
 
-// Groups the existing flat vacancyCountries list into tabs — purely a
-// presentation grouping, every item keeps its original id/href from
-// data/regions.ts untouched, so existing redirects are unaffected.
-const GULF_IDS = new Set(["uae", "saudi-arabia", "qatar", "oman", "kuwait", "bahrain", "iran", "iraq", "turkey"]);
-const ASIA_IDS = new Set(["singapore", "malaysia", "thailand", "indonesia", "philippines", "japan", "south-korea"]);
+function slugify(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
-const india = nearbyRegions.find((r) => r.id === "all-india");
-const gulf = vacancyCountries.filter((r) => GULF_IDS.has(r.id));
-const asia = vacancyCountries.filter((r) => ASIA_IDS.has(r.id));
-const international = vacancyCountries.filter((r) => !GULF_IDS.has(r.id) && !ASIA_IDS.has(r.id));
+interface RegionRow {
+  id: string;
+  label: string;
+  flag: string;
+  jobCount: number;
+  href: string;
+}
 
-const TABS: { key: string; label: string; items: Region[] }[] = [
-  { key: "gulf", label: "Gulf", items: gulf },
-  { key: "india", label: "India", items: india ? [india] : [] },
-  { key: "asia", label: "Asia", items: asia },
-  { key: "intl", label: "International", items: international },
-];
+const FLAGS: Record<string, string> = {
+  Bahrain: "🇧🇭", Iran: "🇮🇷", Iraq: "🇮🇶", Kuwait: "🇰🇼", Oman: "🇴🇲",
+  Qatar: "🇶🇦", "Saudi Arabia": "🇸🇦", Turkey: "🇹🇷", UAE: "🇦🇪",
+  Indonesia: "🇮🇩", Japan: "🇯🇵", Malaysia: "🇲🇾", Maldives: "🇲🇻", Mauritius: "🇲🇺",
+  Philippines: "🇵🇭", Singapore: "🇸🇬", "South Korea": "🇰🇷", Thailand: "🇹🇭",
+  Africa: "🌍", Azerbaijan: "🇦🇿", Georgia: "🇬🇪", Israel: "🇮🇱", Jordan: "🇯🇴",
+  Kazakhstan: "🇰🇿", Russia: "🇷🇺", Uzbekistan: "🇺🇿",
+  Australia: "🇦🇺", Canada: "🇨🇦", Europe: "🇪🇺", "New Zealand": "🇳🇿",
+};
 
-function RegionRow({ region }: { region: Region }) {
+interface Tab {
+  key: string;
+  label: string;
+  items: RegionRow[];
+}
+
+function RegionRowView({ region }: { region: RegionRow }) {
   return (
     <Link
       href={region.href}
@@ -43,8 +53,56 @@ function RegionRow({ region }: { region: Region }) {
 }
 
 export default function RegionsSection() {
-  const [activeTab, setActiveTab] = useState(TABS[0].key);
-  const current = TABS.find((t) => t.key === activeTab) ?? TABS[0];
+  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [activeTab, setActiveTab] = useState("gulf");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [jobs, tree] = await Promise.all([getJobs(), getJobLocations()]);
+
+        const countByLocationId = new Map<string, number>();
+        for (const job of jobs) {
+          if (!job.jobLocationId) continue;
+          countByLocationId.set(job.jobLocationId, (countByLocationId.get(job.jobLocationId) ?? 0) + 1);
+        }
+
+        const findNode = (name: string) => tree.find((n) => n.name === name);
+        const toRow = (node: JobLocation, defaultFlag: string): RegionRow => ({
+          id: node.id,
+          label: node.name,
+          flag: FLAGS[node.name] ?? defaultFlag,
+          jobCount: countByLocationId.get(node.id) ?? 0,
+          href: `/jobs?location=${slugify(node.name)}`,
+        });
+        const byCountDesc = (a: RegionRow, b: RegionRow) => b.jobCount - a.jobCount;
+
+        const gulf = (findNode("Gulf")?.children ?? []).map((n) => toRow(n, "🌍")).sort(byCountDesc);
+        const india = (findNode("India (All States)")?.children ?? []).map((n) => toRow(n, "🇮🇳")).sort(byCountDesc);
+        const asia = (findNode("Asia")?.children ?? []).map((n) => toRow(n, "🌏")).sort(byCountDesc);
+        const intlLeaves = ["Australia", "Canada", "Europe", "New Zealand"]
+          .map(findNode)
+          .filter((n): n is JobLocation => !!n)
+          .map((n) => toRow(n, "🌍"));
+        const russiaChildren = (findNode("Russia & Other Countries")?.children ?? []).map((n) => toRow(n, "🌍"));
+        const international = [...intlLeaves, ...russiaChildren].sort(byCountDesc);
+
+        setTabs([
+          { key: "gulf", label: "Gulf", items: gulf },
+          { key: "india", label: "India", items: india },
+          { key: "asia", label: "Asia", items: asia },
+          { key: "intl", label: "International", items: international },
+        ]);
+      } catch (err) {
+        if (!(err instanceof ApiError)) console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const current = tabs.find((t) => t.key === activeTab) ?? tabs[0];
 
   return (
     <section className="py-10 md:py-14 bg-white">
@@ -62,7 +120,7 @@ export default function RegionsSection() {
         </div>
 
         <div className="inline-flex bg-secondary/50 rounded-full p-1 mb-6 gap-1">
-          {TABS.map((tab) => (
+          {(tabs.length ? tabs : [{ key: "gulf", label: "Gulf", items: [] }, { key: "india", label: "India", items: [] }, { key: "asia", label: "Asia", items: [] }, { key: "intl", label: "International", items: [] }]).map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
@@ -75,11 +133,19 @@ export default function RegionsSection() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {current.items.map((region) => (
-            <RegionRow key={region.id} region={region} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-13 rounded-xl bg-secondary/40 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(current?.items ?? []).map((region) => (
+              <RegionRowView key={region.id} region={region} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-8 text-center">
           <Link

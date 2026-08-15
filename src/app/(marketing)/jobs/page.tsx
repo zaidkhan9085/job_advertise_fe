@@ -13,6 +13,7 @@ import {
   List as ListIcon,
   RotateCcw,
   ChevronDown,
+  Star,
 } from "lucide-react";
 import {
   getJobs,
@@ -361,18 +362,25 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
     return (
       <div
         onClick={goToJob}
-        className="group bg-white rounded-2xl border border-brand-blue/15 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer"
+        className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
+          job.type === "FEATURED"
+            ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 hover:bg-amber-50/20"
+            : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
+        }`}
       >
         <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-brand-blue/10">
           <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
-          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-            {isNew && (
-              <span className="text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-black/80 text-white backdrop-blur-sm">New</span>
-            )}
-            {job.type === "FEATURED" && (
-              <span className="text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-brand-blue text-white backdrop-blur-sm">Featured</span>
-            )}
-          </div>
+          {job.type === "FEATURED" && (
+            <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-1.5 px-3 flex items-center gap-1.5 shadow-md">
+              <Star className="w-3 h-3 fill-white text-white shrink-0" />
+              <span className="text-[10px] font-black text-white uppercase tracking-wider">Featured</span>
+            </div>
+          )}
+          {isNew && (
+            <span className="absolute bottom-2.5 left-2.5 z-10 text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-md bg-emerald-500 text-white shadow-md">
+              New
+            </span>
+          )}
         </div>
         <div className="p-4 flex flex-col flex-1">
           <div className="block mb-2.5">
@@ -408,23 +416,36 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
   return (
     <div
       onClick={goToJob}
-      className="group bg-white rounded-2xl border border-brand-blue/15 p-4 sm:p-5 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] hover:border-brand-blue/40 hover:bg-brand-blue-muted/5 transition-all duration-300 cursor-pointer"
+      className={`group bg-white rounded-2xl border p-4 sm:p-5 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 cursor-pointer ${
+        job.type === "FEATURED"
+          ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 bg-amber-50/10"
+          : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
+      }`}
     >
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
-        <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full sm:w-24 h-32 sm:h-24 shrink-0 rounded-xl border border-brand-blue/10" />
+        <div className="relative w-full sm:w-24 h-32 sm:h-24 shrink-0">
+          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full rounded-xl border border-brand-blue/10" />
+          {isNew && (
+            <span className="absolute bottom-1.5 left-1.5 text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-emerald-500 text-white shadow-md">
+              New
+            </span>
+          )}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-1">
             <h3 className="text-lg sm:text-xl font-extrabold text-brand-blue group-hover:text-brand-blue-medium transition-colors line-clamp-1 leading-snug">
               {job.title}
             </h3>
+            {job.type === "FEATURED" && (
+              <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r from-[#DAA520] to-[#FFD700] text-white shadow-sm">
+                <Star className="w-3 h-3 fill-white" /> Featured
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-sm font-bold text-muted-foreground group-hover:text-brand-blue transition-colors mb-4">
             <span className="flex items-center gap-1.5"><Building className="w-4 h-4 opacity-50 text-brand-blue" /> {job.company}</span>
             <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 opacity-50 text-brand-blue" /> {job.location}</span>
             <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-50 text-brand-blue" /> {job.type}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isNew && <span className="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-secondary text-muted-foreground">New</span>}
           </div>
         </div>
         <div className="w-full sm:w-auto sm:border-l sm:border-brand-blue/10 sm:pl-6 flex flex-row sm:flex-col gap-2 shrink-0">
