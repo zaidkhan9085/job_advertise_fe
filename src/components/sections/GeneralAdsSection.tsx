@@ -111,9 +111,9 @@ export default function GeneralAdsSection() {
   if (jobs.length === 0) return null;
 
   return (
-    <section className="py-16 bg-brand-blue-muted/10">
+    <section className="py-8 md:py-10 bg-brand-blue-muted/10">
       <div className="container-site">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
               General Ads & Opportunities

@@ -176,7 +176,10 @@ export interface JobPost {
   companyId: string | null;
   jobLocationId: string | null;
   jobTypeId: string | null;
+  jobType: { id: string; name: string } | null;
   industryId: string | null;
+  industry: { id: string; name: string } | null;
+  jobLocation: { id: string; name: string; parentId: string | null } | null;
   createdAt: string;
   updatedAt: string;
 }

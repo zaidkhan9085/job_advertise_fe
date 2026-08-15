@@ -1,4 +1,5 @@
 import StoriesSection from "@/components/sections/StoriesSection";
+import SearchSection from "@/components/sections/SearchSection";
 import HomeCTASection from "@/components/sections/HomeCTASection";
 import PremiumAdsSection from "@/components/sections/PremiumAdsSection";
 import GeneralAdsSection from "@/components/sections/GeneralAdsSection";
@@ -12,6 +13,7 @@ export default function Home() {
   return (
     <>
       <StoriesSection />
+      <SearchSection />
       <HomeCTASection />
       <PremiumAdsSection />
       <GeneralAdsSection />
