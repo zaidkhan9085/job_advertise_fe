@@ -11,8 +11,6 @@ import {
   BadgeCheck,
   Zap,
   ImagePlus,
-  Phone,
-  MessageSquare,
   Mail,
   MapPin,
 } from "lucide-react";
@@ -30,6 +28,7 @@ import {
   type Industry,
 } from "@/lib/api";
 import LocationPicker from "@/components/dashboard/LocationPicker";
+import PhoneInput from "@/components/common/PhoneInput";
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -291,30 +290,11 @@ export default function PostJobPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Calling Number</label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  type="tel"
-                  placeholder="+1 234 567 890"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-                />
-              </div>
+              <PhoneInput value={contactPhone} onChange={setContactPhone} placeholder="234 567 890" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">WhatsApp Number *</label>
-              <div className="relative">
-                <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                <input
-                  value={contactWhatsapp}
-                  onChange={(e) => setContactWhatsapp(e.target.value)}
-                  required
-                  type="tel"
-                  placeholder="+1 234 567 890"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-                />
-              </div>
+              <PhoneInput value={contactWhatsapp} onChange={setContactWhatsapp} placeholder="234 567 890" required />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Email Address *</label>

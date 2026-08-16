@@ -96,7 +96,6 @@ export default function ManageJobsPage() {
                 <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px]">Job Title & Location</th>
                 <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px]">Type</th>
                 <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px]">Posted</th>
-                <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px]">Views</th>
                 <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px]">Status</th>
                 <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-right">Actions</th>
               </tr>
@@ -135,7 +134,6 @@ export default function ManageJobsPage() {
                     <td className="px-6 py-5 text-muted-foreground font-medium">
                       {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
                     </td>
-                    <td className="px-6 py-5 font-bold text-foreground">{job.views}</td>
                     <td className="px-6 py-5">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${STATUS_STYLES[job.status]}`}>
                         {job.status}

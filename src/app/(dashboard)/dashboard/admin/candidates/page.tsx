@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
+import PhoneInput from "@/components/common/PhoneInput";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
 
@@ -104,12 +105,7 @@ function EditCandidateModal({
             type="email"
             className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
           />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone"
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-          />
+          <PhoneInput value={phone} onChange={setPhone} />
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
