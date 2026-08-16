@@ -17,8 +17,8 @@ function GeneralAdCard({ job }: { job: JobPost }) {
       onClick={() => router.push(`/jobs/${job.id}`)}
       className="group flex flex-col bg-white rounded-2xl border border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden cursor-pointer"
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary/30">
-        <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" fit="contain" />
+      <div className="relative w-full bg-secondary/30">
+        <JobPosterImage image={job.image} title={job.title} company={job.company} fit="natural" placeholderClassName="w-full aspect-[4/5]" />
 
         {isNew && (
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
@@ -117,7 +117,7 @@ export default function GeneralAdsSection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
           {jobs.slice(0, 8).map((job) => (
             <GeneralAdCard key={job.id} job={job} />
           ))}

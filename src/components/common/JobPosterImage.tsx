@@ -19,30 +19,31 @@ export default function JobPosterImage({
   company,
   className = "",
   fit = "cover",
+  placeholderClassName,
 }: {
   image: string | null;
   title: string;
   company: string;
   className?: string;
-  // "cover" crops to fill — fine for small/square thumbnails. "contain"
-  // guarantees the full poster is always visible (employer posters vary
-  // wildly in aspect ratio, many are tall flyers that "cover" would crop
-  // into) by letterboxing over a blurred copy of the same image instead of
-  // leaving bare background.
-  fit?: "cover" | "contain";
+  // "cover" crops to fill a fixed-size box — fine for small/square
+  // thumbnails. "natural" fills the full width and lets height follow the
+  // image's own aspect ratio — no cropping, no letterbox bars, since the
+  // box itself sizes to the image rather than the other way around.
+  // Requires the caller's grid to not force items to a shared row height
+  // (e.g. `items-start` on the grid container).
+  fit?: "cover" | "natural";
+  // Only used for the no-image placeholder in "natural" mode, since there's
+  // no intrinsic image size to size the box from. Defaults to className.
+  placeholderClassName?: string;
 }) {
   if (image) {
     const src = resolveImageUrl(image);
     const alt = `${title} at ${company}`;
 
-    if (fit === "contain") {
+    if (fit === "natural") {
       return (
-        <div className={`relative overflow-hidden ${className}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} className="relative w-full h-full object-contain" />
-        </div>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt} className={`w-full h-auto ${className}`} />
       );
     }
 
@@ -56,7 +57,9 @@ export default function JobPosterImage({
     <div
       role="img"
       aria-label={`${title} at ${company}`}
-      className={`flex flex-col items-center justify-center gap-1 bg-brand-blue/5 text-brand-blue ${className}`}
+      className={`flex flex-col items-center justify-center gap-1 bg-brand-blue/5 text-brand-blue ${
+        fit === "natural" ? placeholderClassName ?? className : className
+      }`}
     >
       <span className="text-2xl font-black">{initials(company) || initials(title)}</span>
       <span className="text-[10px] font-semibold uppercase tracking-wide px-2 text-center line-clamp-2">

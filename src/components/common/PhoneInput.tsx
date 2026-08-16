@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { Select } from "@base-ui/react/select";
+import { Check, ChevronDown } from "lucide-react";
 
 interface CountryCode {
   iso: string;
@@ -92,10 +94,12 @@ export default function PhoneInput({
 }) {
   const { dial, number } = useMemo(() => splitValue(value), [value]);
   const [localDial, setLocalDial] = useState(dial);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Keeps the select in sync if the incoming value's code changes out from
   // under us (e.g. admin edit form finishes loading an existing job).
   const effectiveDial = value ? dial : localDial;
+  const effectiveCountry = COUNTRY_CODES.find((c) => c.dial === effectiveDial) ?? COUNTRY_CODES[0];
 
   const handleDialChange = (nextDial: string) => {
     setLocalDial(nextDial);
@@ -108,18 +112,42 @@ export default function PhoneInput({
 
   return (
     <div className="flex gap-2">
-      <select
-        value={effectiveDial}
-        onChange={(e) => handleDialChange(e.target.value)}
-        aria-label="Country code"
-        className="shrink-0 w-[92px] pl-2 pr-1 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm"
-      >
-        {COUNTRY_CODES.map((c) => (
-          <option key={c.iso} value={c.dial}>
-            {c.flag} {c.dial}
-          </option>
-        ))}
-      </select>
+      <Select.Root value={effectiveDial} onValueChange={(v) => handleDialChange(v as string)}>
+        <Select.Trigger
+          ref={triggerRef}
+          aria-label="Country code"
+          className="shrink-0 w-[92px] flex items-center justify-between gap-1 pl-2.5 pr-2 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm"
+        >
+          <span className="truncate">{effectiveCountry.flag} {effectiveCountry.dial}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner anchor={triggerRef} side="bottom" align="start" sideOffset={6} className="z-50 outline-none">
+            <Select.Popup className="w-56 max-h-72 overflow-auto rounded-xl border border-border/60 bg-white shadow-xl py-1.5">
+              <Select.List>
+                {COUNTRY_CODES.map((c) => (
+                  <Select.Item
+                    key={c.iso}
+                    value={c.dial}
+                    className="flex items-center justify-between gap-2 px-3.5 py-2 text-sm font-medium text-foreground cursor-pointer data-[highlighted]:bg-brand-blue-muted/50"
+                  >
+                    <Select.ItemText className="flex items-center gap-2">
+                      <span>{c.flag}</span>
+                      <span className="truncate">{c.name}</span>
+                    </Select.ItemText>
+                    <span className="flex items-center gap-1.5 shrink-0 text-muted-foreground">
+                      {c.dial}
+                      <Select.ItemIndicator>
+                        <Check className="w-3.5 h-3.5 text-brand-blue" />
+                      </Select.ItemIndicator>
+                    </span>
+                  </Select.Item>
+                ))}
+              </Select.List>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
       <input
         id={id}
         type="tel"
