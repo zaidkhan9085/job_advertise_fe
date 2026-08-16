@@ -17,15 +17,15 @@ import {
 } from "lucide-react";
 import {
   getJobs,
-  getJobLocations,
   getJobTypes,
   getIndustries,
+  searchJobLocations,
   type JobPost,
-  type JobLocation,
   ApiError,
 } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import MultiSelectCombobox, { type ComboOption } from "@/components/common/MultiSelectCombobox";
+import LocationCountFilter, { type LocationValue } from "@/components/common/LocationCountFilter";
 import { useIsRecent } from "@/hooks/useIsRecent";
 
 const PAGE_SIZE = 12;
@@ -43,24 +43,6 @@ const JOB_TYPE_OPTIONS: ComboOption[] = [
   { value: "Shutdown", label: "Shutdown" },
   { value: "Free", label: "Free Recruitment" },
 ];
-
-// The JobLocation tree is the same structured picker the job-posting form
-// uses — leaves and childless top-level nodes (e.g. "Europe") become
-// selectable options; children get their parent's name as a sublabel
-// (e.g. "UAE · Gulf").
-function flattenLocations(tree: JobLocation[]): ComboOption[] {
-  const out: ComboOption[] = [];
-  for (const node of tree) {
-    if (!node.children || node.children.length === 0) {
-      out.push({ value: node.id, label: node.name });
-    } else {
-      for (const child of node.children) {
-        out.push({ value: child.id, label: child.name, sublabel: node.name });
-      }
-    }
-  }
-  return out;
-}
 
 function slugify(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -80,12 +62,11 @@ function JobsListingContent() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const [jobs, setJobs] = useState<JobPost[]>([]);
-  const [locationOptions, setLocationOptions] = useState<ComboOption[]>([]);
   const [industryOptions, setIndustryOptions] = useState<ComboOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedLocations, setSelectedLocations] = useState<ComboOption[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<LocationValue[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<ComboOption[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<ComboOption[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -94,9 +75,8 @@ function JobsListingContent() {
     setIsLoading(true);
     setError(null);
     try {
-      const [jobsData, locationsTree, industries] = await Promise.all([getJobs(), getJobLocations(), getIndustries()]);
+      const [jobsData, industries] = await Promise.all([getJobs(), getIndustries()]);
       setJobs(jobsData);
-      setLocationOptions(flattenLocations(locationsTree));
       setIndustryOptions(industries.map((i) => ({ value: i.id, label: i.name })));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load jobs.");
@@ -110,10 +90,11 @@ function JobsListingContent() {
   }, [load]);
 
   // One-time hydration from homepage links (?industry=id, ?location=slug) —
-  // waits for the real option lists to load so the matching chip can
-  // actually be shown as selected, not just applied invisibly.
+  // waits for industryOptions to load so its chip can actually be shown as
+  // selected. Location has no preloaded list anymore (worldwide search), so
+  // it resolves each slug against the search endpoint directly instead.
   useEffect(() => {
-    if (hydrated || locationOptions.length === 0 || industryOptions.length === 0) return;
+    if (hydrated || industryOptions.length === 0) return;
 
     const industryIds = new Set(parseCsv(searchParams.get("industry")));
     if (industryIds.size) {
@@ -122,7 +103,15 @@ function JobsListingContent() {
 
     const locationSlugs = parseCsv(searchParams.get("location"));
     if (locationSlugs.length) {
-      setSelectedLocations(locationOptions.filter((o) => locationSlugs.includes(slugify(o.label))));
+      Promise.all(
+        locationSlugs.map(async (slug) => {
+          const guess = slug.replace(/-/g, " ");
+          const results = await searchJobLocations(guess).catch(() => []);
+          return results.find((r) => slugify(r.name) === slug) ?? null;
+        })
+      ).then((matches) => {
+        setSelectedLocations(matches.filter((m): m is LocationValue => !!m));
+      });
     }
 
     const typeNames = new Set(parseCsv(searchParams.get("jobtype")));
@@ -131,7 +120,7 @@ function JobsListingContent() {
     }
 
     setHydrated(true);
-  }, [hydrated, locationOptions, industryOptions, searchParams]);
+  }, [hydrated, industryOptions, searchParams]);
 
   // Keeps the URL shareable/bookmarkable as filters change, mirroring the
   // pattern the page already used for `q`.
@@ -140,7 +129,7 @@ function JobsListingContent() {
     const params = new URLSearchParams();
     if (searchTerm) params.set("q", searchTerm);
     if (timeFilter !== "any") params.set("time", timeFilter);
-    if (selectedLocations.length) params.set("location", selectedLocations.map((o) => slugify(o.label)).join(","));
+    if (selectedLocations.length) params.set("location", selectedLocations.map((o) => slugify(o.name)).join(","));
     if (selectedIndustries.length) params.set("industry", selectedIndustries.map((o) => o.value).join(","));
     if (selectedJobTypes.length) params.set("jobtype", selectedJobTypes.map((o) => o.value).join(","));
     router.replace(`/jobs${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false });
@@ -155,7 +144,7 @@ function JobsListingContent() {
     const now = Date.now();
     const TIME_MS: Record<string, number> = { "24h": 86_400_000, "3d": 3 * 86_400_000, "7d": 7 * 86_400_000, "30d": 30 * 86_400_000 };
 
-    const selectedLocationIds = new Set(selectedLocations.map((o) => o.value));
+    const selectedLocationIds = new Set(selectedLocations.map((o) => o.id));
     const selectedIndustryIds = new Set(selectedIndustries.map((o) => o.value));
     const selectedTypeNames = new Set(selectedJobTypes.map((o) => o.value));
 
@@ -169,16 +158,17 @@ function JobsListingContent() {
 
       const matchesTime = timeFilter === "any" || now - new Date(job.createdAt).getTime() <= TIME_MS[timeFilter];
 
-      // Filter options are country/state-level (from the coarse bulk tree,
-      // see flattenLocations()); jobs can point at city-level locations, so
-      // match against the denormalized country/state ancestor ids rather
-      // than the raw jobLocationId. The text fallback stays as a safety net
-      // for jobs saved before this denormalization existed.
+      // A selected filter result can be at any level (city/state/country),
+      // so match a job if the selection is either its exact location or one
+      // of its denormalized ancestors (e.g. selecting "Maharashtra" matches
+      // a job posted in "Mumbai"). Text fallback stays as a safety net for
+      // jobs saved before jobLocationCountryId/StateId existed.
       const matchesLocation =
         selectedLocationIds.size === 0 ||
+        (job.jobLocationId && selectedLocationIds.has(job.jobLocationId)) ||
         (job.jobLocationCountryId && selectedLocationIds.has(job.jobLocationCountryId)) ||
         (job.jobLocationStateId && selectedLocationIds.has(job.jobLocationStateId)) ||
-        selectedLocations.some((o) => location.toLowerCase().includes(o.label.toLowerCase()));
+        selectedLocations.some((o) => location.toLowerCase().includes(o.name.toLowerCase()));
 
       const matchesIndustry = selectedIndustryIds.size === 0 || (!!job.industryId && selectedIndustryIds.has(job.industryId));
 
@@ -210,7 +200,7 @@ function JobsListingContent() {
     selectedIndustries.length === 1
       ? `${selectedIndustries[0].label} Jobs`
       : selectedLocations.length === 1
-      ? `Jobs in ${selectedLocations[0].label}`
+      ? `Jobs in ${selectedLocations[0].name}`
       : "Find Your Dream Job Today";
 
   return (
@@ -253,12 +243,12 @@ function JobsListingContent() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
-            <MultiSelectCombobox
+            <LocationCountFilter
               label="Location"
-              placeholder="Any location"
-              options={locationOptions}
+              placeholder="Search city, state, or country..."
               selected={selectedLocations}
               onChange={setSelectedLocations}
+              jobs={jobs}
             />
             <MultiSelectCombobox
               label="Industry"
@@ -333,7 +323,7 @@ function JobsListingContent() {
             </div>
           ) : (
             <>
-              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}>
+              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start" : "space-y-4"}>
                 {visibleJobs.map((job) => (
                   <JobCardView key={job.id} job={job} mode={viewMode} />
                 ))}
@@ -366,14 +356,14 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
     return (
       <div
         onClick={goToJob}
-        className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
+        className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 overflow-hidden flex flex-col cursor-pointer ${
           job.type === "FEATURED"
             ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 hover:bg-amber-50/20"
             : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
         }`}
       >
-        <div className="relative aspect-[4/5] w-full overflow-hidden border-b border-brand-blue/10 bg-secondary/20">
-          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" fit="contain" />
+        <div className="relative w-full border-b border-brand-blue/10 bg-secondary/20">
+          <JobPosterImage image={job.image} title={job.title} company={job.company} fit="natural" placeholderClassName="w-full aspect-[4/5]" />
           {job.type === "FEATURED" && (
             <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-1.5 px-3 flex items-center gap-1.5 shadow-md">
               <Star className="w-3 h-3 fill-white text-white shrink-0" />
