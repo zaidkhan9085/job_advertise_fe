@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, MessageCircle, Eye, Star, Crown, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Star, Crown, ArrowRight } from "lucide-react";
 import { getFeaturedJobs, type JobPost, ApiError } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
 
@@ -115,49 +115,36 @@ export default function PremiumAdsSection() {
                   </div>
                 </div>
 
-                <div className="p-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{job.company}</span>
-                    <span className="w-1 h-1 rounded-full bg-border" />
-                    <span className="text-[10px] font-black text-[#DAA520] uppercase tracking-widest">Featured Opportunity</span>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">{job.company}</span>
                   </div>
 
-                  <Link href={`/jobs/${job.id}`} className="block mb-8 min-h-[56px]">
-                    <h3 className="text-xl font-black text-brand-blue leading-tight line-clamp-2 transition-colors group-hover:text-brand-blue-medium">
+                  <Link href={`/jobs/${job.id}`} className="block mb-3">
+                    <h3 className="text-base font-black text-brand-blue leading-tight line-clamp-2 transition-colors group-hover:text-brand-blue-medium">
                       {job.title}
                     </h3>
                   </Link>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {job.contactWhatsapp ? (
+                  <div className="pt-2 border-t border-brand-blue/10 flex items-center justify-end gap-1.5">
+                    {job.contactWhatsapp && (
                       <a
                         href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="WhatsApp"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex flex-col items-center justify-center py-3 rounded-2xl bg-[#25D366] text-white hover:bg-[#128C7E] transition-all shadow-lg shadow-emerald-500/20 active:scale-95 gap-1"
+                        className="p-1.5 rounded-md bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors"
                       >
-                        <MessageCircle className="w-5 h-5 flex-shrink-0" />
-                        <span className="text-[9px] font-black uppercase tracking-tighter">WhatsApp</span>
+                        <MessageCircle className="w-3.5 h-3.5" />
                       </a>
-                    ) : (
-                      <Link
-                        href={`/jobs/${job.id}`}
-                        title="View Details"
-                        className="flex flex-col items-center justify-center py-3 rounded-2xl bg-secondary text-foreground hover:bg-border/60 transition-all active:scale-95 gap-1"
-                      >
-                        <Eye className="w-5 h-5 flex-shrink-0" />
-                        <span className="text-[9px] font-black uppercase tracking-tighter">Details</span>
-                      </Link>
                     )}
                     <Link
                       href={`/jobs/${job.id}`}
-                      title="Apply Now"
-                      className="flex flex-col items-center justify-center py-3 rounded-2xl bg-brand-orange text-white hover:bg-brand-orange-medium transition-all shadow-lg shadow-orange-500/20 active:scale-95 gap-1"
+                      title="Apply"
+                      className="p-1.5 rounded-md bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white transition-all"
                     >
-                      <ArrowRight className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-[9px] font-black uppercase tracking-tighter">Apply Now</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>

@@ -63,13 +63,11 @@ export default function LocationCountFilter({
     return () => clearTimeout(timer);
   }, [term, isSearchable]);
 
-  // Real counts only, computed against the currently-loaded jobs — zero-
-  // count matches are dropped entirely rather than shown as "0" or "-".
+  // Every matched location stays in the list (so the name is always
+  // searchable/selectable) — only the count badge itself is real, and it's
+  // simply blank for a location with no current jobs, never "0" or "-".
   const results = isSearchable
-    ? rawResults
-        .map((r) => ({ ...r, count: countJobsAt(jobs, r.id) }))
-        .filter((r) => r.count > 0)
-        .sort((a, b) => b.count - a.count)
+    ? rawResults.map((r) => ({ ...r, count: countJobsAt(jobs, r.id) })).sort((a, b) => b.count - a.count)
     : [];
 
   const visibleChip = selected[0];
@@ -143,7 +141,7 @@ export default function LocationCountFilter({
                 <div className="px-3.5 py-3 text-sm text-muted-foreground text-center">Searching...</div>
               ) : (
                 <Combobox.Empty className="px-3.5 py-3 text-sm text-muted-foreground text-center">
-                  {term.length < 2 ? "Type at least 2 characters" : "No jobs found in that location"}
+                  {term.length < 2 ? "Type at least 2 characters" : "No matches"}
                 </Combobox.Empty>
               )}
               <Combobox.List>
@@ -162,7 +160,7 @@ export default function LocationCountFilter({
                       )}
                     </span>
                     <span className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs font-black text-brand-blue tabular-nums">{item.count}</span>
+                      {item.count > 0 && <span className="text-xs font-black text-brand-blue tabular-nums">{item.count}</span>}
                       <Combobox.ItemIndicator>
                         <Check className="w-4 h-4 text-brand-blue shrink-0" />
                       </Combobox.ItemIndicator>

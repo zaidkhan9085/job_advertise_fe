@@ -28,9 +28,12 @@ export default function JobPosterImage({
   // "cover" crops to fill a fixed-size box — fine for small/square
   // thumbnails. "natural" fills the full width and lets height follow the
   // image's own aspect ratio — no cropping, no letterbox bars, since the
-  // box itself sizes to the image rather than the other way around.
-  // Requires the caller's grid to not force items to a shared row height
-  // (e.g. `items-start` on the grid container).
+  // box itself sizes to the image rather than the other way around. Capped
+  // at a max height so a pathologically tall/narrow poster can't blow the
+  // whole card out — past that cap it falls back to object-contain
+  // (shrinks to fit, still uncropped, just no longer full-width). Requires
+  // the caller's grid to not force items to a shared row height (e.g.
+  // `items-start` on the grid container).
   fit?: "cover" | "natural";
   // Only used for the no-image placeholder in "natural" mode, since there's
   // no intrinsic image size to size the box from. Defaults to className.
@@ -43,7 +46,7 @@ export default function JobPosterImage({
     if (fit === "natural") {
       return (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className={`w-full h-auto ${className}`} />
+        <img src={src} alt={alt} className={`w-full h-auto max-h-[420px] object-contain mx-auto ${className}`} />
       );
     }
 
