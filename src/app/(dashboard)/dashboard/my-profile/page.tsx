@@ -20,16 +20,15 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  getRegions,
   getMyCandidateProfile,
   createCandidateProfile,
   updateCandidateProfile,
   resolveImageUrl,
   ApiError,
-  type Region,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import PhoneInput from "@/components/common/PhoneInput";
+import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 
 function initials(name: string) {
   return name
@@ -43,7 +42,6 @@ function initials(name: string) {
 export default function MyProfilePage() {
   const { user } = useAuth();
 
-  const [regions, setRegions] = useState<Region[]>([]);
   const [isExisting, setIsExisting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +50,7 @@ export default function MyProfilePage() {
   const [position, setPosition] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
-  const [currentLocation, setCurrentLocation] = useState("");
+  const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
   const [qualification, setQualification] = useState("");
   const [industry, setIndustry] = useState("");
   const [indianExp, setIndianExp] = useState("");
@@ -62,7 +60,6 @@ export default function MyProfilePage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
   const [preferredLocation, setPreferredLocation] = useState("");
-  const [regionId, setRegionId] = useState("");
 
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -71,15 +68,14 @@ export default function MyProfilePage() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [regionList, profile] = await Promise.all([getRegions(), getMyCandidateProfile()]);
-      setRegions(regionList);
+      const profile = await getMyCandidateProfile();
       if (profile) {
         setIsExisting(true);
         setName(profile.name ?? "");
         setPosition(profile.position ?? "");
         setWhatsapp(profile.whatsapp ?? "");
         setEmail(profile.email ?? "");
-        setCurrentLocation(profile.currentLocation ?? "");
+        setJobLocation(toLocationValue(profile.jobLocation));
         setQualification(profile.qualification ?? "");
         setIndustry(profile.industry ?? "");
         setIndianExp(profile.indianExp ?? "");
@@ -89,7 +85,6 @@ export default function MyProfilePage() {
         setDateOfBirth(profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "");
         setGender(profile.gender ?? "");
         setPreferredLocation(profile.preferredLocation ?? "");
-        setRegionId(profile.regionId ?? "");
         if (profile.profileImage) setPhotoPreview(resolveImageUrl(profile.profileImage));
       }
     } catch (err) {
@@ -109,7 +104,6 @@ export default function MyProfilePage() {
       position,
       whatsapp,
       email,
-      currentLocation,
       qualification,
       industry,
       indianExp,
@@ -119,16 +113,14 @@ export default function MyProfilePage() {
       dateOfBirth,
       gender,
       preferredLocation,
-      regionId,
     ];
-    const filled = fields.filter((f) => f.trim().length > 0).length;
-    return Math.round((filled / fields.length) * 100);
+    const filled = fields.filter((f) => f.trim().length > 0).length + (jobLocation ? 1 : 0);
+    return Math.round((filled / (fields.length + 1)) * 100);
   }, [
     name,
     position,
     whatsapp,
     email,
-    currentLocation,
     qualification,
     industry,
     indianExp,
@@ -138,7 +130,7 @@ export default function MyProfilePage() {
     dateOfBirth,
     gender,
     preferredLocation,
-    regionId,
+    jobLocation,
   ]);
 
   if (user && user.role !== "candidate") {
@@ -153,8 +145,8 @@ export default function MyProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!regionId) {
-      toast.error("Please select a region.");
+    if (!jobLocation) {
+      toast.error("Please select your current location.");
       return;
     }
 
@@ -163,8 +155,7 @@ export default function MyProfilePage() {
       position,
       whatsapp,
       email,
-      regionId,
-      currentLocation: currentLocation || undefined,
+      jobLocationId: jobLocation.id,
       qualification: qualification || undefined,
       industry: industry || undefined,
       indianExp: indianExp || undefined,
@@ -277,8 +268,8 @@ export default function MyProfilePage() {
             </div>
           </div>
           <div className="space-y-2">
-            <label className={labelClass}><MapPin className="w-4 h-4" /> Current Location</label>
-            <input value={currentLocation} onChange={(e) => setCurrentLocation(e.target.value)} className={inputClass} />
+            <label className={labelClass}><MapPin className="w-4 h-4" /> Current Location *</label>
+            <CityAutocomplete value={jobLocation} onChange={setJobLocation} required />
           </div>
         </div>
 
@@ -347,20 +338,6 @@ export default function MyProfilePage() {
           <div className="space-y-2">
             <label className={labelClass}><MapPin className="w-4 h-4" /> Preferred Location</label>
             <input value={preferredLocation} onChange={(e) => setPreferredLocation(e.target.value)} className={inputClass} />
-          </div>
-          <div className="space-y-2">
-            <label className={labelClass}><Globe2 className="w-4 h-4" /> Region *</label>
-            <select
-              value={regionId}
-              onChange={(e) => setRegionId(e.target.value)}
-              required
-              className={`${inputClass} appearance-none cursor-pointer`}
-            >
-              <option value="" disabled>Select your region</option>
-              {regions.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
           </div>
         </div>
 

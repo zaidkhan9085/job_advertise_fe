@@ -62,10 +62,22 @@ export default function RegionsSection() {
       try {
         const [jobs, tree] = await Promise.all([getJobs(), getJobLocations()]);
 
-        const countByLocationId = new Map<string, number>();
+        // Counts by the denormalized country/state ancestor ids, not the raw
+        // jobLocationId — jobs increasingly point at city-level locations
+        // (job posting's picker now supports full worldwide city detail),
+        // and this tab grouping is intentionally coarse (country/state
+        // level only). A job contributes to both its country's count and
+        // its state's count (when it has one) — these are always different
+        // ids, so one shared map is fine, nothing double-counts within a
+        // single tab.
+        const countByAncestorId = new Map<string, number>();
+        const bump = (id: string | null) => {
+          if (!id) return;
+          countByAncestorId.set(id, (countByAncestorId.get(id) ?? 0) + 1);
+        };
         for (const job of jobs) {
-          if (!job.jobLocationId) continue;
-          countByLocationId.set(job.jobLocationId, (countByLocationId.get(job.jobLocationId) ?? 0) + 1);
+          bump(job.jobLocationCountryId);
+          bump(job.jobLocationStateId);
         }
 
         const findNode = (name: string) => tree.find((n) => n.name === name);
@@ -73,7 +85,7 @@ export default function RegionsSection() {
           id: node.id,
           label: node.name,
           flag: FLAGS[node.name] ?? defaultFlag,
-          jobCount: countByLocationId.get(node.id) ?? 0,
+          jobCount: countByAncestorId.get(node.id) ?? 0,
           href: `/jobs?location=${slugify(node.name)}`,
         });
         const byCountDesc = (a: RegionRow, b: RegionRow) => b.jobCount - a.jobCount;

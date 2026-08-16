@@ -2,15 +2,15 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Building, ImagePlus, MapPin, Globe } from "lucide-react";
-import { getRegions, getMyCompany, updateMyCompany, ApiError, resolveImageUrl, type Region } from "@/lib/api";
+import { Building, ImagePlus, Globe } from "lucide-react";
+import { getMyCompany, updateMyCompany, ApiError, resolveImageUrl } from "@/lib/api";
+import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 
 export default function CompanyProfilePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
-  const [regionId, setRegionId] = useState("");
-  const [regions, setRegions] = useState<Region[]>([]);
+  const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
 
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -22,13 +22,12 @@ export default function CompanyProfilePage() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [regionList, company] = await Promise.all([getRegions(), getMyCompany()]);
-      setRegions(regionList);
+      const company = await getMyCompany();
       if (company) {
         setName(company.name);
         setDescription(company.description ?? "");
         setWebsite(company.website ?? "");
-        setRegionId(company.regionId ?? "");
+        setJobLocation(toLocationValue(company.jobLocation));
         if (company.logo) setLogoPreview(resolveImageUrl(company.logo));
       }
     } catch (err) {
@@ -50,8 +49,8 @@ export default function CompanyProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!regionId) {
-      toast.error("Please select a region.");
+    if (!jobLocation) {
+      toast.error("Please select your location.");
       return;
     }
 
@@ -61,7 +60,7 @@ export default function CompanyProfilePage() {
         name,
         description: description || undefined,
         website: website || undefined,
-        regionId,
+        jobLocationId: jobLocation.id,
         logo: logo ?? undefined,
       });
       toast.success(result.message);
@@ -85,7 +84,7 @@ export default function CompanyProfilePage() {
       <div>
         <h1 className="text-2xl font-black text-foreground tracking-tight">Company Profile</h1>
         <p className="text-muted-foreground mt-1 text-sm font-medium">
-          Shown to candidates on your job posts. Region is required — it controls which candidates can find you.
+          Shown to candidates on your job posts. Location is required — it controls which candidates can find you.
         </p>
       </div>
 
@@ -162,21 +161,9 @@ export default function CompanyProfilePage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-bold text-foreground/80 flex items-center gap-2">
-            <MapPin className="w-4 h-4" /> Region *
-          </label>
-          <select
-            value={regionId}
-            onChange={(e) => setRegionId(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
-          >
-            <option value="" disabled>Select your region</option>
-            {regions.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
-          <p className="text-xs text-muted-foreground">Candidates in this region will be prioritized for your job posts.</p>
+          <label className="text-sm font-bold text-foreground/80">Location *</label>
+          <CityAutocomplete value={jobLocation} onChange={setJobLocation} required />
+          <p className="text-xs text-muted-foreground">Candidates near this location will be prioritized for your job posts.</p>
         </div>
 
         <button
