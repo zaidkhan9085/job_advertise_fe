@@ -118,6 +118,7 @@ export interface RegisterPayload {
   role: FrontendRole;
   phone?: string;
   location?: string;
+  jobLocationId?: string;
 }
 
 export function registerRequest(payload: RegisterPayload) {
@@ -175,6 +176,8 @@ export interface JobPost {
   employerId: number;
   companyId: string | null;
   jobLocationId: string | null;
+  jobLocationCountryId: string | null;
+  jobLocationStateId: string | null;
   jobTypeId: string | null;
   jobType: { id: string; name: string } | null;
   industryId: string | null;
@@ -562,6 +565,16 @@ export interface Region {
   name: string;
 }
 
+// Shape of a JobLocation row as returned by a Prisma `include` (e.g. on
+// Company/CandidateProfile) — distinct from JobLocationSearchResult, which
+// is the shape the /job-locations/search endpoint returns.
+export interface JobLocationRef {
+  id: string;
+  name: string;
+  countryName: string | null;
+  stateName: string | null;
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -570,6 +583,8 @@ export interface Company {
   website: string | null;
   regionId: string | null;
   region: Region | null;
+  jobLocationId: string | null;
+  jobLocation: JobLocationRef | null;
   createdAt: string;
 }
 
@@ -596,7 +611,7 @@ export function getCompanyById(id: string) {
 export function updateMyCompany(payload: {
   name: string;
   description?: string;
-  regionId: string;
+  jobLocationId: string;
   website?: string;
   logo?: File;
 }) {
@@ -604,7 +619,7 @@ export function updateMyCompany(payload: {
     const formData = new FormData();
     formData.append("name", payload.name);
     if (payload.description) formData.append("description", payload.description);
-    formData.append("regionId", payload.regionId);
+    formData.append("jobLocationId", payload.jobLocationId);
     if (payload.website) formData.append("website", payload.website);
     formData.append("logo", payload.logo);
     return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
@@ -617,7 +632,7 @@ export function updateMyCompany(payload: {
     body: JSON.stringify({
       name: payload.name,
       description: payload.description,
-      regionId: payload.regionId,
+      jobLocationId: payload.jobLocationId,
       website: payload.website,
     }),
   });
@@ -648,6 +663,8 @@ export interface MyCandidateProfile {
   profileImage: string | null;
   regionId: string | null;
   region: Region | null;
+  jobLocationId: string | null;
+  jobLocation: JobLocationRef | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
   updatedAt: string;
@@ -658,7 +675,7 @@ export interface MyCandidateProfilePayload {
   position: string;
   whatsapp: string;
   email: string;
-  regionId: string;
+  jobLocationId: string;
   passportNo?: string;
   dateOfBirth?: string;
   nationality?: string;
@@ -667,7 +684,6 @@ export interface MyCandidateProfilePayload {
   gulfExp?: string;
   qualification?: string;
   industry?: string;
-  currentLocation?: string;
   preferredLocation?: string;
   profileImage?: File;
 }
@@ -831,6 +847,21 @@ export interface Industry {
 
 export function getJobLocations() {
   return apiFetch<JobLocation[]>("/api/job-locations");
+}
+
+// Worldwide search-as-you-type over the JobLocation tree (countries,
+// states, and cities alike) — used by CityAutocomplete. Distinct from
+// getJobLocations() above, which returns the whole coarse tree at once and
+// doesn't scale to city-level row counts.
+export interface JobLocationSearchResult {
+  id: string;
+  name: string;
+  country: string | null;
+  state: string | null;
+}
+
+export function searchJobLocations(q: string) {
+  return apiFetch<JobLocationSearchResult[]>(`/api/job-locations/search?q=${encodeURIComponent(q)}`);
 }
 
 export function getJobTypes() {

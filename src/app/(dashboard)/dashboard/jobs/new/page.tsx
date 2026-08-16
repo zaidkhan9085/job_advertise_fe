@@ -19,15 +19,13 @@ import { toast } from "sonner";
 import {
   createJob,
   getMyCompany,
-  getJobLocations,
   getJobTypes,
   getIndustries,
   ApiError,
-  type JobLocation,
   type JobType,
   type Industry,
 } from "@/lib/api";
-import LocationPicker from "@/components/dashboard/LocationPicker";
+import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import PhoneInput from "@/components/common/PhoneInput";
 
 export default function PostJobPage() {
@@ -44,9 +42,7 @@ export default function PostJobPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [isFreeRecruitment, setIsFreeRecruitment] = useState(false);
 
-  const [locations, setLocations] = useState<JobLocation[]>([]);
-  const [jobLocationId, setJobLocationId] = useState<string | null>(null);
-  const [jobLocationLabel, setJobLocationLabel] = useState<string | null>(null);
+  const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
 
   const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [jobTypeId, setJobTypeId] = useState("");
@@ -67,12 +63,10 @@ export default function PostJobPage() {
         router.push("/dashboard/profile");
         return;
       }
-      const [locationData, jobTypeData, industryData] = await Promise.all([
-        getJobLocations(),
+      const [jobTypeData, industryData] = await Promise.all([
         getJobTypes(),
         getIndustries(),
       ]);
-      setLocations(locationData);
       setJobTypes(jobTypeData);
       setIndustries(industryData);
     } catch (err) {
@@ -108,7 +102,7 @@ export default function PostJobPage() {
         contactWhatsapp,
         contactEmail,
         isFreeRecruitment,
-        jobLocationId: jobLocationId || undefined,
+        jobLocationId: jobLocation?.id || undefined,
         jobTypeId: jobTypeId || undefined,
         industryId: industryId || undefined,
         poster: poster || undefined,
@@ -196,14 +190,7 @@ export default function PostJobPage() {
               <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">
                 <MapPin className="w-4 h-4" /> Job Location (optional)
               </label>
-              <LocationPicker
-                locations={locations}
-                selectedLabel={jobLocationLabel}
-                onSelect={(id, label) => {
-                  setJobLocationId(id);
-                  setJobLocationLabel(label);
-                }}
-              />
+              <CityAutocomplete value={jobLocation} onChange={setJobLocation} />
             </div>
 
             <div className="space-y-2">

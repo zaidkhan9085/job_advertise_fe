@@ -169,9 +169,15 @@ function JobsListingContent() {
 
       const matchesTime = timeFilter === "any" || now - new Date(job.createdAt).getTime() <= TIME_MS[timeFilter];
 
+      // Filter options are country/state-level (from the coarse bulk tree,
+      // see flattenLocations()); jobs can point at city-level locations, so
+      // match against the denormalized country/state ancestor ids rather
+      // than the raw jobLocationId. The text fallback stays as a safety net
+      // for jobs saved before this denormalization existed.
       const matchesLocation =
         selectedLocationIds.size === 0 ||
-        (job.jobLocationId && selectedLocationIds.has(job.jobLocationId)) ||
+        (job.jobLocationCountryId && selectedLocationIds.has(job.jobLocationCountryId)) ||
+        (job.jobLocationStateId && selectedLocationIds.has(job.jobLocationStateId)) ||
         selectedLocations.some((o) => location.toLowerCase().includes(o.label.toLowerCase()));
 
       const matchesIndustry = selectedIndustryIds.size === 0 || (!!job.industryId && selectedIndustryIds.has(job.industryId));
