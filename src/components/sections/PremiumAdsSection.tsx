@@ -89,7 +89,7 @@ export default function PremiumAdsSection() {
         <div className="relative">
           <div
             ref={scrollRef}
-            className="flex items-start gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-12 px-1"
+            className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-12 px-1"
           >
             {premiumJobs.map((job) => (
               <div
@@ -98,8 +98,8 @@ export default function PremiumAdsSection() {
                 style={{ width: "min(calc(100vw - 4rem), 300px)" }}
                 className="flex-shrink-0 @container group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(30,58,138,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden sm:w-[calc(45%)] md:w-[calc(33.333%-1.25rem)] [@media(min-width:1366px)]:w-[calc(25%-1.25rem)] cursor-pointer"
               >
-                <div className="relative bg-secondary/20">
-                  <JobPosterImage image={job.image} title={job.title} company={job.company} fit="natural" placeholderClassName="w-full aspect-[4/5]" />
+                <div className="relative aspect-[4/5] overflow-hidden bg-secondary/20">
+                  <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
 
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-2.5 px-6 flex justify-between items-center shadow-lg">
                     <span className="text-[10px] sm:text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
