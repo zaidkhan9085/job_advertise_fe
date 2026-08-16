@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Phone, ArrowRight, MessageCircle, MapPin, Eye } from "lucide-react";
+import { Phone, ArrowRight, MessageCircle, MapPin } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { getNormalJobs, type JobPost, ApiError } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
@@ -17,8 +17,8 @@ function GeneralAdCard({ job }: { job: JobPost }) {
       onClick={() => router.push(`/jobs/${job.id}`)}
       className="group flex flex-col bg-white rounded-2xl border border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden cursor-pointer"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-secondary/30">
-        <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary/30">
+        <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" fit="contain" />
 
         {isNew && (
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
@@ -29,62 +29,48 @@ function GeneralAdCard({ job }: { job: JobPost }) {
         )}
       </div>
 
-      <div className="p-5 flex flex-col flex-1">
-        <div className="block mb-4">
-          <h3 className="font-bold text-foreground text-[15px] leading-snug group-hover:text-brand-blue transition-colors line-clamp-2">
-            {job.title}
-          </h3>
+      <div className="p-3 flex flex-col flex-1">
+        <h3 className="font-bold text-foreground text-[13px] leading-snug group-hover:text-brand-blue transition-colors line-clamp-1 mb-1">
+          {job.title}
+        </h3>
+        <div className="flex items-center gap-1 mb-2 text-muted-foreground">
+          <MapPin className="w-3 h-3 shrink-0" />
+          <span className="text-[11px] font-medium truncate">{job.location}</span>
         </div>
 
-        <div className="mt-auto">
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {job.contactWhatsapp ? (
-              <a
-                href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-[10px] font-bold">WhatsApp</span>
-              </a>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-secondary text-muted-foreground/40">
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-[10px] font-bold">WhatsApp</span>
-              </div>
-            )}
-            {job.contactPhone ? (
-              <a
-                href={`tel:${job.contactPhone}`}
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-blue-50 text-brand-blue hover:bg-blue-100 transition-colors"
-              >
-                <Phone className="w-4 h-4" />
-                <span className="text-[10px] font-bold">Call</span>
-              </a>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-secondary text-muted-foreground/40">
-                <Phone className="w-4 h-4" />
-                <span className="text-[10px] font-bold">Call</span>
-              </div>
-            )}
-            <div className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-foreground/5 text-foreground">
-              <ArrowRight className="w-4 h-4" />
-              <span className="text-[10px] font-bold">Apply</span>
+        <div className="mt-auto grid grid-cols-3 gap-1.5">
+          {job.contactWhatsapp ? (
+            <a
+              href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center justify-center py-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+              title="WhatsApp"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+            </a>
+          ) : (
+            <div className="flex items-center justify-center py-1.5 rounded-lg bg-secondary text-muted-foreground/40">
+              <MessageCircle className="w-3.5 h-3.5" />
             </div>
-          </div>
-
-          <div className="pt-4 border-t border-border/40 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <MapPin className="w-3 h-3" />
-              <span className="text-[11px] font-medium">{job.location}</span>
+          )}
+          {job.contactPhone ? (
+            <a
+              href={`tel:${job.contactPhone}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center justify-center py-1.5 rounded-lg bg-blue-50 text-brand-blue hover:bg-blue-100 transition-colors"
+              title="Call"
+            >
+              <Phone className="w-3.5 h-3.5" />
+            </a>
+          ) : (
+            <div className="flex items-center justify-center py-1.5 rounded-lg bg-secondary text-muted-foreground/40">
+              <Phone className="w-3.5 h-3.5" />
             </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Eye className="w-3 h-3" />
-              <span className="text-[11px] font-bold">{job.views} Views</span>
-            </div>
+          )}
+          <div className="flex items-center justify-center py-1.5 rounded-lg bg-foreground/5 text-foreground" title="Apply">
+            <ArrowRight className="w-3.5 h-3.5" />
           </div>
         </div>
       </div>

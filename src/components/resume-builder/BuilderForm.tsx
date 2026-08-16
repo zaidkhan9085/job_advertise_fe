@@ -18,6 +18,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useState } from "react";
+import PhoneInput from "@/components/common/PhoneInput";
 
 interface BuilderFormProps {
   resumeData: any;
@@ -126,13 +127,7 @@ export default function BuilderForm({ resumeData, setResumeData }: BuilderFormPr
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Phone Number</label>
-            <input 
-              type="tel" 
-              value={resumeData.personal.phone}
-              onChange={(e) => updatePersonal("phone", e.target.value)}
-              placeholder="e.g. +1 234 567 890"
-              className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-            />
+            <PhoneInput value={resumeData.personal.phone} onChange={(v) => updatePersonal("phone", v)} />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Location</label>

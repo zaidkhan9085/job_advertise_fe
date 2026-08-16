@@ -8,7 +8,6 @@ import {
   MapPin,
   Calendar,
   Building,
-  Eye,
   Share2,
   Heart,
   Flag,
@@ -306,11 +305,10 @@ export default function JobDetailPage() {
       <div className="container-site relative -mt-20 z-10">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="flex-1 w-full min-w-0 space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {[
                 { label: "Type", value: job.type, icon: Building },
                 { label: "Location", value: job.location || "Not specified", icon: MapPin },
-                { label: "Views", value: String(job.views), icon: Eye },
               ].map((stat) => (
                 <div key={stat.label} className="bg-white p-5 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
                   <stat.icon className="w-6 h-6 text-[oklch(0.47_0.20_250)] mb-3" />

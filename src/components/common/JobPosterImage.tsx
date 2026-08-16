@@ -18,20 +18,37 @@ export default function JobPosterImage({
   title,
   company,
   className = "",
+  fit = "cover",
 }: {
   image: string | null;
   title: string;
   company: string;
   className?: string;
+  // "cover" crops to fill — fine for small/square thumbnails. "contain"
+  // guarantees the full poster is always visible (employer posters vary
+  // wildly in aspect ratio, many are tall flyers that "cover" would crop
+  // into) by letterboxing over a blurred copy of the same image instead of
+  // leaving bare background.
+  fit?: "cover" | "contain";
 }) {
   if (image) {
+    const src = resolveImageUrl(image);
+    const alt = `${title} at ${company}`;
+
+    if (fit === "contain") {
+      return (
+        <div className={`relative overflow-hidden ${className}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt} className="relative w-full h-full object-contain" />
+        </div>
+      );
+    }
+
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={resolveImageUrl(image)}
-        alt={`${title} at ${company}`}
-        className={`object-cover ${className}`}
-      />
+      <img src={src} alt={alt} className={`object-cover ${className}`} />
     );
   }
 

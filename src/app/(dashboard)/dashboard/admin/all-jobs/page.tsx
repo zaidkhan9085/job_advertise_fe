@@ -219,12 +219,6 @@ export default function AdminAllJobsPage() {
       ),
     },
     {
-      key: "views",
-      title: "Views",
-      minWidth: 80,
-      render: (_, job) => <span className="font-bold text-foreground">{job.views}</span>,
-    },
-    {
       key: "status",
       title: "Status",
       minWidth: 110,

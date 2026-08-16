@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, Clock, ImagePlus, Phone, MessageSquare, Zap } from "lucide-react";
 import { createJob, ApiError, type StoryTag } from "@/lib/api";
+import PhoneInput from "@/components/common/PhoneInput";
 
 const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
 
@@ -166,25 +167,13 @@ export default function PostStoryPage() {
             <label className="text-sm font-bold text-foreground/80 flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5" /> Phone Number
             </label>
-            <input
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              type="tel"
-              placeholder="e.g. +919876543210"
-              className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-            />
+            <PhoneInput value={contactPhone} onChange={setContactPhone} placeholder="98765 43210" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-foreground/80 flex items-center gap-1.5">
               <MessageSquare className="w-3.5 h-3.5 text-emerald-500" /> WhatsApp Number
             </label>
-            <input
-              value={contactWhatsapp}
-              onChange={(e) => setContactWhatsapp(e.target.value)}
-              type="tel"
-              placeholder="e.g. +919876543210"
-              className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-            />
+            <PhoneInput value={contactWhatsapp} onChange={setContactWhatsapp} placeholder="98765 43210" />
           </div>
         </div>
         <p className="text-xs text-muted-foreground -mt-4">These numbers will show as Call & WhatsApp buttons on your story.</p>
