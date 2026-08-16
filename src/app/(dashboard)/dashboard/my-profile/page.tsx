@@ -29,6 +29,7 @@ import {
   type Region,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
+import PhoneInput from "@/components/common/PhoneInput";
 
 function initials(name: string) {
   return name
@@ -268,7 +269,7 @@ export default function MyProfilePage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className={labelClass}><Phone className="w-4 h-4" /> WhatsApp *</label>
-              <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required className={inputClass} />
+              <PhoneInput value={whatsapp} onChange={setWhatsapp} required />
             </div>
             <div className="space-y-2">
               <label className={labelClass}><Mail className="w-4 h-4" /> Email *</label>

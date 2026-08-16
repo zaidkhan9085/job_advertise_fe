@@ -98,8 +98,8 @@ export default function PremiumAdsSection() {
                 style={{ width: "min(calc(100vw - 4rem), 300px)" }}
                 className="flex-shrink-0 @container group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(30,58,138,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden sm:w-[calc(45%)] md:w-[calc(33.333%-1.25rem)] [@media(min-width:1366px)]:w-[calc(25%-1.25rem)] cursor-pointer"
               >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
+                <div className="relative aspect-[4/5] overflow-hidden bg-secondary/20">
+                  <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" fit="contain" />
 
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-2.5 px-6 flex justify-between items-center shadow-lg">
                     <span className="text-[10px] sm:text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -107,14 +107,10 @@ export default function PremiumAdsSection() {
                     </span>
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                  <div className="absolute bottom-4 left-4 right-4 flex justify-start items-end">
                     <div className="bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl flex items-center gap-2 shadow-xl border border-white/20">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#DAA520] animate-pulse" />
                       <span className="text-[10px] font-black text-brand-blue uppercase">{job.location}</span>
-                    </div>
-                    <div className="bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-2 text-white/90 border border-white/10">
-                      <Eye className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-black">{job.views}</span>
                     </div>
                   </div>
                 </div>

@@ -19,6 +19,7 @@ import {
   ArrowUp,
   ArrowDown
 } from "lucide-react";
+import PhoneInput from "@/components/common/PhoneInput";
 
 interface SortableSectionProps {
   section: any;
@@ -70,14 +71,21 @@ export default function SortableSection({ section, onUpdate, onToggle, onDelete,
             ].map(f => (
               <div key={f.key} className="space-y-1.5 focus-within:translate-x-1 transition-transform duration-200">
                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">{f.label}</label>
-                <input 
-                  type="text" 
-                  value={section.data[f.key]}
-                  autoComplete="off"
-                  onChange={(e) => onUpdate({ ...section, data: { ...section.data, [f.key]: e.target.value } })}
-                  placeholder={f.placeholder}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-100/50 border-2 border-slate-300 focus:border-brand-blue/30 focus:bg-white transition-all outline-none font-bold text-sm text-slate-900 placeholder:text-slate-500 shadow-inner"
-                />
+                {f.key === "phone" ? (
+                  <PhoneInput
+                    value={section.data[f.key]}
+                    onChange={(v) => onUpdate({ ...section, data: { ...section.data, [f.key]: v } })}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={section.data[f.key]}
+                    autoComplete="off"
+                    onChange={(e) => onUpdate({ ...section, data: { ...section.data, [f.key]: e.target.value } })}
+                    placeholder={f.placeholder}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-100/50 border-2 border-slate-300 focus:border-brand-blue/30 focus:bg-white transition-all outline-none font-bold text-sm text-slate-900 placeholder:text-slate-500 shadow-inner"
+                  />
+                )}
               </div>
             ))}
           </div>

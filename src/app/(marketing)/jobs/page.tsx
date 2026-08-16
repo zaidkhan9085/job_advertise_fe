@@ -42,7 +42,6 @@ const JOB_TYPE_OPTIONS: ComboOption[] = [
   { value: "Long Term", label: "Long Term" },
   { value: "Shutdown", label: "Shutdown" },
   { value: "Free", label: "Free Recruitment" },
-  { value: "Paid", label: "Paid / Agency" },
 ];
 
 // The JobLocation tree is the same structured picker the job-posting form
@@ -181,8 +180,7 @@ function JobsListingContent() {
         selectedTypeNames.size === 0 ||
         (selectedTypeNames.has("Long Term") && job.jobType?.name === "Long Term") ||
         (selectedTypeNames.has("Shutdown") && job.jobType?.name === "Shutdown") ||
-        (selectedTypeNames.has("Free") && job.isFreeRecruitment) ||
-        (selectedTypeNames.has("Paid") && !job.isFreeRecruitment);
+        (selectedTypeNames.has("Free") && job.isFreeRecruitment);
 
       return matchesSearch && matchesTime && matchesLocation && matchesIndustry && matchesJobType;
     });
@@ -368,8 +366,8 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
             : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
         }`}
       >
-        <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-brand-blue/10">
-          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
+        <div className="relative aspect-[4/5] w-full overflow-hidden border-b border-brand-blue/10 bg-secondary/20">
+          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" fit="contain" />
           {job.type === "FEATURED" && (
             <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-1.5 px-3 flex items-center gap-1.5 shadow-md">
               <Star className="w-3 h-3 fill-white text-white shrink-0" />
@@ -382,30 +380,32 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
             </span>
           )}
         </div>
-        <div className="p-4 flex flex-col flex-1">
-          <div className="block mb-2.5">
-            <h3 className="font-extrabold text-[15px] leading-tight group-hover:text-brand-blue transition-colors line-clamp-2">
-              {job.title}
-            </h3>
+        <div className="p-3 flex flex-col flex-1">
+          <h3 className="font-extrabold text-[13px] leading-tight group-hover:text-brand-blue transition-colors line-clamp-1 mb-1">
+            {job.title}
+          </h3>
+          <div className="flex items-center gap-1 mb-2 text-[11px] font-medium text-muted-foreground group-hover:text-brand-blue transition-colors">
+            <Building className="w-3 h-3 text-brand-blue/40 shrink-0" />
+            <span className="truncate">{job.company}</span>
+            <span className="text-brand-blue/20 shrink-0">·</span>
+            <MapPin className="w-3 h-3 text-brand-blue/40 shrink-0" />
+            <span className="truncate">{job.location}</span>
           </div>
-          <div className="space-y-1.5 mb-3 text-[13px] font-medium text-muted-foreground group-hover:text-brand-blue transition-colors">
-            <div className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5 text-brand-blue/40 shrink-0" /> <span className="truncate">{job.company}</span></div>
-            <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-brand-blue/40 shrink-0" /> <span className="truncate">{job.location}</span></div>
-          </div>
-          <div className="mt-auto pt-3 border-t border-brand-blue/10 flex items-center justify-end gap-2">
+          <div className="mt-auto pt-2 border-t border-brand-blue/10 flex items-center justify-end gap-1.5">
             {job.contactWhatsapp && (
               <a
                 href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="p-2 rounded-lg bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors"
+                className="p-1.5 rounded-md bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors"
+                title="WhatsApp"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-3.5 h-3.5" />
               </a>
             )}
-            <div className="p-2 rounded-lg bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all">
-              <ArrowRight className="w-4 h-4" />
+            <div className="p-1.5 rounded-md bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all" title="Apply">
+              <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </div>
