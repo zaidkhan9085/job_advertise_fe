@@ -323,7 +323,7 @@ function JobsListingContent() {
             </div>
           ) : (
             <>
-              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start" : "space-y-4"}>
+              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}>
                 {visibleJobs.map((job) => (
                   <JobCardView key={job.id} job={job} mode={viewMode} />
                 ))}
@@ -356,14 +356,14 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
     return (
       <div
         onClick={goToJob}
-        className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 overflow-hidden flex flex-col cursor-pointer ${
+        className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
           job.type === "FEATURED"
             ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 hover:bg-amber-50/20"
             : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
         }`}
       >
-        <div className="relative w-full border-b border-brand-blue/10 bg-secondary/20">
-          <JobPosterImage image={job.image} title={job.title} company={job.company} fit="natural" placeholderClassName="w-full aspect-[4/5]" />
+        <div className="relative aspect-[4/5] w-full overflow-hidden border-b border-brand-blue/10 bg-secondary/20">
+          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
           {job.type === "FEATURED" && (
             <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-1.5 px-3 flex items-center gap-1.5 shadow-md">
               <Star className="w-3 h-3 fill-white text-white shrink-0" />
