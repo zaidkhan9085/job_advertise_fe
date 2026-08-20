@@ -17,6 +17,9 @@ import {
   Calendar,
   FileText,
   ArrowRight,
+  Sparkles,
+  Award,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -25,10 +28,13 @@ import {
   updateCandidateProfile,
   resolveImageUrl,
   ApiError,
+  type ProfileEntry,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import PhoneInput from "@/components/common/PhoneInput";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
+import TagListInput from "@/components/dashboard/TagListInput";
+import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
 
 function initials(name: string) {
   return name
@@ -61,6 +67,13 @@ export default function MyProfilePage() {
   const [gender, setGender] = useState("");
   const [preferredLocation, setPreferredLocation] = useState("");
 
+  const [summary, setSummary] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [experience, setExperience] = useState<ProfileEntry[]>([]);
+  const [education, setEducation] = useState<ProfileEntry[]>([]);
+  const [certifications, setCertifications] = useState<string[]>([]);
+  const [projects, setProjects] = useState<ProfileEntry[]>([]);
+
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +98,12 @@ export default function MyProfilePage() {
         setDateOfBirth(profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "");
         setGender(profile.gender ?? "");
         setPreferredLocation(profile.preferredLocation ?? "");
+        setSummary(profile.summary ?? "");
+        setSkills(profile.skills ?? []);
+        setExperience(profile.experience ?? []);
+        setEducation(profile.education ?? []);
+        setCertifications(profile.certifications ?? []);
+        setProjects(profile.projects ?? []);
         if (profile.profileImage) setPhotoPreview(resolveImageUrl(profile.profileImage));
       }
     } catch (err) {
@@ -98,7 +117,10 @@ export default function MyProfilePage() {
     loadData();
   }, [loadData]);
 
-  const completeness = useMemo(() => {
+  // Professional sections weigh into completeness alongside the original
+  // fields — each is either present or not, same "count what's filled"
+  // approach as before, just extended to cover the new sections.
+  const { completeness, missingSections } = useMemo(() => {
     const fields = [
       name,
       position,
@@ -114,8 +136,20 @@ export default function MyProfilePage() {
       gender,
       preferredLocation,
     ];
-    const filled = fields.filter((f) => f.trim().length > 0).length + (jobLocation ? 1 : 0);
-    return Math.round((filled / (fields.length + 1)) * 100);
+    const sectionChecks = [
+      { label: "Professional Summary", filled: summary.trim().length > 0 },
+      { label: "Skills", filled: skills.length > 0 },
+      { label: "Experience", filled: experience.length > 0 },
+      { label: "Education", filled: education.length > 0 },
+      { label: "Certifications", filled: certifications.length > 0 },
+      { label: "Projects", filled: projects.length > 0 },
+    ];
+    const sectionsFilled = sectionChecks.filter((s) => s.filled).length;
+    const filled = fields.filter((f) => f.trim().length > 0).length + (jobLocation ? 1 : 0) + sectionsFilled;
+    return {
+      completeness: Math.round((filled / (fields.length + 1 + sectionChecks.length)) * 100),
+      missingSections: sectionChecks.filter((s) => !s.filled).map((s) => s.label),
+    };
   }, [
     name,
     position,
@@ -131,6 +165,12 @@ export default function MyProfilePage() {
     gender,
     preferredLocation,
     jobLocation,
+    summary,
+    skills,
+    experience,
+    education,
+    certifications,
+    projects,
   ]);
 
   if (user && user.role !== "candidate") {
@@ -165,6 +205,12 @@ export default function MyProfilePage() {
       dateOfBirth: dateOfBirth || undefined,
       gender: gender || undefined,
       preferredLocation: preferredLocation || undefined,
+      summary: summary || undefined,
+      skills,
+      experience,
+      education,
+      certifications,
+      projects,
       profileImage: photo ?? undefined,
     };
 
@@ -218,6 +264,16 @@ export default function MyProfilePage() {
             style={{ width: `${completeness}%` }}
           />
         </div>
+        {missingSections.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-xs font-semibold text-muted-foreground">Missing:</span>
+            {missingSections.map((label) => (
+              <span key={label} className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -271,6 +327,73 @@ export default function MyProfilePage() {
             <label className={labelClass}><MapPin className="w-4 h-4" /> Current Location *</label>
             <CityAutocomplete value={jobLocation} onChange={setJobLocation} required />
           </div>
+        </div>
+
+        {/* Professional Summary */}
+        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Professional Summary</h2>
+          <div className="space-y-2">
+            <label className={labelClass}><Sparkles className="w-4 h-4" /> Summary</label>
+            <textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="A short overview of your experience and what you're looking for..."
+              rows={4}
+              className={`${inputClass} resize-none`}
+            />
+          </div>
+        </div>
+
+        {/* Skills */}
+        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Skills</h2>
+          <TagListInput values={skills} onChange={setSkills} placeholder="e.g. Welding, MS Excel, Customer Service..." />
+        </div>
+
+        {/* Experience */}
+        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Experience</h2>
+          <ProfileEntryList
+            entries={experience}
+            onChange={setExperience}
+            titlePlaceholder="Job title, e.g. Site Supervisor"
+            subtitlePlaceholder="Company / employer"
+            addLabel="Add work experience"
+          />
+        </div>
+
+        {/* Education */}
+        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Education</h2>
+          <ProfileEntryList
+            entries={education}
+            onChange={setEducation}
+            titlePlaceholder="Degree / course, e.g. Diploma in Mechanical Engineering"
+            subtitlePlaceholder="School / institute"
+            addLabel="Add education"
+          />
+        </div>
+
+        {/* Certifications */}
+        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide flex items-center gap-2">
+            <Award className="w-4 h-4" /> Certifications
+          </h2>
+          <TagListInput values={certifications} onChange={setCertifications} placeholder="e.g. Forklift License, Safety Training..." />
+        </div>
+
+        {/* Projects */}
+        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide flex items-center gap-2">
+            <Layers className="w-4 h-4" /> Projects
+          </h2>
+          <ProfileEntryList
+            entries={projects}
+            onChange={setProjects}
+            titlePlaceholder="Project name"
+            subtitlePlaceholder="Your role / context"
+            addLabel="Add project"
+          />
         </div>
 
         {/* Professional Details */}

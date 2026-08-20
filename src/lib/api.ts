@@ -642,6 +642,16 @@ export function updateMyCompany(payload: {
 // Structured screening data (nationality, passport, Gulf/India experience,
 // preferred location) — distinct from Resume, which is the formatted CV
 // document. See MyCandidateProfilePayload below for the editable fields.
+// A repeatable entry within Experience / Education / Projects — same shape
+// convention already proven by Resume builder's LIST section type.
+export interface ProfileEntry {
+  id: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  content: string;
+}
+
 export interface MyCandidateProfile {
   id: number;
   userId: number;
@@ -659,6 +669,12 @@ export interface MyCandidateProfile {
   email: string;
   currentLocation: string | null;
   preferredLocation: string | null;
+  summary: string | null;
+  skills: string[] | null;
+  experience: ProfileEntry[] | null;
+  education: ProfileEntry[] | null;
+  certifications: string[] | null;
+  projects: ProfileEntry[] | null;
   resumeUrl: string | null;
   profileImage: string | null;
   regionId: string | null;
@@ -685,6 +701,12 @@ export interface MyCandidateProfilePayload {
   qualification?: string;
   industry?: string;
   preferredLocation?: string;
+  summary?: string;
+  skills?: string[];
+  experience?: ProfileEntry[];
+  education?: ProfileEntry[];
+  certifications?: string[];
+  projects?: ProfileEntry[];
   profileImage?: File;
 }
 
@@ -692,7 +714,11 @@ function buildCandidateProfileFormData(payload: MyCandidateProfilePayload): Form
   const formData = new FormData();
   const { profileImage, ...fields } = payload;
   Object.entries(fields).forEach(([key, value]) => {
-    if (value !== undefined) formData.append(key, value);
+    if (value === undefined) return;
+    // Array fields (skills/experience/education/certifications/projects)
+    // travel as JSON strings — this is multipart/form-data (profileImage
+    // rides along), which can't carry real arrays/objects.
+    formData.append(key, typeof value === "string" ? value : JSON.stringify(value));
   });
   if (profileImage) formData.append("profileImage", profileImage);
   return formData;
