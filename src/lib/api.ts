@@ -735,6 +735,21 @@ export function createCandidateProfile(payload: MyCandidateProfilePayload) {
   });
 }
 
+// Uploads (or replaces) the candidate's resume file — a separate, focused
+// endpoint from create/updateCandidateProfile above so it can run the
+// moment a file is picked, independent of the rest of the form (also sets
+// up the later "upload -> parse -> pre-fill" flow, which needs the upload
+// step decoupled from Save). If the candidate has no profile row yet, the
+// backend auto-creates a minimal one seeded from their registration data.
+export function uploadCandidateResume(file: File) {
+  const formData = new FormData();
+  formData.append("resume", file);
+  return apiFetch<{ message: string; resumeUrl: string; profile: MyCandidateProfile }>("/api/candidate/profile/resume", {
+    method: "POST",
+    body: formData,
+  });
+}
+
 export function updateCandidateProfile(payload: MyCandidateProfilePayload) {
   return apiFetch<{ message: string }>("/api/candidate/profile", {
     method: "PUT",

@@ -20,12 +20,16 @@ import {
   Sparkles,
   Award,
   Layers,
+  Upload,
+  FileCheck2,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   getMyCandidateProfile,
   createCandidateProfile,
   updateCandidateProfile,
+  uploadCandidateResume,
   resolveImageUrl,
   ApiError,
   type ProfileEntry,
@@ -78,6 +82,10 @@ export default function MyProfilePage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -104,6 +112,7 @@ export default function MyProfilePage() {
         setEducation(profile.education ?? []);
         setCertifications(profile.certifications ?? []);
         setProjects(profile.projects ?? []);
+        setResumeUrl(profile.resumeUrl ?? null);
         if (profile.profileImage) setPhotoPreview(resolveImageUrl(profile.profileImage));
       }
     } catch (err) {
@@ -180,6 +189,26 @@ export default function MyProfilePage() {
   const handlePhotoChange = (file: File | null) => {
     setPhoto(file);
     setPhotoPreview(file ? URL.createObjectURL(file) : photoPreview);
+  };
+
+  const handleResumeFileChange = async (file: File | null) => {
+    if (!file) return;
+    setIsUploadingResume(true);
+    try {
+      const result = await uploadCandidateResume(file);
+      setResumeUrl(result.resumeUrl);
+      // A profile row now exists either way (the backend auto-creates a
+      // minimal one on first upload if the candidate hadn't saved the form
+      // yet) — without this, a subsequent "Save Profile" would wrongly
+      // call createCandidateProfile and hit "Profile already exists".
+      setIsExisting(true);
+      toast.success("Resume uploaded");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to upload resume.");
+    } finally {
+      setIsUploadingResume(false);
+      if (resumeInputRef.current) resumeInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -473,7 +502,57 @@ export default function MyProfilePage() {
         </button>
       </form>
 
-      {/* Resume */}
+      {/* Uploaded resume file — distinct from the Resume Builder link below.
+          This is the candidate's own file (PDF/DOC/DOCX), shown/replaced
+          here; the builder generates a separate, formatted PDF document. */}
+      <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-3">
+        <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Resume File</h2>
+        <p className="text-xs text-muted-foreground -mt-1">
+          Upload your resume so employers can view or download it directly.
+        </p>
+        <input
+          ref={resumeInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="hidden"
+          onChange={(e) => handleResumeFileChange(e.target.files?.[0] ?? null)}
+        />
+        {resumeUrl ? (
+          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-secondary/30">
+            <a
+              href={resolveImageUrl(resumeUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-bold text-brand-blue hover:underline min-w-0"
+            >
+              <FileCheck2 className="w-4 h-4 shrink-0" />
+              <span className="truncate">View uploaded resume</span>
+              <ExternalLink className="w-3 h-3 shrink-0" />
+            </a>
+            <button
+              type="button"
+              onClick={() => resumeInputRef.current?.click()}
+              disabled={isUploadingResume}
+              className="shrink-0 text-xs font-bold text-muted-foreground hover:text-brand-blue transition-colors disabled:opacity-50"
+            >
+              {isUploadingResume ? "Uploading..." : "Replace"}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => resumeInputRef.current?.click()}
+            disabled={isUploadingResume}
+            className="w-full py-5 rounded-xl border-2 border-dashed border-brand-blue/40 hover:border-brand-blue hover:bg-brand-blue/5 transition-all flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-brand-blue disabled:opacity-60"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="text-sm font-bold">{isUploadingResume ? "Uploading..." : "Upload your resume"}</span>
+            <span className="text-xs">PDF, DOC, or DOCX &middot; Max 5MB</span>
+          </button>
+        )}
+      </div>
+
+      {/* Resume Builder */}
       <Link
         href="/resume-builder"
         className="flex items-center justify-between bg-white rounded-2xl border border-border/60 shadow-sm p-6 hover:border-brand-blue/40 transition-colors group"
@@ -483,8 +562,8 @@ export default function MyProfilePage() {
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-bold text-foreground">Resume</div>
-            <div className="text-xs text-muted-foreground">Build or edit your resume separately</div>
+            <div className="font-bold text-foreground">Resume Builder</div>
+            <div className="text-xs text-muted-foreground">Generate a polished resume PDF from scratch</div>
           </div>
         </div>
         <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-brand-blue transition-colors" />
