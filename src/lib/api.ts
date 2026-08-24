@@ -750,6 +750,38 @@ export function uploadCandidateResume(file: File) {
   });
 }
 
+// Structured data extracted from the candidate's already-uploaded resume
+// file (see uploadCandidateResume above) — returned for the frontend to
+// review/pre-fill into the profile form, never auto-saved by the backend.
+// currentLocation is intentionally NOT part of the profile's own location
+// picker shape (CityAutocomplete's LocationValue) — it's raw text as
+// written on the resume, not a validated worldwide-location match, so the
+// caller doesn't attempt to auto-select a location from it.
+export interface ParsedResumeData {
+  name: string;
+  position: string;
+  email: string;
+  whatsapp: string;
+  currentLocation: string;
+  qualification: string;
+  industry: string;
+  summary: string;
+  skills: string[];
+  certifications: string[];
+  // No `id` — these are freshly extracted, not yet real ProfileEntry rows;
+  // the frontend assigns one when applying them into the form, same as
+  // ProfileEntryList's own "add entry" already does.
+  experience: Omit<ProfileEntry, "id">[];
+  education: Omit<ProfileEntry, "id">[];
+  projects: Omit<ProfileEntry, "id">[];
+}
+
+export function parseCandidateResume() {
+  return apiFetch<{ message: string; parsed: ParsedResumeData }>("/api/resume/parse", {
+    method: "POST",
+  });
+}
+
 export function updateCandidateProfile(payload: MyCandidateProfilePayload) {
   return apiFetch<{ message: string }>("/api/candidate/profile", {
     method: "PUT",
