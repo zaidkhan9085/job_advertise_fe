@@ -23,6 +23,7 @@ import {
   Upload,
   FileCheck2,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -197,30 +198,33 @@ export default function MyProfilePage() {
   // Pre-fills parsed resume data into the form — ONLY fields/sections that
   // are currently empty. A field the candidate has already typed something
   // into, or a section that already has entries, is left completely alone.
-  // This is the entire mechanism behind "uploading a resume never
-  // overwrites manual edits" — there's no server-side write here at all,
-  // just local form state, reviewed and saved through the same Save
-  // Profile button as every other edit.
+  // Each new resume upload is treated as the current source of truth: any
+  // field/section the parse actually found data for replaces whatever was
+  // there before (including a previous resume's parsed data or hand-typed
+  // edits), so re-uploading an updated resume doesn't leave stale fields
+  // mixed in with the new ones. A field the parse found nothing for is left
+  // untouched rather than blanked out — Gemini not mentioning e.g. WhatsApp
+  // isn't a signal to erase it.
   const applyParsedData = (parsed: ParsedResumeData) => {
-    if (!name.trim() && parsed.name) setName(parsed.name);
-    if (!position.trim() && parsed.position) setPosition(parsed.position);
-    if (!whatsapp.trim() && parsed.whatsapp) setWhatsapp(parsed.whatsapp);
-    if (!email.trim() && parsed.email) setEmail(parsed.email);
-    if (!qualification.trim() && parsed.qualification) setQualification(parsed.qualification);
-    if (!industry.trim() && parsed.industry) setIndustry(parsed.industry);
-    if (!summary.trim() && parsed.summary) setSummary(parsed.summary);
-    if (skills.length === 0 && parsed.skills.length > 0) setSkills(parsed.skills);
-    if (certifications.length === 0 && parsed.certifications.length > 0) setCertifications(parsed.certifications);
+    if (parsed.name) setName(parsed.name);
+    if (parsed.position) setPosition(parsed.position);
+    if (parsed.whatsapp) setWhatsapp(parsed.whatsapp);
+    if (parsed.email) setEmail(parsed.email);
+    if (parsed.qualification) setQualification(parsed.qualification);
+    if (parsed.industry) setIndustry(parsed.industry);
+    if (parsed.summary) setSummary(parsed.summary);
+    if (parsed.skills.length > 0) setSkills(parsed.skills);
+    if (parsed.certifications.length > 0) setCertifications(parsed.certifications);
     // Gemini doesn't return an `id` (these are freshly extracted, not yet
     // real entries) — assign one here, same as ProfileEntryList's own "add
     // entry" already does.
-    if (experience.length === 0 && parsed.experience.length > 0) {
+    if (parsed.experience.length > 0) {
       setExperience(parsed.experience.map((e, i) => ({ ...e, id: `parsed-${Date.now()}-${i}` })));
     }
-    if (education.length === 0 && parsed.education.length > 0) {
+    if (parsed.education.length > 0) {
       setEducation(parsed.education.map((e, i) => ({ ...e, id: `parsed-${Date.now()}-${i}` })));
     }
-    if (projects.length === 0 && parsed.projects.length > 0) {
+    if (parsed.projects.length > 0) {
       setProjects(parsed.projects.map((e, i) => ({ ...e, id: `parsed-${Date.now()}-${i}` })));
     }
     // currentLocation is deliberately not applied — it's raw text as
@@ -418,7 +422,27 @@ export default function MyProfilePage() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="relative">
+        {/* Blocks editing every field while a resume is being uploaded or
+            parsed — without this, typing during parsing races with
+            applyParsedData's pre-fill (which now overwrites on every parse,
+            not just empty fields), so a candidate's own in-progress edit
+            could get silently clobbered the moment parsing finishes. */}
+        {(isUploadingResume || isParsingResume) && (
+          <div className="absolute inset-0 z-10 bg-white/70 backdrop-blur-[1px] rounded-2xl flex flex-col items-center justify-center gap-3 py-20">
+            <Loader2 className="w-8 h-8 text-brand-blue animate-spin" />
+            <p className="text-sm font-bold text-foreground">
+              {isUploadingResume ? "Uploading your resume..." : "Reading your resume and filling your profile..."}
+            </p>
+            <p className="text-xs text-muted-foreground">Fields are locked until this finishes.</p>
+          </div>
+        )}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6"
+          aria-busy={isUploadingResume || isParsingResume}
+          inert={isUploadingResume || isParsingResume}
+        >
         {/* Avatar */}
         <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 flex items-center gap-5">
           <input
@@ -613,7 +637,8 @@ export default function MyProfilePage() {
         >
           {isSubmitting ? "Saving..." : "Save Profile"}
         </button>
-      </form>
+        </form>
+      </div>
 
       {/* Resume Builder */}
       <Link
