@@ -30,9 +30,11 @@ import {
   createCandidateProfile,
   updateCandidateProfile,
   uploadCandidateResume,
+  parseCandidateResume,
   resolveImageUrl,
   ApiError,
   type ProfileEntry,
+  type ParsedResumeData,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import PhoneInput from "@/components/common/PhoneInput";
@@ -84,6 +86,7 @@ export default function MyProfilePage() {
 
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [isParsingResume, setIsParsingResume] = useState(false);
   const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = useCallback(async () => {
@@ -191,6 +194,41 @@ export default function MyProfilePage() {
     setPhotoPreview(file ? URL.createObjectURL(file) : photoPreview);
   };
 
+  // Pre-fills parsed resume data into the form — ONLY fields/sections that
+  // are currently empty. A field the candidate has already typed something
+  // into, or a section that already has entries, is left completely alone.
+  // This is the entire mechanism behind "uploading a resume never
+  // overwrites manual edits" — there's no server-side write here at all,
+  // just local form state, reviewed and saved through the same Save
+  // Profile button as every other edit.
+  const applyParsedData = (parsed: ParsedResumeData) => {
+    if (!name.trim() && parsed.name) setName(parsed.name);
+    if (!position.trim() && parsed.position) setPosition(parsed.position);
+    if (!whatsapp.trim() && parsed.whatsapp) setWhatsapp(parsed.whatsapp);
+    if (!email.trim() && parsed.email) setEmail(parsed.email);
+    if (!qualification.trim() && parsed.qualification) setQualification(parsed.qualification);
+    if (!industry.trim() && parsed.industry) setIndustry(parsed.industry);
+    if (!summary.trim() && parsed.summary) setSummary(parsed.summary);
+    if (skills.length === 0 && parsed.skills.length > 0) setSkills(parsed.skills);
+    if (certifications.length === 0 && parsed.certifications.length > 0) setCertifications(parsed.certifications);
+    // Gemini doesn't return an `id` (these are freshly extracted, not yet
+    // real entries) — assign one here, same as ProfileEntryList's own "add
+    // entry" already does.
+    if (experience.length === 0 && parsed.experience.length > 0) {
+      setExperience(parsed.experience.map((e, i) => ({ ...e, id: `parsed-${Date.now()}-${i}` })));
+    }
+    if (education.length === 0 && parsed.education.length > 0) {
+      setEducation(parsed.education.map((e, i) => ({ ...e, id: `parsed-${Date.now()}-${i}` })));
+    }
+    if (projects.length === 0 && parsed.projects.length > 0) {
+      setProjects(parsed.projects.map((e, i) => ({ ...e, id: `parsed-${Date.now()}-${i}` })));
+    }
+    // currentLocation is deliberately not applied — it's raw text as
+    // written on the resume, not a validated match against the worldwide
+    // location picker, so auto-selecting from it risks picking the wrong
+    // place. The candidate picks their location themselves either way.
+  };
+
   const handleResumeFileChange = async (file: File | null) => {
     if (!file) return;
     setIsUploadingResume(true);
@@ -203,6 +241,25 @@ export default function MyProfilePage() {
       // call createCandidateProfile and hit "Profile already exists".
       setIsExisting(true);
       toast.success("Resume uploaded");
+
+      setIsParsingResume(true);
+      try {
+        const parseResult = await parseCandidateResume();
+        applyParsedData(parseResult.parsed);
+        toast.success("We've pre-filled your profile from your resume — please review before saving.");
+      } catch (parseErr) {
+        // Parsing is a best-effort assist on top of a successful upload —
+        // a failure here shouldn't read as "the upload failed" (it didn't,
+        // the file is safely attached), just that auto-fill isn't
+        // available this time.
+        toast.error(
+          parseErr instanceof ApiError
+            ? parseErr.message
+            : "Couldn't read this resume automatically — please fill in your profile manually."
+        );
+      } finally {
+        setIsParsingResume(false);
+      }
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to upload resume.");
     } finally {
@@ -279,6 +336,62 @@ export default function MyProfilePage() {
         <p className="text-muted-foreground mt-1 text-sm font-medium">
           Employers screen candidates by this information before opening a resume.
         </p>
+      </div>
+
+      {/* Resume upload — first step: upload once and most of the form
+          below can pre-fill itself. Distinct from the Resume Builder link
+          further down, which generates a separate formatted PDF. */}
+      <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-3">
+        <h2 className="font-black text-foreground text-sm uppercase tracking-wide">
+          {resumeUrl ? "Resume File" : "Start with your resume"}
+        </h2>
+        <p className="text-xs text-muted-foreground -mt-1">
+          {resumeUrl
+            ? "Employers can view or download this directly."
+            : "Upload your resume and we'll pre-fill your profile automatically — you can review and edit everything before saving. Or skip this and fill it in yourself below."}
+        </p>
+        <input
+          ref={resumeInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="hidden"
+          onChange={(e) => handleResumeFileChange(e.target.files?.[0] ?? null)}
+        />
+        {resumeUrl ? (
+          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-secondary/30">
+            <a
+              href={resolveImageUrl(resumeUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-bold text-brand-blue hover:underline min-w-0"
+            >
+              <FileCheck2 className="w-4 h-4 shrink-0" />
+              <span className="truncate">View uploaded resume</span>
+              <ExternalLink className="w-3 h-3 shrink-0" />
+            </a>
+            <button
+              type="button"
+              onClick={() => resumeInputRef.current?.click()}
+              disabled={isUploadingResume || isParsingResume}
+              className="shrink-0 text-xs font-bold text-muted-foreground hover:text-brand-blue transition-colors disabled:opacity-50"
+            >
+              {isUploadingResume ? "Uploading..." : isParsingResume ? "Reading..." : "Replace"}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => resumeInputRef.current?.click()}
+            disabled={isUploadingResume || isParsingResume}
+            className="w-full py-5 rounded-xl border-2 border-dashed border-brand-blue/40 hover:border-brand-blue hover:bg-brand-blue/5 transition-all flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-brand-blue disabled:opacity-60"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="text-sm font-bold">
+              {isUploadingResume ? "Uploading..." : isParsingResume ? "Reading your resume..." : "Upload your resume"}
+            </span>
+            <span className="text-xs">PDF, DOC, or DOCX &middot; Max 5MB</span>
+          </button>
+        )}
       </div>
 
       {/* Completeness */}
@@ -501,56 +614,6 @@ export default function MyProfilePage() {
           {isSubmitting ? "Saving..." : "Save Profile"}
         </button>
       </form>
-
-      {/* Uploaded resume file — distinct from the Resume Builder link below.
-          This is the candidate's own file (PDF/DOC/DOCX), shown/replaced
-          here; the builder generates a separate, formatted PDF document. */}
-      <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-3">
-        <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Resume File</h2>
-        <p className="text-xs text-muted-foreground -mt-1">
-          Upload your resume so employers can view or download it directly.
-        </p>
-        <input
-          ref={resumeInputRef}
-          type="file"
-          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          className="hidden"
-          onChange={(e) => handleResumeFileChange(e.target.files?.[0] ?? null)}
-        />
-        {resumeUrl ? (
-          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-secondary/30">
-            <a
-              href={resolveImageUrl(resumeUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm font-bold text-brand-blue hover:underline min-w-0"
-            >
-              <FileCheck2 className="w-4 h-4 shrink-0" />
-              <span className="truncate">View uploaded resume</span>
-              <ExternalLink className="w-3 h-3 shrink-0" />
-            </a>
-            <button
-              type="button"
-              onClick={() => resumeInputRef.current?.click()}
-              disabled={isUploadingResume}
-              className="shrink-0 text-xs font-bold text-muted-foreground hover:text-brand-blue transition-colors disabled:opacity-50"
-            >
-              {isUploadingResume ? "Uploading..." : "Replace"}
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => resumeInputRef.current?.click()}
-            disabled={isUploadingResume}
-            className="w-full py-5 rounded-xl border-2 border-dashed border-brand-blue/40 hover:border-brand-blue hover:bg-brand-blue/5 transition-all flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-brand-blue disabled:opacity-60"
-          >
-            <Upload className="w-5 h-5" />
-            <span className="text-sm font-bold">{isUploadingResume ? "Uploading..." : "Upload your resume"}</span>
-            <span className="text-xs">PDF, DOC, or DOCX &middot; Max 5MB</span>
-          </button>
-        )}
-      </div>
 
       {/* Resume Builder */}
       <Link
