@@ -782,14 +782,6 @@ export function parseCandidateResume() {
   });
 }
 
-// The stored resumeUrl on the profile is not itself a working link — resumes
-// are stored with Cloudinary delivery type "authenticated" (not the default
-// public "upload"), so viewing one needs a freshly signed URL each time
-// rather than linking directly to the stored value.
-export function getResumeViewUrl() {
-  return apiFetch<{ url: string }>("/api/candidate/profile/resume/view");
-}
-
 export function updateCandidateProfile(payload: MyCandidateProfilePayload) {
   return apiFetch<{ message: string }>("/api/candidate/profile", {
     method: "PUT",
