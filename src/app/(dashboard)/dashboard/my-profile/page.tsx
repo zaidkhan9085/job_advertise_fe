@@ -31,6 +31,7 @@ import {
   updateCandidateProfile,
   uploadCandidateResume,
   parseCandidateResume,
+  getResumeViewUrl,
   resolveImageUrl,
   ApiError,
   type ProfileEntry,
@@ -87,6 +88,7 @@ export default function MyProfilePage() {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const [isParsingResume, setIsParsingResume] = useState(false);
+  const [isOpeningResume, setIsOpeningResume] = useState(false);
   const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = useCallback(async () => {
@@ -268,6 +270,26 @@ export default function MyProfilePage() {
     }
   };
 
+  // The stored resumeUrl isn't a working link on its own (resumes are
+  // stored with a private Cloudinary delivery type) — fetch a freshly
+  // signed URL on demand each time "View" is clicked rather than caching
+  // one. Opens the tab synchronously (before the await) and only then
+  // navigates it, so browser popup blockers don't treat this as an
+  // unsolicited popup.
+  const handleViewResume = async () => {
+    const win = window.open("", "_blank");
+    setIsOpeningResume(true);
+    try {
+      const { url } = await getResumeViewUrl();
+      if (win) win.location.href = url;
+    } catch (err) {
+      win?.close();
+      toast.error(err instanceof ApiError ? err.message : "Couldn't open the resume.");
+    } finally {
+      setIsOpeningResume(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -359,16 +381,16 @@ export default function MyProfilePage() {
         />
         {resumeUrl ? (
           <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-secondary/30">
-            <a
-              href={resolveImageUrl(resumeUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm font-bold text-brand-blue hover:underline min-w-0"
+            <button
+              type="button"
+              onClick={handleViewResume}
+              disabled={isOpeningResume}
+              className="flex items-center gap-2 text-sm font-bold text-brand-blue hover:underline min-w-0 disabled:opacity-50"
             >
               <FileCheck2 className="w-4 h-4 shrink-0" />
-              <span className="truncate">View uploaded resume</span>
+              <span className="truncate">{isOpeningResume ? "Opening..." : "View uploaded resume"}</span>
               <ExternalLink className="w-3 h-3 shrink-0" />
-            </a>
+            </button>
             <button
               type="button"
               onClick={() => resumeInputRef.current?.click()}
