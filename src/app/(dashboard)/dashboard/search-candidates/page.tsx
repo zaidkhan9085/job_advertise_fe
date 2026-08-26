@@ -18,21 +18,36 @@ import {
   Search,
   RotateCcw,
   ShieldCheck,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   searchCandidates,
   unlockCandidate,
   getMyCredits,
-  getRegions,
+  getIndustries,
+  getQualifications,
+  getSkillSuggestions,
   type ATSCandidate,
   type CreditsSummary,
-  type Region,
+  type Industry,
+  type Qualification,
+  type ExperienceBand,
   type PaginatedMeta,
   ApiError,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import Preview from "@/components/resume-builder/Preview";
+import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
+import MultiSelectCombobox, { type ComboOption } from "@/components/common/MultiSelectCombobox";
+
+const EXPERIENCE_BANDS: { value: ExperienceBand; label: string }[] = [
+  { value: "ZERO_TO_ONE", label: "0-1 years" },
+  { value: "ONE_TO_THREE", label: "1-3 years" },
+  { value: "THREE_TO_FIVE", label: "3-5 years" },
+  { value: "FIVE_TO_TEN", label: "5-10 years" },
+  { value: "TEN_PLUS", label: "10+ years" },
+];
 
 const PAGE_LIMIT = 20;
 const UNLOCK_COST = 1;
@@ -160,7 +175,6 @@ export default function SearchCandidatesPage() {
   const [candidates, setCandidates] = useState<ATSCandidate[]>([]);
   const [meta, setMeta] = useState<PaginatedMeta | null>(null);
   const [stats, setStats] = useState<{ totalCandidates: number; withResumeCount: number } | null>(null);
-  const [regions, setRegions] = useState<Region[]>([]);
   const [credits, setCredits] = useState<CreditsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -168,10 +182,19 @@ export default function SearchCandidatesPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [keywordMode, setKeywordMode] = useState<"all" | "any">("any");
-  const [regionId, setRegionId] = useState("");
+  const [location, setLocation] = useState<LocationValue | null>(null);
+  const [selectedSkills, setSelectedSkills] = useState<ComboOption[]>([]);
+  const [skillOptions, setSkillOptions] = useState<ComboOption[]>([]);
+  const [industry, setIndustry] = useState("");
+  const [qualification, setQualification] = useState("");
+  const [industries, setIndustries] = useState<Industry[]>([]);
+  const [qualifications, setQualifications] = useState<Qualification[]>([]);
+  const [indianExpBand, setIndianExpBand] = useState<ExperienceBand | "">("");
+  const [gulfExpBand, setGulfExpBand] = useState<ExperienceBand | "">("");
   const [nationality, setNationality] = useState("");
   const [gender, setGender] = useState("");
   const [resumeWithinDays, setResumeWithinDays] = useState<number | undefined>(undefined);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [page, setPage] = useState(1);
 
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -190,18 +213,23 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, keywordMode, regionId, nationality, gender, resumeWithinDays]);
+  }, [search, keywordMode, location, selectedSkills, industry, qualification, indianExpBand, gulfExpBand, nationality, gender, resumeWithinDays]);
 
   const filters = useMemo(
     () => ({
       search: search || undefined,
       keywordMode,
-      region: regionId || undefined,
+      jobLocationId: location?.id || undefined,
+      skills: selectedSkills.length > 0 ? selectedSkills.map((s) => s.value) : undefined,
+      industry: industry || undefined,
+      qualification: qualification || undefined,
+      indianExpBand: indianExpBand || undefined,
+      gulfExpBand: gulfExpBand || undefined,
       nationality: nationality || undefined,
       gender: gender || undefined,
       resumeWithinDays,
     }),
-    [search, keywordMode, regionId, nationality, gender, resumeWithinDays]
+    [search, keywordMode, location, selectedSkills, industry, qualification, indianExpBand, gulfExpBand, nationality, gender, resumeWithinDays]
   );
 
   const loadCredits = useCallback(async () => {
@@ -233,7 +261,11 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     if (user && (user.role === "employer" || user.role === "sub_admin" || user.role === "admin")) {
-      getRegions().then(setRegions).catch(() => {});
+      getIndustries().then(setIndustries).catch(() => {});
+      getQualifications().then(setQualifications).catch(() => {});
+      getSkillSuggestions()
+        .then((suggestions) => setSkillOptions(suggestions.map((s) => ({ value: s.value, label: s.label }))))
+        .catch(() => {});
       loadCandidates();
     }
   }, [user, loadCandidates]);
@@ -254,14 +286,12 @@ export default function SearchCandidatesPage() {
     try {
       const result = await unlockCandidate(candidate.userId);
       toast.success(candidate.isUnlocked ? "Resume opened" : `Unlocked — ${result.creditsRemaining} credit(s) remaining`);
-      setCandidates((prev) =>
-        prev.map((c) =>
-          c.userId === candidate.userId
-            ? { ...c, isUnlocked: true, whatsapp: result.candidate.whatsapp, email: result.candidate.email }
-            : c
-        )
-      );
-      setCredits((prev) => (prev ? { ...prev, creditsRemaining: result.creditsRemaining } : prev));
+      // Refetch rather than patching local state piecemeal — once
+      // isUnlocked flips server-side, searchCandidates also reveals
+      // summary/skills/experience/education/certifications/projects (see
+      // atsController.js), which unlockCandidate's own response doesn't
+      // carry back. loadCandidates already refreshes credits too.
+      await loadCandidates();
       if (openResume)
         setViewing({
           candidate: { ...candidate, isUnlocked: true, ...result.candidate },
@@ -275,11 +305,64 @@ export default function SearchCandidatesPage() {
     }
   };
 
-  const hasActiveFilters = !!searchInput || !!regionId || !!nationality || !!gender || !!resumeWithinDays;
+  // Drives both the "Reset" button's visibility and the removable chips row
+  // below the filter bar — each chip clears just that one filter, derived
+  // straight from the same state the filter controls themselves use.
+  const activeFilterChips = useMemo(() => {
+    const chips: { key: string; label: string; onRemove: () => void }[] = [];
+    if (searchInput) chips.push({ key: "search", label: `"${searchInput}"`, onRemove: () => setSearchInput("") });
+    if (location) {
+      chips.push({
+        key: "location",
+        label: [location.name, location.state, location.country].filter(Boolean).join(", "),
+        onRemove: () => setLocation(null),
+      });
+    }
+    for (const skill of selectedSkills) {
+      chips.push({
+        key: `skill-${skill.value}`,
+        label: skill.label,
+        onRemove: () => setSelectedSkills((prev) => prev.filter((s) => s.value !== skill.value)),
+      });
+    }
+    if (industry) chips.push({ key: "industry", label: industry, onRemove: () => setIndustry("") });
+    if (qualification) chips.push({ key: "qualification", label: qualification, onRemove: () => setQualification("") });
+    if (indianExpBand) {
+      chips.push({
+        key: "indianExpBand",
+        label: `India: ${EXPERIENCE_BANDS.find((b) => b.value === indianExpBand)?.label}`,
+        onRemove: () => setIndianExpBand(""),
+      });
+    }
+    if (gulfExpBand) {
+      chips.push({
+        key: "gulfExpBand",
+        label: `Gulf: ${EXPERIENCE_BANDS.find((b) => b.value === gulfExpBand)?.label}`,
+        onRemove: () => setGulfExpBand(""),
+      });
+    }
+    if (gender) chips.push({ key: "gender", label: gender, onRemove: () => setGender("") });
+    if (nationality) chips.push({ key: "nationality", label: nationality, onRemove: () => setNationality("") });
+    if (resumeWithinDays) {
+      chips.push({
+        key: "resumeWithinDays",
+        label: `Updated in ${resumeWithinDays}d`,
+        onRemove: () => setResumeWithinDays(undefined),
+      });
+    }
+    return chips;
+  }, [searchInput, location, selectedSkills, industry, qualification, indianExpBand, gulfExpBand, gender, nationality, resumeWithinDays]);
+
+  const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
     setSearchInput("");
     setKeywordMode("any");
-    setRegionId("");
+    setLocation(null);
+    setSelectedSkills([]);
+    setIndustry("");
+    setQualification("");
+    setIndianExpBand("");
+    setGulfExpBand("");
     setNationality("");
     setGender("");
     setResumeWithinDays(undefined);
@@ -315,76 +398,146 @@ export default function SearchCandidatesPage() {
         <StatCard label="Matching current filters" value={meta ? meta.total.toLocaleString() : "—"} />
       </div>
 
-      <div className="bg-white border border-border/60 rounded-2xl p-3 shadow-sm flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search by name, position, qualification..."
-            className="w-full pl-9 pr-24 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium"
-          />
-          <div className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex bg-secondary/60 rounded-full p-0.5">
-            <button
-              onClick={() => setKeywordMode("all")}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
-                keywordMode === "all" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setKeywordMode("any")}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
-                keywordMode === "any" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              Any
-            </button>
+      <div className="bg-white border border-border/60 rounded-2xl p-3 shadow-sm space-y-3">
+        {/* Keyword + Location + Skills are the 3 filters most searches
+            actually need — everything else lives behind "More filters" so
+            the bar doesn't turn into a wall of dropdowns. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by name, position, qualification..."
+              className="w-full pl-9 pr-24 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium"
+            />
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex bg-secondary/60 rounded-full p-0.5">
+              <button
+                onClick={() => setKeywordMode("all")}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
+                  keywordMode === "all" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setKeywordMode("any")}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
+                  keywordMode === "any" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Any
+              </button>
+            </div>
           </div>
-        </div>
-        <select
-          value={regionId}
-          onChange={(e) => setRegionId(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-        >
-          <option value="">All regions</option>
-          {regions.map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
-          ))}
-        </select>
-        <select
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-        >
-          <option value="">All genders</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-        <select
-          value={resumeWithinDays ?? ""}
-          onChange={(e) => setResumeWithinDays(e.target.value ? Number(e.target.value) : undefined)}
-          className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-        >
-          <option value="">Resume: any time</option>
-          <option value="7">Updated in 7 days</option>
-          <option value="30">Updated in 30 days</option>
-          <option value="90">Updated in 90 days</option>
-        </select>
-        <input
-          value={nationality}
-          onChange={(e) => setNationality(e.target.value)}
-          placeholder="Nationality"
-          className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium w-32"
-        />
-        {hasActiveFilters && (
+          <div className="w-full sm:w-56">
+            <CityAutocomplete label="Location" placeholder="Any location" value={location} onChange={setLocation} />
+          </div>
+          <div className="w-full sm:w-64">
+            <MultiSelectCombobox label="Skills" placeholder="Any skills" options={skillOptions} selected={selectedSkills} onChange={setSelectedSkills} />
+          </div>
           <button
-            onClick={resetFilters}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground px-2"
+            onClick={() => setShowMoreFilters((v) => !v)}
+            className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-bold transition-colors ${
+              showMoreFilters ? "border-brand-blue bg-brand-blue/5 text-brand-blue" : "border-border/60 text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset
+            <SlidersHorizontal className="w-4 h-4" /> More filters
           </button>
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground px-2"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Reset
+            </button>
+          )}
+        </div>
+
+        {showMoreFilters && (
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
+            <select
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
+            >
+              <option value="">All industries</option>
+              {industries.map((i) => (
+                <option key={i.id} value={i.name}>{i.name}</option>
+              ))}
+            </select>
+            <select
+              value={qualification}
+              onChange={(e) => setQualification(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
+            >
+              <option value="">All qualifications</option>
+              {qualifications.map((q) => (
+                <option key={q.id} value={q.name}>{q.name}</option>
+              ))}
+            </select>
+            <select
+              value={indianExpBand}
+              onChange={(e) => setIndianExpBand(e.target.value as ExperienceBand | "")}
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
+            >
+              <option value="">India exp: any</option>
+              {EXPERIENCE_BANDS.map((b) => (
+                <option key={b.value} value={b.value}>{b.label}</option>
+              ))}
+            </select>
+            <select
+              value={gulfExpBand}
+              onChange={(e) => setGulfExpBand(e.target.value as ExperienceBand | "")}
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
+            >
+              <option value="">Gulf exp: any</option>
+              {EXPERIENCE_BANDS.map((b) => (
+                <option key={b.value} value={b.value}>{b.label}</option>
+              ))}
+            </select>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
+            >
+              <option value="">All genders</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <select
+              value={resumeWithinDays ?? ""}
+              onChange={(e) => setResumeWithinDays(e.target.value ? Number(e.target.value) : undefined)}
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
+            >
+              <option value="">Resume: any time</option>
+              <option value="7">Updated in 7 days</option>
+              <option value="30">Updated in 30 days</option>
+              <option value="90">Updated in 90 days</option>
+            </select>
+            <input
+              value={nationality}
+              onChange={(e) => setNationality(e.target.value)}
+              placeholder="Nationality"
+              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium w-32"
+            />
+          </div>
+        )}
+
+        {activeFilterChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/60">
+            {activeFilterChips.map((chip) => (
+              <span
+                key={chip.key}
+                className="inline-flex items-center gap-1 text-xs font-bold text-brand-blue bg-brand-blue/10 rounded-full pl-2.5 pr-1.5 py-1"
+              >
+                {chip.label}
+                <button onClick={chip.onRemove} className="p-0.5 rounded-full hover:bg-brand-blue/20 transition-colors">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
         )}
       </div>
 
@@ -535,8 +688,18 @@ export default function SearchCandidatesPage() {
                 {[
                   ["Qualification", selected.qualification],
                   ["Industry", selected.industry],
-                  ["Experience · India", selected.indianExp],
-                  ["Experience · Gulf", selected.gulfExp],
+                  [
+                    "Experience · India",
+                    [selected.indianExp, selected.indianExpBand ? `(${EXPERIENCE_BANDS.find((b) => b.value === selected.indianExpBand)?.label})` : null]
+                      .filter(Boolean)
+                      .join(" "),
+                  ],
+                  [
+                    "Experience · Gulf",
+                    [selected.gulfExp, selected.gulfExpBand ? `(${EXPERIENCE_BANDS.find((b) => b.value === selected.gulfExpBand)?.label})` : null]
+                      .filter(Boolean)
+                      .join(" "),
+                  ],
                   ["Nationality", [selected.nationality, selected.gender].filter(Boolean).join(" · ")],
                   ["Current location", selected.currentLocation || selected.region?.name],
                   ["Preferred location", selected.preferredLocation],

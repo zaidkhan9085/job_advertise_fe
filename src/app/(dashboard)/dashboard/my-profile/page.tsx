@@ -36,12 +36,21 @@ import {
   ApiError,
   type ProfileEntry,
   type ParsedResumeData,
+  type ExperienceBand,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import PhoneInput from "@/components/common/PhoneInput";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 import TagListInput from "@/components/dashboard/TagListInput";
 import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
+
+const EXPERIENCE_BANDS: { value: ExperienceBand; label: string }[] = [
+  { value: "ZERO_TO_ONE", label: "0-1 years" },
+  { value: "ONE_TO_THREE", label: "1-3 years" },
+  { value: "THREE_TO_FIVE", label: "3-5 years" },
+  { value: "FIVE_TO_TEN", label: "5-10 years" },
+  { value: "TEN_PLUS", label: "10+ years" },
+];
 
 function initials(name: string) {
   return name
@@ -68,6 +77,8 @@ export default function MyProfilePage() {
   const [industry, setIndustry] = useState("");
   const [indianExp, setIndianExp] = useState("");
   const [gulfExp, setGulfExp] = useState("");
+  const [indianExpBand, setIndianExpBand] = useState<ExperienceBand | "">("");
+  const [gulfExpBand, setGulfExpBand] = useState<ExperienceBand | "">("");
   const [nationality, setNationality] = useState("");
   const [passportNo, setPassportNo] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -105,6 +116,8 @@ export default function MyProfilePage() {
         setIndustry(profile.industry ?? "");
         setIndianExp(profile.indianExp ?? "");
         setGulfExp(profile.gulfExp ?? "");
+        setIndianExpBand(profile.indianExpBand ?? "");
+        setGulfExpBand(profile.gulfExpBand ?? "");
         setNationality(profile.nationality ?? "");
         setPassportNo(profile.passportNo ?? "");
         setDateOfBirth(profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "");
@@ -290,6 +303,8 @@ export default function MyProfilePage() {
       industry: industry || undefined,
       indianExp: indianExp || undefined,
       gulfExp: gulfExp || undefined,
+      indianExpBand: indianExpBand || undefined,
+      gulfExpBand: gulfExpBand || undefined,
       nationality: nationality || undefined,
       passportNo: passportNo || undefined,
       dateOfBirth: dateOfBirth || undefined,
@@ -583,10 +598,34 @@ export default function MyProfilePage() {
             <div className="space-y-2">
               <label className={labelClass}>India Experience</label>
               <input value={indianExp} onChange={(e) => setIndianExp(e.target.value)} placeholder="e.g. 3 years" className={inputClass} />
+              <select
+                value={indianExpBand}
+                onChange={(e) => setIndianExpBand(e.target.value as ExperienceBand | "")}
+                className={inputClass}
+              >
+                <option value="">Experience range (optional)</option>
+                {EXPERIENCE_BANDS.map((b) => (
+                  <option key={b.value} value={b.value}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <label className={labelClass}>Gulf Experience</label>
               <input value={gulfExp} onChange={(e) => setGulfExp(e.target.value)} placeholder="e.g. 2 years" className={inputClass} />
+              <select
+                value={gulfExpBand}
+                onChange={(e) => setGulfExpBand(e.target.value as ExperienceBand | "")}
+                className={inputClass}
+              >
+                <option value="">Experience range (optional)</option>
+                {EXPERIENCE_BANDS.map((b) => (
+                  <option key={b.value} value={b.value}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

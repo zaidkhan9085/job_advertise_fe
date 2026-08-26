@@ -75,10 +75,15 @@ export type BulkDeletePayload =
   | { ids: (string | number)[] }
   | { selectAllMatching: true; filters: Record<string, unknown>; excludeIds: (string | number)[] };
 
-function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+function buildQuery(params: Record<string, string | number | boolean | string[] | undefined>): string {
   const usp = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== "") usp.set(key, String(value));
+    if (value === undefined || value === "") return;
+    if (Array.isArray(value)) {
+      value.forEach((v) => usp.append(key, v));
+    } else {
+      usp.set(key, String(value));
+    }
   });
   const query = usp.toString();
   return query ? `?${query}` : "";
@@ -652,6 +657,8 @@ export interface ProfileEntry {
   content: string;
 }
 
+export type ExperienceBand = "ZERO_TO_ONE" | "ONE_TO_THREE" | "THREE_TO_FIVE" | "FIVE_TO_TEN" | "TEN_PLUS";
+
 export interface MyCandidateProfile {
   id: number;
   userId: number;
@@ -663,6 +670,8 @@ export interface MyCandidateProfile {
   gender: string | null;
   indianExp: string | null;
   gulfExp: string | null;
+  indianExpBand: ExperienceBand | null;
+  gulfExpBand: ExperienceBand | null;
   qualification: string | null;
   industry: string | null;
   whatsapp: string;
@@ -698,6 +707,8 @@ export interface MyCandidateProfilePayload {
   gender?: string;
   indianExp?: string;
   gulfExp?: string;
+  indianExpBand?: ExperienceBand;
+  gulfExpBand?: ExperienceBand;
   qualification?: string;
   industry?: string;
   preferredLocation?: string;
@@ -820,6 +831,8 @@ export interface ATSCandidate {
   industry: string | null;
   indianExp: string | null;
   gulfExp: string | null;
+  indianExpBand: ExperienceBand | null;
+  gulfExpBand: ExperienceBand | null;
   gender: string | null;
   currentLocation: string | null;
   preferredLocation: string | null;
@@ -843,10 +856,16 @@ export interface ATSSearchResult extends Paginated<ATSCandidate> {
 
 export interface ATSSearchFilters extends AdminListParams {
   region?: string;
+  jobLocationId?: string;
   nationality?: string;
   gender?: string;
   keywordMode?: "all" | "any";
   resumeWithinDays?: number;
+  industry?: string;
+  qualification?: string;
+  indianExpBand?: ExperienceBand;
+  gulfExpBand?: ExperienceBand;
+  skills?: string[];
 }
 
 export function searchCandidates(filters?: ATSSearchFilters) {
@@ -858,10 +877,16 @@ export function searchCandidates(filters?: ATSSearchFilters) {
     sortOrder: filters?.sortOrder,
     all: filters?.all,
     region: filters?.region,
+    jobLocationId: filters?.jobLocationId,
     nationality: filters?.nationality,
     gender: filters?.gender,
     keywordMode: filters?.keywordMode,
     resumeWithinDays: filters?.resumeWithinDays,
+    industry: filters?.industry,
+    qualification: filters?.qualification,
+    indianExpBand: filters?.indianExpBand,
+    gulfExpBand: filters?.gulfExpBand,
+    skills: filters?.skills,
   });
   return apiFetch<ATSSearchResult>(`/api/ats/search${query}`);
 }
@@ -953,6 +978,26 @@ export function getJobTypes() {
 
 export function getIndustries() {
   return apiFetch<Industry[]>("/api/industries");
+}
+
+export interface Qualification {
+  id: string;
+  name: string;
+}
+
+export function getQualifications() {
+  return apiFetch<Qualification[]>("/api/qualifications");
+}
+
+// Real skills candidates currently have (frequency-sorted), not a fixed
+// taxonomy — powers the ATS Skills filter's suggestions.
+export interface SkillSuggestion {
+  value: string;
+  label: string;
+}
+
+export function getSkillSuggestions() {
+  return apiFetch<SkillSuggestion[]>("/api/ats/skills");
 }
 
 export { apiFetch, API_URL };
