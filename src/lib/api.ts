@@ -869,6 +869,10 @@ export function searchCandidates(filters?: ATSSearchFilters) {
 export interface UnlockCandidateResult {
   candidate: { whatsapp: string | null; email: string | null };
   resume: { theme: unknown; sections: unknown } | null;
+  // Signed, ready-to-open URL for the candidate's uploaded resume FILE
+  // (PDF/DOC/DOCX) — a separate source from the Resume Builder `resume`
+  // field above; a candidate can have either, both, or neither.
+  uploadedResumeUrl: string | null;
   creditsRemaining: number;
 }
 

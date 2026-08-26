@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Mail,
   Printer,
+  Download,
   X,
   Loader2,
   FileText,
@@ -53,10 +54,12 @@ function formatFreshness(candidate: ATSCandidate): string {
 function ResumeModal({
   candidate,
   resume,
+  uploadedResumeUrl,
   onClose,
 }: {
   candidate: ATSCandidate;
   resume: { theme: unknown; sections: unknown } | null;
+  uploadedResumeUrl: string | null;
   onClose: () => void;
 }) {
   const previewRef = useRef<HTMLDivElement>(null);
@@ -87,6 +90,16 @@ function ResumeModal({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {uploadedResumeUrl && (
+              <a
+                href={uploadedResumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90"
+              >
+                <Download className="w-4 h-4" /> Download Resume
+              </a>
+            )}
             {resume && (
               <button
                 onClick={() => handlePrint()}
@@ -103,10 +116,23 @@ function ResumeModal({
         <div className="flex-1 overflow-y-auto bg-secondary/30 p-6 flex justify-center">
           {resume ? (
             <Preview ref={previewRef} data={{ theme: resume.theme, sections: resume.sections }} />
+          ) : uploadedResumeUrl ? (
+            <div className="text-center text-muted-foreground py-20">
+              <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
+              <p className="mb-4">This candidate uploaded a resume file.</p>
+              <a
+                href={uploadedResumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90"
+              >
+                <Download className="w-4 h-4" /> Download Resume
+              </a>
+            </div>
           ) : (
             <div className="text-center text-muted-foreground py-20">
               <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              This candidate hasn&apos;t built a resume yet.
+              This candidate hasn&apos;t uploaded or built a resume yet.
             </div>
           )}
         </div>
@@ -151,9 +177,11 @@ export default function SearchCandidatesPage() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [unlockingId, setUnlockingId] = useState<number | null>(null);
-  const [viewing, setViewing] = useState<{ candidate: ATSCandidate; resume: { theme: unknown; sections: unknown } | null } | null>(
-    null
-  );
+  const [viewing, setViewing] = useState<{
+    candidate: ATSCandidate;
+    resume: { theme: unknown; sections: unknown } | null;
+    uploadedResumeUrl: string | null;
+  } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
@@ -234,7 +262,12 @@ export default function SearchCandidatesPage() {
         )
       );
       setCredits((prev) => (prev ? { ...prev, creditsRemaining: result.creditsRemaining } : prev));
-      if (openResume) setViewing({ candidate: { ...candidate, isUnlocked: true, ...result.candidate }, resume: result.resume });
+      if (openResume)
+        setViewing({
+          candidate: { ...candidate, isUnlocked: true, ...result.candidate },
+          resume: result.resume,
+          uploadedResumeUrl: result.uploadedResumeUrl,
+        });
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to unlock candidate.");
     } finally {
@@ -611,7 +644,7 @@ export default function SearchCandidatesPage() {
                     <FileText className="w-5 h-5 text-brand-blue shrink-0" />
                     <div>
                       <div className="text-sm font-bold text-foreground">Resume on file</div>
-                      <div className="text-xs text-muted-foreground">Click to open the full preview and print</div>
+                      <div className="text-xs text-muted-foreground">Click to view or download</div>
                     </div>
                   </button>
                 ) : (
@@ -635,7 +668,14 @@ export default function SearchCandidatesPage() {
         </div>
       </div>
 
-      {viewing && <ResumeModal candidate={viewing.candidate} resume={viewing.resume} onClose={() => setViewing(null)} />}
+      {viewing && (
+        <ResumeModal
+          candidate={viewing.candidate}
+          resume={viewing.resume}
+          uploadedResumeUrl={viewing.uploadedResumeUrl}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </div>
   );
 }
