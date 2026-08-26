@@ -515,6 +515,87 @@ export default function SearchCandidatesPage() {
                 ))}
               </div>
 
+              {selected.summary && (
+                <div className="p-5 sm:p-6 border-b border-border/60">
+                  <div className="text-xs font-bold text-muted-foreground mb-2">Summary</div>
+                  <p className="text-sm text-foreground leading-relaxed">{selected.summary}</p>
+                </div>
+              )}
+
+              {selected.skills && selected.skills.length > 0 && (
+                <div className="p-5 sm:p-6 border-b border-border/60">
+                  <div className="text-xs font-bold text-muted-foreground mb-2.5">Skills</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.skills.map((skill) => (
+                      <span key={skill} className="text-xs font-bold text-foreground bg-secondary/50 border border-border/60 rounded-full px-2.5 py-1">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selected.experience && selected.experience.length > 0 && (
+                <div className="p-5 sm:p-6 border-b border-border/60 space-y-3">
+                  <div className="text-xs font-bold text-muted-foreground">Experience</div>
+                  {selected.experience.map((entry, i) => (
+                    <div key={entry.id || i} className="text-sm">
+                      <div className="font-bold text-foreground">
+                        {entry.title}
+                        {entry.subtitle ? ` · ${entry.subtitle}` : ""}
+                      </div>
+                      {entry.date && <div className="text-xs text-muted-foreground">{entry.date}</div>}
+                      {entry.content && <div className="text-muted-foreground mt-0.5">{entry.content}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selected.education && selected.education.length > 0 && (
+                <div className="p-5 sm:p-6 border-b border-border/60 space-y-3">
+                  <div className="text-xs font-bold text-muted-foreground">Education</div>
+                  {selected.education.map((entry, i) => (
+                    <div key={entry.id || i} className="text-sm">
+                      <div className="font-bold text-foreground">
+                        {entry.title}
+                        {entry.subtitle ? ` · ${entry.subtitle}` : ""}
+                      </div>
+                      {entry.date && <div className="text-xs text-muted-foreground">{entry.date}</div>}
+                      {entry.content && <div className="text-muted-foreground mt-0.5">{entry.content}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selected.projects && selected.projects.length > 0 && (
+                <div className="p-5 sm:p-6 border-b border-border/60 space-y-3">
+                  <div className="text-xs font-bold text-muted-foreground">Projects</div>
+                  {selected.projects.map((entry, i) => (
+                    <div key={entry.id || i} className="text-sm">
+                      <div className="font-bold text-foreground">
+                        {entry.title}
+                        {entry.subtitle ? ` · ${entry.subtitle}` : ""}
+                      </div>
+                      {entry.date && <div className="text-xs text-muted-foreground">{entry.date}</div>}
+                      {entry.content && <div className="text-muted-foreground mt-0.5">{entry.content}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selected.certifications && selected.certifications.length > 0 && (
+                <div className="p-5 sm:p-6 border-b border-border/60">
+                  <div className="text-xs font-bold text-muted-foreground mb-2.5">Certifications</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.certifications.map((cert) => (
+                      <span key={cert} className="text-xs font-bold text-foreground bg-secondary/50 border border-border/60 rounded-full px-2.5 py-1">
+                        {cert}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="p-5 sm:p-6">
                 <div className="text-xs font-bold text-muted-foreground mb-2.5">Resume</div>
                 {!selected.hasResume ? (

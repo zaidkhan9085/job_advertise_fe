@@ -829,6 +829,12 @@ export interface ATSCandidate {
   isUnlocked: boolean;
   whatsapp: string | null;
   email: string | null;
+  summary: string | null;
+  skills: string[] | null;
+  certifications: string[] | null;
+  experience: ProfileEntry[] | null;
+  education: ProfileEntry[] | null;
+  projects: ProfileEntry[] | null;
 }
 
 export interface ATSSearchResult extends Paginated<ATSCandidate> {
