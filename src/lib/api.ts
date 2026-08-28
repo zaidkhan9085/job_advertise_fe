@@ -343,7 +343,6 @@ export interface CandidateProfileAdmin {
   whatsapp: string;
   email: string;
   currentLocation: string | null;
-  preferredLocation: string | null;
   resumeUrl: string | null;
   status: ProfileStatus;
   createdAt: string;
@@ -675,7 +674,8 @@ export interface MyCandidateProfile {
   whatsapp: string;
   email: string;
   currentLocation: string | null;
-  preferredLocation: string | null;
+  preferredLocationId: string | null;
+  preferredLocation: JobLocationRef | null;
   summary: string | null;
   skills: string[] | null;
   experience: ProfileEntry[] | null;
@@ -709,7 +709,7 @@ export interface MyCandidateProfilePayload {
   gulfExpYears?: number;
   qualification?: string;
   industry?: string;
-  preferredLocation?: string;
+  preferredLocationId?: string;
   summary?: string;
   skills?: string[];
   experience?: ProfileEntry[];

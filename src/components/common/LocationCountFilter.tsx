@@ -7,8 +7,13 @@ import { searchJobLocations, type JobPost, type JobLocationSearchResult } from "
 
 export type LocationValue = JobLocationSearchResult;
 
+// See CityAutocomplete.tsx's formatLabel for why: a state-level result has
+// a country ancestor but no state of its own, and showing that country
+// suffix ("India (All States)" — the coarse country-wrapper's actual seeded
+// name) on every state reads as clutter. Only city-level results (which
+// have both) get the fuller label.
 function formatLabel(loc: LocationValue) {
-  return [loc.name, loc.state, loc.country].filter(Boolean).join(", ");
+  return loc.state && loc.country ? [loc.name, loc.state, loc.country].filter(Boolean).join(", ") : loc.name;
 }
 
 // A job counts toward a location if it's an exact match (job posted at
@@ -153,7 +158,7 @@ export default function LocationCountFilter({
                   >
                     <span className="min-w-0">
                       <span className="truncate">{item.name}</span>
-                      {(item.state || item.country) && (
+                      {item.state && item.country && (
                         <span className="text-muted-foreground font-normal ml-1">
                           · {[item.state, item.country].filter(Boolean).join(", ")}
                         </span>

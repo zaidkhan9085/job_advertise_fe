@@ -79,7 +79,7 @@ export default function MyProfilePage() {
   const [passportNo, setPassportNo] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
-  const [preferredLocation, setPreferredLocation] = useState("");
+  const [preferredLocation, setPreferredLocation] = useState<LocationValue | null>(null);
 
   const [summary, setSummary] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
@@ -118,7 +118,7 @@ export default function MyProfilePage() {
         setPassportNo(profile.passportNo ?? "");
         setDateOfBirth(profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "");
         setGender(profile.gender ?? "");
-        setPreferredLocation(profile.preferredLocation ?? "");
+        setPreferredLocation(toLocationValue(profile.preferredLocation));
         setSummary(profile.summary ?? "");
         setSkills(profile.skills ?? []);
         setExperience(profile.experience ?? []);
@@ -156,7 +156,6 @@ export default function MyProfilePage() {
       passportNo,
       dateOfBirth,
       gender,
-      preferredLocation,
     ];
     const sectionChecks = [
       { label: "Professional Summary", filled: summary.trim().length > 0 },
@@ -167,9 +166,10 @@ export default function MyProfilePage() {
       { label: "Projects", filled: projects.length > 0 },
     ];
     const sectionsFilled = sectionChecks.filter((s) => s.filled).length;
-    const filled = fields.filter((f) => f.trim().length > 0).length + (jobLocation ? 1 : 0) + sectionsFilled;
+    const filled =
+      fields.filter((f) => f.trim().length > 0).length + (jobLocation ? 1 : 0) + (preferredLocation ? 1 : 0) + sectionsFilled;
     return {
-      completeness: Math.round((filled / (fields.length + 1 + sectionChecks.length)) * 100),
+      completeness: Math.round((filled / (fields.length + 2 + sectionChecks.length)) * 100),
       missingSections: sectionChecks.filter((s) => !s.filled).map((s) => s.label),
     };
   }, [
@@ -305,7 +305,7 @@ export default function MyProfilePage() {
       passportNo: passportNo || undefined,
       dateOfBirth: dateOfBirth || undefined,
       gender: gender || undefined,
-      preferredLocation: preferredLocation || undefined,
+      preferredLocationId: preferredLocation?.id || undefined,
       summary: summary || undefined,
       skills,
       experience,
@@ -661,7 +661,7 @@ export default function MyProfilePage() {
           <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Preferences</h2>
           <div className="space-y-2">
             <label className={labelClass}><MapPin className="w-4 h-4" /> Preferred Location</label>
-            <input value={preferredLocation} onChange={(e) => setPreferredLocation(e.target.value)} className={inputClass} />
+            <CityAutocomplete value={preferredLocation} onChange={setPreferredLocation} />
           </div>
         </div>
 

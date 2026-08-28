@@ -349,7 +349,12 @@ export default function SearchCandidatesPage() {
     if (location) {
       chips.push({
         key: "location",
-        label: [location.name, location.state, location.country].filter(Boolean).join(", "),
+        // A state-level pick (e.g. "Maharashtra") has no state of its own —
+        // showing its country suffix ("India (All States)") on the chip is
+        // clutter; only show the fuller label for city-level picks.
+        label: location.state && location.country
+          ? [location.name, location.state, location.country].filter(Boolean).join(", ")
+          : location.name,
         onRemove: () => setLocation(null),
       });
     }
