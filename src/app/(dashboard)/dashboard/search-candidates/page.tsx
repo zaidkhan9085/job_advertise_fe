@@ -25,12 +25,10 @@ import {
   searchCandidates,
   unlockCandidate,
   getMyCredits,
-  getIndustries,
   getQualifications,
   getSkillSuggestions,
   type ATSCandidate,
   type CreditsSummary,
-  type Industry,
   type Qualification,
   type PaginatedMeta,
   ApiError,
@@ -236,15 +234,10 @@ export default function SearchCandidatesPage() {
   const [location, setLocation] = useState<LocationValue | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<ComboOption[]>([]);
   const [skillOptions, setSkillOptions] = useState<ComboOption[]>([]);
-  const [industry, setIndustry] = useState("");
   const [qualification, setQualification] = useState("");
-  const [industries, setIndustries] = useState<Industry[]>([]);
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
-  const [indianExpMin, setIndianExpMin] = useState<number | "">("");
-  const [indianExpMax, setIndianExpMax] = useState<number | "">("");
-  const [gulfExpMin, setGulfExpMin] = useState<number | "">("");
-  const [gulfExpMax, setGulfExpMax] = useState<number | "">("");
-  const [ageMin, setAgeMin] = useState<number | "">("");
+  const [expMin, setExpMin] = useState<number | "">("");
+  const [expMax, setExpMax] = useState<number | "">("");
   const [ageMax, setAgeMax] = useState<number | "">("");
   const [nationality, setNationality] = useState("");
   const [gender, setGender] = useState("");
@@ -268,23 +261,7 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [
-    search,
-    keywordMode,
-    location,
-    selectedSkills,
-    industry,
-    qualification,
-    indianExpMin,
-    indianExpMax,
-    gulfExpMin,
-    gulfExpMax,
-    ageMin,
-    ageMax,
-    nationality,
-    gender,
-    resumeWithinDays,
-  ]);
+  }, [search, keywordMode, location, selectedSkills, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]);
 
   const filters = useMemo(
     () => ({
@@ -292,35 +269,15 @@ export default function SearchCandidatesPage() {
       keywordMode,
       jobLocationId: location?.id || undefined,
       skills: selectedSkills.length > 0 ? selectedSkills.map((s) => s.value) : undefined,
-      industry: industry || undefined,
       qualification: qualification || undefined,
-      indianExpMin: indianExpMin === "" ? undefined : indianExpMin,
-      indianExpMax: indianExpMax === "" ? undefined : indianExpMax,
-      gulfExpMin: gulfExpMin === "" ? undefined : gulfExpMin,
-      gulfExpMax: gulfExpMax === "" ? undefined : gulfExpMax,
-      ageMin: ageMin === "" ? undefined : ageMin,
+      expMin: expMin === "" ? undefined : expMin,
+      expMax: expMax === "" ? undefined : expMax,
       ageMax: ageMax === "" ? undefined : ageMax,
       nationality: nationality || undefined,
       gender: gender || undefined,
       resumeWithinDays,
     }),
-    [
-      search,
-      keywordMode,
-      location,
-      selectedSkills,
-      industry,
-      qualification,
-      indianExpMin,
-      indianExpMax,
-      gulfExpMin,
-      gulfExpMax,
-      ageMin,
-      ageMax,
-      nationality,
-      gender,
-      resumeWithinDays,
-    ]
+    [search, keywordMode, location, selectedSkills, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]
   );
 
   const loadCredits = useCallback(async () => {
@@ -352,7 +309,6 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     if (user && (user.role === "employer" || user.role === "sub_admin" || user.role === "admin")) {
-      getIndustries().then(setIndustries).catch(() => {});
       getQualifications().then(setQualifications).catch(() => {});
       getSkillSuggestions()
         .then((suggestions) => setSkillOptions(suggestions.map((s) => ({ value: s.value, label: s.label }))))
@@ -416,37 +372,19 @@ export default function SearchCandidatesPage() {
         onRemove: () => setSelectedSkills((prev) => prev.filter((s) => s.value !== skill.value)),
       });
     }
-    if (industry) chips.push({ key: "industry", label: industry, onRemove: () => setIndustry("") });
     if (qualification) chips.push({ key: "qualification", label: qualification, onRemove: () => setQualification("") });
-    if (indianExpMin !== "" || indianExpMax !== "") {
+    if (expMin !== "" || expMax !== "") {
       chips.push({
-        key: "indianExp",
-        label: `India exp: ${indianExpMin === "" ? "0" : indianExpMin}-${indianExpMax === "" ? "40+" : indianExpMax} yrs`,
+        key: "exp",
+        label: `Experience: ${expMin === "" ? "0" : expMin}-${expMax === "" ? "40+" : expMax} yrs`,
         onRemove: () => {
-          setIndianExpMin("");
-          setIndianExpMax("");
+          setExpMin("");
+          setExpMax("");
         },
       });
     }
-    if (gulfExpMin !== "" || gulfExpMax !== "") {
-      chips.push({
-        key: "gulfExp",
-        label: `Gulf exp: ${gulfExpMin === "" ? "0" : gulfExpMin}-${gulfExpMax === "" ? "40+" : gulfExpMax} yrs`,
-        onRemove: () => {
-          setGulfExpMin("");
-          setGulfExpMax("");
-        },
-      });
-    }
-    if (ageMin !== "" || ageMax !== "") {
-      chips.push({
-        key: "age",
-        label: `Age: ${ageMin === "" ? "18" : ageMin}-${ageMax === "" ? "65+" : ageMax}`,
-        onRemove: () => {
-          setAgeMin("");
-          setAgeMax("");
-        },
-      });
+    if (ageMax !== "") {
+      chips.push({ key: "age", label: `Age: up to ${ageMax}`, onRemove: () => setAgeMax("") });
     }
     if (gender) chips.push({ key: "gender", label: gender, onRemove: () => setGender("") });
     if (nationality) chips.push({ key: "nationality", label: nationality, onRemove: () => setNationality("") });
@@ -458,22 +396,7 @@ export default function SearchCandidatesPage() {
       });
     }
     return chips;
-  }, [
-    searchInput,
-    location,
-    selectedSkills,
-    industry,
-    qualification,
-    indianExpMin,
-    indianExpMax,
-    gulfExpMin,
-    gulfExpMax,
-    ageMin,
-    ageMax,
-    gender,
-    nationality,
-    resumeWithinDays,
-  ]);
+  }, [searchInput, location, selectedSkills, qualification, expMin, expMax, ageMax, gender, nationality, resumeWithinDays]);
 
   const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
@@ -481,13 +404,9 @@ export default function SearchCandidatesPage() {
     setKeywordMode("any");
     setLocation(null);
     setSelectedSkills([]);
-    setIndustry("");
     setQualification("");
-    setIndianExpMin("");
-    setIndianExpMax("");
-    setGulfExpMin("");
-    setGulfExpMax("");
-    setAgeMin("");
+    setExpMin("");
+    setExpMax("");
     setAgeMax("");
     setNationality("");
     setGender("");
@@ -587,15 +506,6 @@ export default function SearchCandidatesPage() {
         {showMoreFilters && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-3 border-t border-border/60">
             <div className="space-y-1.5">
-              <label className={filterLabelClass}>Industry</label>
-              <select value={industry} onChange={(e) => setIndustry(e.target.value)} className={filterSelectClass}>
-                <option value="">Any industry</option>
-                {industries.map((i) => (
-                  <option key={i.id} value={i.name}>{i.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
               <label className={filterLabelClass}>Qualification</label>
               <select value={qualification} onChange={(e) => setQualification(e.target.value)} className={filterSelectClass}>
                 <option value="">Any qualification</option>
@@ -605,37 +515,28 @@ export default function SearchCandidatesPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className={filterLabelClass}>India Experience</label>
+              <label className={filterLabelClass}>Experience</label>
               <RangeSelectPair
-                min={indianExpMin}
-                max={indianExpMax}
-                onMinChange={setIndianExpMin}
-                onMaxChange={setIndianExpMax}
+                min={expMin}
+                max={expMax}
+                onMinChange={setExpMin}
+                onMaxChange={setExpMax}
                 options={EXPERIENCE_YEAR_OPTIONS}
                 formatOption={(y) => `${y} yr${y === 1 ? "" : "s"}`}
               />
             </div>
             <div className="space-y-1.5">
-              <label className={filterLabelClass}>Gulf Experience</label>
-              <RangeSelectPair
-                min={gulfExpMin}
-                max={gulfExpMax}
-                onMinChange={setGulfExpMin}
-                onMaxChange={setGulfExpMax}
-                options={EXPERIENCE_YEAR_OPTIONS}
-                formatOption={(y) => `${y} yr${y === 1 ? "" : "s"}`}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className={filterLabelClass}>Age</label>
-              <RangeSelectPair
-                min={ageMin}
-                max={ageMax}
-                onMinChange={setAgeMin}
-                onMaxChange={setAgeMax}
-                options={AGE_OPTIONS}
-                formatOption={(a) => `${a}`}
-              />
+              <label className={filterLabelClass}>Age (up to)</label>
+              <select
+                value={ageMax}
+                onChange={(e) => setAgeMax(e.target.value === "" ? "" : Number(e.target.value))}
+                className={filterSelectClass}
+              >
+                <option value="">Any age</option>
+                {AGE_OPTIONS.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Gender</label>

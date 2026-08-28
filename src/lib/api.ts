@@ -862,11 +862,8 @@ export interface ATSSearchFilters extends AdminListParams {
   resumeWithinDays?: number;
   industry?: string;
   qualification?: string;
-  indianExpMin?: number;
-  indianExpMax?: number;
-  gulfExpMin?: number;
-  gulfExpMax?: number;
-  ageMin?: number;
+  expMin?: number;
+  expMax?: number;
   ageMax?: number;
   skills?: string[];
 }
@@ -887,11 +884,8 @@ export function searchCandidates(filters?: ATSSearchFilters) {
     resumeWithinDays: filters?.resumeWithinDays,
     industry: filters?.industry,
     qualification: filters?.qualification,
-    indianExpMin: filters?.indianExpMin,
-    indianExpMax: filters?.indianExpMax,
-    gulfExpMin: filters?.gulfExpMin,
-    gulfExpMax: filters?.gulfExpMax,
-    ageMin: filters?.ageMin,
+    expMin: filters?.expMin,
+    expMax: filters?.expMax,
     ageMax: filters?.ageMax,
     skills: filters?.skills,
   });
