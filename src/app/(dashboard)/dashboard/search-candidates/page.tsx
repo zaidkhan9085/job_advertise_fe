@@ -26,7 +26,6 @@ import {
   unlockCandidate,
   getMyCredits,
   getQualifications,
-  getSkillSuggestions,
   type ATSCandidate,
   type CreditsSummary,
   type Qualification,
@@ -36,7 +35,7 @@ import {
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import Preview from "@/components/resume-builder/Preview";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
-import MultiSelectCombobox, { type ComboOption } from "@/components/common/MultiSelectCombobox";
+import SimpleSelect from "@/components/common/SimpleSelect";
 
 // Naukri-style min-max range filters, not fixed bands — a plain number
 // dropdown for each bound so a recruiter can build any custom range (e.g.
@@ -72,31 +71,26 @@ function RangeSelectPair<T extends number>({
   options: readonly T[];
   formatOption: (value: T) => string;
 }) {
-  const selectClass =
-    "w-full px-2.5 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer";
+  const selectOptions = options.map((o) => ({ value: String(o), label: formatOption(o) }));
+  const rangeTriggerClass =
+    "w-full flex items-center justify-between gap-1 px-2.5 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium cursor-pointer";
   return (
     <div className="flex items-center gap-1.5">
-      <select
-        value={min}
-        onChange={(e) => onMinChange(e.target.value === "" ? "" : (Number(e.target.value) as T))}
-        className={selectClass}
-      >
-        <option value="">Min</option>
-        {options.map((o) => (
-          <option key={o} value={o}>{formatOption(o)}</option>
-        ))}
-      </select>
+      <SimpleSelect
+        value={min === "" ? "" : String(min)}
+        onChange={(v) => onMinChange(v === "" ? "" : (Number(v) as T))}
+        options={selectOptions}
+        placeholder="Min"
+        className={rangeTriggerClass}
+      />
       <span className="text-muted-foreground text-xs shrink-0">–</span>
-      <select
-        value={max}
-        onChange={(e) => onMaxChange(e.target.value === "" ? "" : (Number(e.target.value) as T))}
-        className={selectClass}
-      >
-        <option value="">Max</option>
-        {options.map((o) => (
-          <option key={o} value={o}>{formatOption(o)}</option>
-        ))}
-      </select>
+      <SimpleSelect
+        value={max === "" ? "" : String(max)}
+        onChange={(v) => onMaxChange(v === "" ? "" : (Number(v) as T))}
+        options={selectOptions}
+        placeholder="Max"
+        className={rangeTriggerClass}
+      />
     </div>
   );
 }
@@ -232,8 +226,6 @@ export default function SearchCandidatesPage() {
   const [search, setSearch] = useState("");
   const [keywordMode, setKeywordMode] = useState<"all" | "any">("any");
   const [location, setLocation] = useState<LocationValue | null>(null);
-  const [selectedSkills, setSelectedSkills] = useState<ComboOption[]>([]);
-  const [skillOptions, setSkillOptions] = useState<ComboOption[]>([]);
   const [qualification, setQualification] = useState("");
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
   const [expMin, setExpMin] = useState<number | "">("");
@@ -261,14 +253,13 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, keywordMode, location, selectedSkills, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]);
+  }, [search, keywordMode, location, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]);
 
   const filters = useMemo(
     () => ({
       search: search || undefined,
       keywordMode,
       jobLocationId: location?.id || undefined,
-      skills: selectedSkills.length > 0 ? selectedSkills.map((s) => s.value) : undefined,
       qualification: qualification || undefined,
       expMin: expMin === "" ? undefined : expMin,
       expMax: expMax === "" ? undefined : expMax,
@@ -277,7 +268,7 @@ export default function SearchCandidatesPage() {
       gender: gender || undefined,
       resumeWithinDays,
     }),
-    [search, keywordMode, location, selectedSkills, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]
+    [search, keywordMode, location, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]
   );
 
   const loadCredits = useCallback(async () => {
@@ -310,9 +301,6 @@ export default function SearchCandidatesPage() {
   useEffect(() => {
     if (user && (user.role === "employer" || user.role === "sub_admin" || user.role === "admin")) {
       getQualifications().then(setQualifications).catch(() => {});
-      getSkillSuggestions()
-        .then((suggestions) => setSkillOptions(suggestions.map((s) => ({ value: s.value, label: s.label }))))
-        .catch(() => {});
       loadCandidates();
     }
   }, [user, loadCandidates]);
@@ -365,13 +353,6 @@ export default function SearchCandidatesPage() {
         onRemove: () => setLocation(null),
       });
     }
-    for (const skill of selectedSkills) {
-      chips.push({
-        key: `skill-${skill.value}`,
-        label: skill.label,
-        onRemove: () => setSelectedSkills((prev) => prev.filter((s) => s.value !== skill.value)),
-      });
-    }
     if (qualification) chips.push({ key: "qualification", label: qualification, onRemove: () => setQualification("") });
     if (expMin !== "" || expMax !== "") {
       chips.push({
@@ -396,14 +377,13 @@ export default function SearchCandidatesPage() {
       });
     }
     return chips;
-  }, [searchInput, location, selectedSkills, qualification, expMin, expMax, ageMax, gender, nationality, resumeWithinDays]);
+  }, [searchInput, location, qualification, expMin, expMax, ageMax, gender, nationality, resumeWithinDays]);
 
   const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
     setSearchInput("");
     setKeywordMode("any");
     setLocation(null);
-    setSelectedSkills([]);
     setQualification("");
     setExpMin("");
     setExpMax("");
@@ -479,11 +459,8 @@ export default function SearchCandidatesPage() {
               </div>
             </div>
           </div>
-          <div className="w-full sm:w-56">
-            <CityAutocomplete label="Location" placeholder="Any location" value={location} onChange={setLocation} />
-          </div>
           <div className="w-full sm:w-64">
-            <MultiSelectCombobox label="Skills" placeholder="Any skills" options={skillOptions} selected={selectedSkills} onChange={setSelectedSkills} />
+            <CityAutocomplete label="Location" placeholder="Any location" value={location} onChange={setLocation} />
           </div>
           <button
             onClick={() => setShowMoreFilters((v) => !v)}
@@ -507,12 +484,12 @@ export default function SearchCandidatesPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-3 border-t border-border/60">
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Qualification</label>
-              <select value={qualification} onChange={(e) => setQualification(e.target.value)} className={filterSelectClass}>
-                <option value="">Any qualification</option>
-                {qualifications.map((q) => (
-                  <option key={q.id} value={q.name}>{q.name}</option>
-                ))}
-              </select>
+              <SimpleSelect
+                value={qualification}
+                onChange={setQualification}
+                options={qualifications.map((q) => ({ value: q.name, label: q.name }))}
+                placeholder="Any qualification"
+              />
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Experience</label>
@@ -527,37 +504,38 @@ export default function SearchCandidatesPage() {
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Age (up to)</label>
-              <select
-                value={ageMax}
-                onChange={(e) => setAgeMax(e.target.value === "" ? "" : Number(e.target.value))}
-                className={filterSelectClass}
-              >
-                <option value="">Any age</option>
-                {AGE_OPTIONS.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
+              <SimpleSelect
+                value={ageMax === "" ? "" : String(ageMax)}
+                onChange={(v) => setAgeMax(v === "" ? "" : Number(v))}
+                options={AGE_OPTIONS.map((a) => ({ value: String(a), label: String(a) }))}
+                placeholder="Any age"
+              />
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Gender</label>
-              <select value={gender} onChange={(e) => setGender(e.target.value)} className={filterSelectClass}>
-                <option value="">Any gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
+              <SimpleSelect
+                value={gender}
+                onChange={setGender}
+                options={[
+                  { value: "Male", label: "Male" },
+                  { value: "Female", label: "Female" },
+                  { value: "Other", label: "Other" },
+                ]}
+                placeholder="All"
+              />
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Resume Updated</label>
-              <select
-                value={resumeWithinDays ?? ""}
-                onChange={(e) => setResumeWithinDays(e.target.value ? Number(e.target.value) : undefined)}
-                className={filterSelectClass}
-              >
-                <option value="">Any time</option>
-                <option value="7">In 7 days</option>
-                <option value="30">In 30 days</option>
-                <option value="90">In 90 days</option>
-              </select>
+              <SimpleSelect
+                value={resumeWithinDays ? String(resumeWithinDays) : ""}
+                onChange={(v) => setResumeWithinDays(v ? Number(v) : undefined)}
+                options={[
+                  { value: "7", label: "In 7 days" },
+                  { value: "30", label: "In 30 days" },
+                  { value: "90", label: "In 90 days" },
+                ]}
+                placeholder="Any time"
+              />
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Nationality</label>
