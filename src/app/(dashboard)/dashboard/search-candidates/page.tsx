@@ -32,7 +32,6 @@ import {
   type CreditsSummary,
   type Industry,
   type Qualification,
-  type ExperienceBand,
   type PaginatedMeta,
   ApiError,
 } from "@/lib/api";
@@ -41,16 +40,68 @@ import Preview from "@/components/resume-builder/Preview";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import MultiSelectCombobox, { type ComboOption } from "@/components/common/MultiSelectCombobox";
 
-const EXPERIENCE_BANDS: { value: ExperienceBand; label: string }[] = [
-  { value: "ZERO_TO_ONE", label: "0-1 years" },
-  { value: "ONE_TO_THREE", label: "1-3 years" },
-  { value: "THREE_TO_FIVE", label: "3-5 years" },
-  { value: "FIVE_TO_TEN", label: "5-10 years" },
-  { value: "TEN_PLUS", label: "10+ years" },
-];
+// Naukri-style min-max range filters, not fixed bands — a plain number
+// dropdown for each bound so a recruiter can build any custom range (e.g.
+// 2-6 years) instead of being locked into a handful of preset buckets.
+const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
+const AGE_OPTIONS = Array.from({ length: 48 }, (_, i) => i + 18); // 18-65
 
 const PAGE_LIMIT = 20;
 const UNLOCK_COST = 1;
+
+// Shared by every "More filters" control so they all sit on the same
+// visual baseline as CityAutocomplete/MultiSelectCombobox's own built-in
+// label styling (text-[11px] font-bold uppercase, same select chrome).
+const filterLabelClass = "block text-[11px] font-bold text-muted-foreground uppercase tracking-wide";
+const filterSelectClass =
+  "w-full px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer";
+
+// One "Min – Max" pair of <select>s for a numeric range filter (experience
+// years, age) — a real min-max range like Naukri's, not a fixed band, so a
+// recruiter can build any custom range.
+function RangeSelectPair<T extends number>({
+  min,
+  max,
+  onMinChange,
+  onMaxChange,
+  options,
+  formatOption,
+}: {
+  min: T | "";
+  max: T | "";
+  onMinChange: (value: T | "") => void;
+  onMaxChange: (value: T | "") => void;
+  options: readonly T[];
+  formatOption: (value: T) => string;
+}) {
+  const selectClass =
+    "w-full px-2.5 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer";
+  return (
+    <div className="flex items-center gap-1.5">
+      <select
+        value={min}
+        onChange={(e) => onMinChange(e.target.value === "" ? "" : (Number(e.target.value) as T))}
+        className={selectClass}
+      >
+        <option value="">Min</option>
+        {options.map((o) => (
+          <option key={o} value={o}>{formatOption(o)}</option>
+        ))}
+      </select>
+      <span className="text-muted-foreground text-xs shrink-0">–</span>
+      <select
+        value={max}
+        onChange={(e) => onMaxChange(e.target.value === "" ? "" : (Number(e.target.value) as T))}
+        className={selectClass}
+      >
+        <option value="">Max</option>
+        {options.map((o) => (
+          <option key={o} value={o}>{formatOption(o)}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function initials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -189,8 +240,12 @@ export default function SearchCandidatesPage() {
   const [qualification, setQualification] = useState("");
   const [industries, setIndustries] = useState<Industry[]>([]);
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
-  const [indianExpBand, setIndianExpBand] = useState<ExperienceBand | "">("");
-  const [gulfExpBand, setGulfExpBand] = useState<ExperienceBand | "">("");
+  const [indianExpMin, setIndianExpMin] = useState<number | "">("");
+  const [indianExpMax, setIndianExpMax] = useState<number | "">("");
+  const [gulfExpMin, setGulfExpMin] = useState<number | "">("");
+  const [gulfExpMax, setGulfExpMax] = useState<number | "">("");
+  const [ageMin, setAgeMin] = useState<number | "">("");
+  const [ageMax, setAgeMax] = useState<number | "">("");
   const [nationality, setNationality] = useState("");
   const [gender, setGender] = useState("");
   const [resumeWithinDays, setResumeWithinDays] = useState<number | undefined>(undefined);
@@ -213,7 +268,23 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, keywordMode, location, selectedSkills, industry, qualification, indianExpBand, gulfExpBand, nationality, gender, resumeWithinDays]);
+  }, [
+    search,
+    keywordMode,
+    location,
+    selectedSkills,
+    industry,
+    qualification,
+    indianExpMin,
+    indianExpMax,
+    gulfExpMin,
+    gulfExpMax,
+    ageMin,
+    ageMax,
+    nationality,
+    gender,
+    resumeWithinDays,
+  ]);
 
   const filters = useMemo(
     () => ({
@@ -223,13 +294,33 @@ export default function SearchCandidatesPage() {
       skills: selectedSkills.length > 0 ? selectedSkills.map((s) => s.value) : undefined,
       industry: industry || undefined,
       qualification: qualification || undefined,
-      indianExpBand: indianExpBand || undefined,
-      gulfExpBand: gulfExpBand || undefined,
+      indianExpMin: indianExpMin === "" ? undefined : indianExpMin,
+      indianExpMax: indianExpMax === "" ? undefined : indianExpMax,
+      gulfExpMin: gulfExpMin === "" ? undefined : gulfExpMin,
+      gulfExpMax: gulfExpMax === "" ? undefined : gulfExpMax,
+      ageMin: ageMin === "" ? undefined : ageMin,
+      ageMax: ageMax === "" ? undefined : ageMax,
       nationality: nationality || undefined,
       gender: gender || undefined,
       resumeWithinDays,
     }),
-    [search, keywordMode, location, selectedSkills, industry, qualification, indianExpBand, gulfExpBand, nationality, gender, resumeWithinDays]
+    [
+      search,
+      keywordMode,
+      location,
+      selectedSkills,
+      industry,
+      qualification,
+      indianExpMin,
+      indianExpMax,
+      gulfExpMin,
+      gulfExpMax,
+      ageMin,
+      ageMax,
+      nationality,
+      gender,
+      resumeWithinDays,
+    ]
   );
 
   const loadCredits = useCallback(async () => {
@@ -327,18 +418,34 @@ export default function SearchCandidatesPage() {
     }
     if (industry) chips.push({ key: "industry", label: industry, onRemove: () => setIndustry("") });
     if (qualification) chips.push({ key: "qualification", label: qualification, onRemove: () => setQualification("") });
-    if (indianExpBand) {
+    if (indianExpMin !== "" || indianExpMax !== "") {
       chips.push({
-        key: "indianExpBand",
-        label: `India: ${EXPERIENCE_BANDS.find((b) => b.value === indianExpBand)?.label}`,
-        onRemove: () => setIndianExpBand(""),
+        key: "indianExp",
+        label: `India exp: ${indianExpMin === "" ? "0" : indianExpMin}-${indianExpMax === "" ? "40+" : indianExpMax} yrs`,
+        onRemove: () => {
+          setIndianExpMin("");
+          setIndianExpMax("");
+        },
       });
     }
-    if (gulfExpBand) {
+    if (gulfExpMin !== "" || gulfExpMax !== "") {
       chips.push({
-        key: "gulfExpBand",
-        label: `Gulf: ${EXPERIENCE_BANDS.find((b) => b.value === gulfExpBand)?.label}`,
-        onRemove: () => setGulfExpBand(""),
+        key: "gulfExp",
+        label: `Gulf exp: ${gulfExpMin === "" ? "0" : gulfExpMin}-${gulfExpMax === "" ? "40+" : gulfExpMax} yrs`,
+        onRemove: () => {
+          setGulfExpMin("");
+          setGulfExpMax("");
+        },
+      });
+    }
+    if (ageMin !== "" || ageMax !== "") {
+      chips.push({
+        key: "age",
+        label: `Age: ${ageMin === "" ? "18" : ageMin}-${ageMax === "" ? "65+" : ageMax}`,
+        onRemove: () => {
+          setAgeMin("");
+          setAgeMax("");
+        },
       });
     }
     if (gender) chips.push({ key: "gender", label: gender, onRemove: () => setGender("") });
@@ -351,7 +458,22 @@ export default function SearchCandidatesPage() {
       });
     }
     return chips;
-  }, [searchInput, location, selectedSkills, industry, qualification, indianExpBand, gulfExpBand, gender, nationality, resumeWithinDays]);
+  }, [
+    searchInput,
+    location,
+    selectedSkills,
+    industry,
+    qualification,
+    indianExpMin,
+    indianExpMax,
+    gulfExpMin,
+    gulfExpMax,
+    ageMin,
+    ageMax,
+    gender,
+    nationality,
+    resumeWithinDays,
+  ]);
 
   const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
@@ -361,8 +483,12 @@ export default function SearchCandidatesPage() {
     setSelectedSkills([]);
     setIndustry("");
     setQualification("");
-    setIndianExpBand("");
-    setGulfExpBand("");
+    setIndianExpMin("");
+    setIndianExpMax("");
+    setGulfExpMin("");
+    setGulfExpMax("");
+    setAgeMin("");
+    setAgeMax("");
     setNationality("");
     setGender("");
     setResumeWithinDays(undefined);
@@ -399,35 +525,39 @@ export default function SearchCandidatesPage() {
       </div>
 
       <div className="bg-white border border-border/60 rounded-2xl p-3 shadow-sm space-y-3">
-        {/* Keyword + Location + Skills are the 3 filters most searches
-            actually need — everything else lives behind "More filters" so
-            the bar doesn't turn into a wall of dropdowns. */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by name, position, qualification..."
-              className="w-full pl-9 pr-24 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium"
-            />
-            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex bg-secondary/60 rounded-full p-0.5">
-              <button
-                onClick={() => setKeywordMode("all")}
-                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
-                  keywordMode === "all" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setKeywordMode("any")}
-                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
-                  keywordMode === "any" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Any
-              </button>
+        {/* Every control shares the same "small uppercase label + input"
+            shape (matching CityAutocomplete/MultiSelectCombobox's own
+            built-in label styling) so the whole bar sits on one visual
+            baseline instead of some controls floating higher than others. */}
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[220px] space-y-1.5">
+            <label className={filterLabelClass}>Keyword</label>
+            <div className="relative">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Name, position, qualification..."
+                className="w-full pl-9 pr-24 py-3 rounded-xl border-[1.5px] border-border bg-white shadow-sm hover:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm font-medium"
+              />
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex bg-secondary/60 rounded-full p-0.5">
+                <button
+                  onClick={() => setKeywordMode("all")}
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
+                    keywordMode === "all" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setKeywordMode("any")}
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors ${
+                    keywordMode === "any" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Any
+                </button>
+              </div>
             </div>
           </div>
           <div className="w-full sm:w-56">
@@ -438,7 +568,7 @@ export default function SearchCandidatesPage() {
           </div>
           <button
             onClick={() => setShowMoreFilters((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-bold transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-3 rounded-xl border text-sm font-bold transition-colors shrink-0 ${
               showMoreFilters ? "border-brand-blue bg-brand-blue/5 text-brand-blue" : "border-border/60 text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -447,7 +577,7 @@ export default function SearchCandidatesPage() {
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground px-2"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground px-2 py-3 shrink-0"
             >
               <RotateCcw className="w-3.5 h-3.5" /> Reset
             </button>
@@ -455,72 +585,88 @@ export default function SearchCandidatesPage() {
         </div>
 
         {showMoreFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
-            <select
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-            >
-              <option value="">All industries</option>
-              {industries.map((i) => (
-                <option key={i.id} value={i.name}>{i.name}</option>
-              ))}
-            </select>
-            <select
-              value={qualification}
-              onChange={(e) => setQualification(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-            >
-              <option value="">All qualifications</option>
-              {qualifications.map((q) => (
-                <option key={q.id} value={q.name}>{q.name}</option>
-              ))}
-            </select>
-            <select
-              value={indianExpBand}
-              onChange={(e) => setIndianExpBand(e.target.value as ExperienceBand | "")}
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-            >
-              <option value="">India exp: any</option>
-              {EXPERIENCE_BANDS.map((b) => (
-                <option key={b.value} value={b.value}>{b.label}</option>
-              ))}
-            </select>
-            <select
-              value={gulfExpBand}
-              onChange={(e) => setGulfExpBand(e.target.value as ExperienceBand | "")}
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-            >
-              <option value="">Gulf exp: any</option>
-              {EXPERIENCE_BANDS.map((b) => (
-                <option key={b.value} value={b.value}>{b.label}</option>
-              ))}
-            </select>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-            >
-              <option value="">All genders</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-            <select
-              value={resumeWithinDays ?? ""}
-              onChange={(e) => setResumeWithinDays(e.target.value ? Number(e.target.value) : undefined)}
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium appearance-none cursor-pointer"
-            >
-              <option value="">Resume: any time</option>
-              <option value="7">Updated in 7 days</option>
-              <option value="30">Updated in 30 days</option>
-              <option value="90">Updated in 90 days</option>
-            </select>
-            <input
-              value={nationality}
-              onChange={(e) => setNationality(e.target.value)}
-              placeholder="Nationality"
-              className="px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium w-32"
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-3 border-t border-border/60">
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Industry</label>
+              <select value={industry} onChange={(e) => setIndustry(e.target.value)} className={filterSelectClass}>
+                <option value="">Any industry</option>
+                {industries.map((i) => (
+                  <option key={i.id} value={i.name}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Qualification</label>
+              <select value={qualification} onChange={(e) => setQualification(e.target.value)} className={filterSelectClass}>
+                <option value="">Any qualification</option>
+                {qualifications.map((q) => (
+                  <option key={q.id} value={q.name}>{q.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>India Experience</label>
+              <RangeSelectPair
+                min={indianExpMin}
+                max={indianExpMax}
+                onMinChange={setIndianExpMin}
+                onMaxChange={setIndianExpMax}
+                options={EXPERIENCE_YEAR_OPTIONS}
+                formatOption={(y) => `${y} yr${y === 1 ? "" : "s"}`}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Gulf Experience</label>
+              <RangeSelectPair
+                min={gulfExpMin}
+                max={gulfExpMax}
+                onMinChange={setGulfExpMin}
+                onMaxChange={setGulfExpMax}
+                options={EXPERIENCE_YEAR_OPTIONS}
+                formatOption={(y) => `${y} yr${y === 1 ? "" : "s"}`}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Age</label>
+              <RangeSelectPair
+                min={ageMin}
+                max={ageMax}
+                onMinChange={setAgeMin}
+                onMaxChange={setAgeMax}
+                options={AGE_OPTIONS}
+                formatOption={(a) => `${a}`}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Gender</label>
+              <select value={gender} onChange={(e) => setGender(e.target.value)} className={filterSelectClass}>
+                <option value="">Any gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Resume Updated</label>
+              <select
+                value={resumeWithinDays ?? ""}
+                onChange={(e) => setResumeWithinDays(e.target.value ? Number(e.target.value) : undefined)}
+                className={filterSelectClass}
+              >
+                <option value="">Any time</option>
+                <option value="7">In 7 days</option>
+                <option value="30">In 30 days</option>
+                <option value="90">In 90 days</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className={filterLabelClass}>Nationality</label>
+              <input
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                placeholder="Any nationality"
+                className={filterSelectClass}
+              />
+            </div>
           </div>
         )}
 
@@ -690,16 +836,13 @@ export default function SearchCandidatesPage() {
                   ["Industry", selected.industry],
                   [
                     "Experience · India",
-                    [selected.indianExp, selected.indianExpBand ? `(${EXPERIENCE_BANDS.find((b) => b.value === selected.indianExpBand)?.label})` : null]
-                      .filter(Boolean)
-                      .join(" "),
+                    [selected.indianExp, selected.indianExpYears != null ? `(${selected.indianExpYears} yrs)` : null].filter(Boolean).join(" "),
                   ],
                   [
                     "Experience · Gulf",
-                    [selected.gulfExp, selected.gulfExpBand ? `(${EXPERIENCE_BANDS.find((b) => b.value === selected.gulfExpBand)?.label})` : null]
-                      .filter(Boolean)
-                      .join(" "),
+                    [selected.gulfExp, selected.gulfExpYears != null ? `(${selected.gulfExpYears} yrs)` : null].filter(Boolean).join(" "),
                   ],
+                  ["Age", selected.age != null ? `${selected.age}` : null],
                   ["Nationality", [selected.nationality, selected.gender].filter(Boolean).join(" · ")],
                   ["Current location", selected.currentLocation || selected.region?.name],
                   ["Preferred location", selected.preferredLocation],
