@@ -6,6 +6,8 @@ import {
   ArrowRight, ChevronLeft, ChevronRight,
   Fuel, Zap, Droplets, Building2, Factory, Wrench, Stethoscope, Monitor,
   Ship, Banknote, Users2, Truck, ShoppingBag, Compass, HardHat, GraduationCap,
+  Hotel, Plane, Headphones, TrendingUp, ShoppingCart, Home, Megaphone, Scale,
+  Landmark, Shield, Car,
   MoreHorizontal, type LucideIcon,
 } from "lucide-react";
 import { getIndustries, getJobs, type Industry, ApiError } from "@/lib/api";
@@ -17,26 +19,39 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/autoplay";
 
-// Same 17 sectors seeded into the real Industry table (backend/prisma/seed.js)
+// Same 28 sectors seeded into the real Industry table (backend/prisma/seed.js)
 // — matched by name, not id, since the icon is purely decorative and this
-// list only exists to avoid a generic icon for every card.
+// list only exists to avoid a generic icon for every card. A name that
+// doesn't match (e.g. an admin-added category) just falls back to
+// MoreHorizontal below, not an error.
 const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   "Oil & Gas, Petrochemical & Refinery": Fuel,
-  "Power Plant, Substation, Energy & Gas Turbine": Zap,
-  "Water Treatment Plant (WTP), RO & STP": Droplets,
-  "Building Construction, Infrastructure & EPC Projects": Building2,
-  "Manufacturing & Production": Factory,
-  "Facility Management & MEP": Wrench,
-  "Healthcare & Hospitality": Stethoscope,
-  "IT, Hardware, Software & Telecom": Monitor,
-  "Marine, Maritime, Aviation & Offshore": Ship,
-  "Banking, Finance & Non-IT Services": Banknote,
-  "HR, Admin, Back Office & BPO / Telecaller": Users2,
-  "Logistics, Transportation, Shipping & Supply Chain": Truck,
-  "FMCG (Fast-Moving Consumer Goods)": ShoppingBag,
-  "Design, Drafting, Engineering & Consultancy": Compass,
+  "Power, Energy & Utilities": Zap,
+  "Water & Wastewater Treatment": Droplets,
+  "Construction, Infrastructure & EPC Projects": Building2,
+  "Manufacturing & Industrial Production": Factory,
+  "Facility Management, MEP & Maintenance": Wrench,
+  "Healthcare & Medical Services": Stethoscope,
+  "Hospitality, Travel & Tourism": Hotel,
+  "IT, Software, Hardware & Telecom": Monitor,
+  "Marine & Shipping Services": Ship,
+  "Aviation & Airport Services": Plane,
+  "Banking, Financial Services & Insurance": Banknote,
+  "HR & Administration": Users2,
+  "Customer Support, BPO & Telecalling": Headphones,
+  "Logistics, Transportation & Supply Chain": Truck,
+  "Automotive & Transport Equipment": Car,
+  "FMCG & Consumer Goods": ShoppingBag,
+  "Retail & E-commerce": ShoppingCart,
+  "Engineering, Design & Technical Consultancy": Compass,
   "Heavy Industries, Steel, Cement & Mining": HardHat,
   "Education, Training & Skill Development": GraduationCap,
+  "Sales, Marketing & Business Development": TrendingUp,
+  "Media, Advertising & Creative Services": Megaphone,
+  "Legal & Compliance Services": Scale,
+  "Real Estate & Property Services": Home,
+  "Government & Public Sector": Landmark,
+  "Security & Safety Services": Shield,
   "Other Industries": MoreHorizontal,
 };
 

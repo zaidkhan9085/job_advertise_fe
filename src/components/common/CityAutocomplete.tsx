@@ -7,8 +7,14 @@ import { searchJobLocations, type JobLocationSearchResult, type JobLocationRef }
 
 export type LocationValue = JobLocationSearchResult;
 
+// A state-level result (e.g. "Maharashtra") has a country ancestor but no
+// state of its own — showing that country suffix reads as clutter ("India
+// (All States)" is the coarse country-wrapper's actual seeded name, not
+// meant to trail every state in the list). Only city-level results (which
+// have both a state AND a country ancestor) get the fuller "City, State,
+// Country" label; state/country-level results show just their own name.
 function formatLabel(loc: LocationValue) {
-  return [loc.name, loc.state, loc.country].filter(Boolean).join(", ");
+  return loc.state && loc.country ? [loc.name, loc.state, loc.country].filter(Boolean).join(", ") : loc.name;
 }
 
 // Converts a Prisma-`include`-shaped JobLocation (e.g. Company.jobLocation,
@@ -118,7 +124,7 @@ export default function CityAutocomplete({
                   >
                     <span>
                       {item.name}
-                      {(item.state || item.country) && (
+                      {item.state && item.country && (
                         <span className="text-muted-foreground font-normal ml-1">
                           · {[item.state, item.country].filter(Boolean).join(", ")}
                         </span>
