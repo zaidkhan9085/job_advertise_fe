@@ -27,6 +27,7 @@ import {
 } from "@/lib/api";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import PhoneInput from "@/components/common/PhoneInput";
+import SearchableSelect from "@/components/common/SearchableSelect";
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -195,16 +196,12 @@ export default function PostJobPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Industry (optional)</label>
-              <select
+              <SearchableSelect
                 value={industryId}
-                onChange={(e) => setIndustryId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
-              >
-                <option value="">Other Industries</option>
-                {industries.map((i) => (
-                  <option key={i.id} value={i.id}>{i.name}</option>
-                ))}
-              </select>
+                onChange={setIndustryId}
+                options={industries.map((i) => ({ value: i.id, label: i.name }))}
+                placeholder="Search and select an industry..."
+              />
             </div>
 
             <div className="space-y-2">
