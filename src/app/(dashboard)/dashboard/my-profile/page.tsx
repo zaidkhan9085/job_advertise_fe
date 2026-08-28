@@ -36,7 +36,6 @@ import {
   ApiError,
   type ProfileEntry,
   type ParsedResumeData,
-  type ExperienceBand,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import PhoneInput from "@/components/common/PhoneInput";
@@ -44,13 +43,10 @@ import CityAutocomplete, { toLocationValue, type LocationValue } from "@/compone
 import TagListInput from "@/components/dashboard/TagListInput";
 import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
 
-const EXPERIENCE_BANDS: { value: ExperienceBand; label: string }[] = [
-  { value: "ZERO_TO_ONE", label: "0-1 years" },
-  { value: "ONE_TO_THREE", label: "1-3 years" },
-  { value: "THREE_TO_FIVE", label: "3-5 years" },
-  { value: "FIVE_TO_TEN", label: "5-10 years" },
-  { value: "TEN_PLUS", label: "10+ years" },
-];
+// 0-40 years covers the realistic working-life range for this platform's
+// audience — a plain dropdown (not free text) so the ATS min-max experience
+// filter has a clean number to query against.
+const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
 
 function initials(name: string) {
   return name
@@ -77,8 +73,8 @@ export default function MyProfilePage() {
   const [industry, setIndustry] = useState("");
   const [indianExp, setIndianExp] = useState("");
   const [gulfExp, setGulfExp] = useState("");
-  const [indianExpBand, setIndianExpBand] = useState<ExperienceBand | "">("");
-  const [gulfExpBand, setGulfExpBand] = useState<ExperienceBand | "">("");
+  const [indianExpYears, setIndianExpYears] = useState<number | "">("");
+  const [gulfExpYears, setGulfExpYears] = useState<number | "">("");
   const [nationality, setNationality] = useState("");
   const [passportNo, setPassportNo] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -116,8 +112,8 @@ export default function MyProfilePage() {
         setIndustry(profile.industry ?? "");
         setIndianExp(profile.indianExp ?? "");
         setGulfExp(profile.gulfExp ?? "");
-        setIndianExpBand(profile.indianExpBand ?? "");
-        setGulfExpBand(profile.gulfExpBand ?? "");
+        setIndianExpYears(profile.indianExpYears ?? "");
+        setGulfExpYears(profile.gulfExpYears ?? "");
         setNationality(profile.nationality ?? "");
         setPassportNo(profile.passportNo ?? "");
         setDateOfBirth(profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "");
@@ -303,8 +299,8 @@ export default function MyProfilePage() {
       industry: industry || undefined,
       indianExp: indianExp || undefined,
       gulfExp: gulfExp || undefined,
-      indianExpBand: indianExpBand || undefined,
-      gulfExpBand: gulfExpBand || undefined,
+      indianExpYears: indianExpYears === "" ? undefined : indianExpYears,
+      gulfExpYears: gulfExpYears === "" ? undefined : gulfExpYears,
       nationality: nationality || undefined,
       passportNo: passportNo || undefined,
       dateOfBirth: dateOfBirth || undefined,
@@ -599,14 +595,14 @@ export default function MyProfilePage() {
               <label className={labelClass}>India Experience</label>
               <input value={indianExp} onChange={(e) => setIndianExp(e.target.value)} placeholder="e.g. 3 years" className={inputClass} />
               <select
-                value={indianExpBand}
-                onChange={(e) => setIndianExpBand(e.target.value as ExperienceBand | "")}
+                value={indianExpYears}
+                onChange={(e) => setIndianExpYears(e.target.value === "" ? "" : Number(e.target.value))}
                 className={inputClass}
               >
-                <option value="">Experience range (optional)</option>
-                {EXPERIENCE_BANDS.map((b) => (
-                  <option key={b.value} value={b.value}>
-                    {b.label}
+                <option value="">Years of experience (optional)</option>
+                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>
+                    {y} {y === 1 ? "year" : "years"}
                   </option>
                 ))}
               </select>
@@ -615,14 +611,14 @@ export default function MyProfilePage() {
               <label className={labelClass}>Gulf Experience</label>
               <input value={gulfExp} onChange={(e) => setGulfExp(e.target.value)} placeholder="e.g. 2 years" className={inputClass} />
               <select
-                value={gulfExpBand}
-                onChange={(e) => setGulfExpBand(e.target.value as ExperienceBand | "")}
+                value={gulfExpYears}
+                onChange={(e) => setGulfExpYears(e.target.value === "" ? "" : Number(e.target.value))}
                 className={inputClass}
               >
-                <option value="">Experience range (optional)</option>
-                {EXPERIENCE_BANDS.map((b) => (
-                  <option key={b.value} value={b.value}>
-                    {b.label}
+                <option value="">Years of experience (optional)</option>
+                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>
+                    {y} {y === 1 ? "year" : "years"}
                   </option>
                 ))}
               </select>

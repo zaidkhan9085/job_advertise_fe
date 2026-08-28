@@ -657,8 +657,6 @@ export interface ProfileEntry {
   content: string;
 }
 
-export type ExperienceBand = "ZERO_TO_ONE" | "ONE_TO_THREE" | "THREE_TO_FIVE" | "FIVE_TO_TEN" | "TEN_PLUS";
-
 export interface MyCandidateProfile {
   id: number;
   userId: number;
@@ -670,8 +668,8 @@ export interface MyCandidateProfile {
   gender: string | null;
   indianExp: string | null;
   gulfExp: string | null;
-  indianExpBand: ExperienceBand | null;
-  gulfExpBand: ExperienceBand | null;
+  indianExpYears: number | null;
+  gulfExpYears: number | null;
   qualification: string | null;
   industry: string | null;
   whatsapp: string;
@@ -707,8 +705,8 @@ export interface MyCandidateProfilePayload {
   gender?: string;
   indianExp?: string;
   gulfExp?: string;
-  indianExpBand?: ExperienceBand;
-  gulfExpBand?: ExperienceBand;
+  indianExpYears?: number;
+  gulfExpYears?: number;
   qualification?: string;
   industry?: string;
   preferredLocation?: string;
@@ -831,8 +829,9 @@ export interface ATSCandidate {
   industry: string | null;
   indianExp: string | null;
   gulfExp: string | null;
-  indianExpBand: ExperienceBand | null;
-  gulfExpBand: ExperienceBand | null;
+  indianExpYears: number | null;
+  gulfExpYears: number | null;
+  age: number | null;
   gender: string | null;
   currentLocation: string | null;
   preferredLocation: string | null;
@@ -863,8 +862,12 @@ export interface ATSSearchFilters extends AdminListParams {
   resumeWithinDays?: number;
   industry?: string;
   qualification?: string;
-  indianExpBand?: ExperienceBand;
-  gulfExpBand?: ExperienceBand;
+  indianExpMin?: number;
+  indianExpMax?: number;
+  gulfExpMin?: number;
+  gulfExpMax?: number;
+  ageMin?: number;
+  ageMax?: number;
   skills?: string[];
 }
 
@@ -884,8 +887,12 @@ export function searchCandidates(filters?: ATSSearchFilters) {
     resumeWithinDays: filters?.resumeWithinDays,
     industry: filters?.industry,
     qualification: filters?.qualification,
-    indianExpBand: filters?.indianExpBand,
-    gulfExpBand: filters?.gulfExpBand,
+    indianExpMin: filters?.indianExpMin,
+    indianExpMax: filters?.indianExpMax,
+    gulfExpMin: filters?.gulfExpMin,
+    gulfExpMax: filters?.gulfExpMax,
+    ageMin: filters?.ageMin,
+    ageMax: filters?.ageMax,
     skills: filters?.skills,
   });
   return apiFetch<ATSSearchResult>(`/api/ats/search${query}`);
