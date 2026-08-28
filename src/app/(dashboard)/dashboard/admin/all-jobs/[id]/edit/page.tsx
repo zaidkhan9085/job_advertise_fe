@@ -19,6 +19,7 @@ import {
   type Industry,
 } from "@/lib/api";
 import LocationPicker from "@/components/dashboard/LocationPicker";
+import SearchableSelect from "@/components/common/SearchableSelect";
 
 export default function AdminEditJobPage() {
   const params = useParams<{ id: string }>();
@@ -159,16 +160,12 @@ export default function AdminEditJobPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-foreground/80">Industry</label>
-            <select
+            <SearchableSelect
               value={industryId}
-              onChange={(e) => setIndustryId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
-            >
-              <option value="">Other Industries</option>
-              {industries.map((i) => (
-                <option key={i.id} value={i.id}>{i.name}</option>
-              ))}
-            </select>
+              onChange={setIndustryId}
+              options={industries.map((i) => ({ value: i.id, label: i.name }))}
+              placeholder="Search and select an industry..."
+            />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold text-foreground/80">Job Type</label>
