@@ -10,7 +10,6 @@ import {
   Mail,
   MapPin,
   Briefcase,
-  GraduationCap,
   Building2,
   Globe2,
   Plane,
@@ -42,6 +41,7 @@ import PhoneInput from "@/components/common/PhoneInput";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 import TagListInput from "@/components/dashboard/TagListInput";
 import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
+import EducationEntryList from "@/components/dashboard/EducationEntryList";
 
 // 0-40 years covers the realistic working-life range for this platform's
 // audience — a plain dropdown (not free text) so the ATS min-max experience
@@ -69,7 +69,6 @@ export default function MyProfilePage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
-  const [qualification, setQualification] = useState("");
   const [industry, setIndustry] = useState("");
   const [indianExp, setIndianExp] = useState("");
   const [gulfExp, setGulfExp] = useState("");
@@ -108,7 +107,6 @@ export default function MyProfilePage() {
         setWhatsapp(profile.whatsapp ?? "");
         setEmail(profile.email ?? "");
         setJobLocation(toLocationValue(profile.jobLocation));
-        setQualification(profile.qualification ?? "");
         setIndustry(profile.industry ?? "");
         setIndianExp(profile.indianExp ?? "");
         setGulfExp(profile.gulfExp ?? "");
@@ -148,7 +146,6 @@ export default function MyProfilePage() {
       position,
       whatsapp,
       email,
-      qualification,
       industry,
       indianExp,
       gulfExp,
@@ -177,7 +174,6 @@ export default function MyProfilePage() {
     position,
     whatsapp,
     email,
-    qualification,
     industry,
     indianExp,
     gulfExp,
@@ -219,7 +215,6 @@ export default function MyProfilePage() {
     if (parsed.position) setPosition(parsed.position);
     if (parsed.whatsapp) setWhatsapp(parsed.whatsapp);
     if (parsed.email) setEmail(parsed.email);
-    if (parsed.qualification) setQualification(parsed.qualification);
     if (parsed.industry) setIndustry(parsed.industry);
     if (parsed.summary) setSummary(parsed.summary);
     if (parsed.skills.length > 0) setSkills(parsed.skills);
@@ -295,7 +290,6 @@ export default function MyProfilePage() {
       whatsapp,
       email,
       jobLocationId: jobLocation.id,
-      qualification: qualification || undefined,
       industry: industry || undefined,
       indianExp: indianExp || undefined,
       gulfExp: gulfExp || undefined,
@@ -542,13 +536,7 @@ export default function MyProfilePage() {
         {/* Education */}
         <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
           <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Education</h2>
-          <ProfileEntryList
-            entries={education}
-            onChange={setEducation}
-            titlePlaceholder="Degree / course, e.g. Diploma in Mechanical Engineering"
-            subtitlePlaceholder="School / institute"
-            addLabel="Add education"
-          />
+          <EducationEntryList entries={education} onChange={setEducation} />
         </div>
 
         {/* Certifications */}
@@ -580,15 +568,9 @@ export default function MyProfilePage() {
             <label className={labelClass}><Briefcase className="w-4 h-4" /> Position / Job Title *</label>
             <input value={position} onChange={(e) => setPosition(e.target.value)} required className={inputClass} />
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className={labelClass}><GraduationCap className="w-4 h-4" /> Qualification</label>
-              <input value={qualification} onChange={(e) => setQualification(e.target.value)} className={inputClass} />
-            </div>
-            <div className="space-y-2">
-              <label className={labelClass}><Building2 className="w-4 h-4" /> Industry</label>
-              <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={inputClass} />
-            </div>
+          <div className="space-y-2">
+            <label className={labelClass}><Building2 className="w-4 h-4" /> Industry</label>
+            <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={inputClass} />
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">

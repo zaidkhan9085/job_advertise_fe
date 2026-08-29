@@ -25,10 +25,8 @@ import {
   searchCandidates,
   unlockCandidate,
   getMyCredits,
-  getQualifications,
   type ATSCandidate,
   type CreditsSummary,
-  type Qualification,
   type PaginatedMeta,
   ApiError,
 } from "@/lib/api";
@@ -36,12 +34,15 @@ import ComingSoon from "@/components/dashboard/ComingSoon";
 import Preview from "@/components/resume-builder/Preview";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import SimpleSelect from "@/components/common/SimpleSelect";
+import SearchableSelect from "@/components/common/SearchableSelect";
+import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
 
 // Naukri-style min-max range filters, not fixed bands — a plain number
 // dropdown for each bound so a recruiter can build any custom range (e.g.
 // 2-6 years) instead of being locked into a handful of preset buckets.
 const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
 const AGE_OPTIONS = Array.from({ length: 48 }, (_, i) => i + 18); // 18-65
+const COURSE_SELECT_OPTIONS = COURSE_OPTIONS.map((c) => ({ value: c, label: c }));
 
 const PAGE_LIMIT = 20;
 const RESUME_UNLOCK_COST = 1;
@@ -227,8 +228,8 @@ export default function SearchCandidatesPage() {
   const [search, setSearch] = useState("");
   const [keywordMode, setKeywordMode] = useState<"all" | "any">("any");
   const [location, setLocation] = useState<LocationValue | null>(null);
-  const [qualification, setQualification] = useState("");
-  const [qualifications, setQualifications] = useState<Qualification[]>([]);
+  const [course, setCourse] = useState("");
+  const [specialization, setSpecialization] = useState("");
   const [expMin, setExpMin] = useState<number | "">("");
   const [expMax, setExpMax] = useState<number | "">("");
   const [ageMax, setAgeMax] = useState<number | "">("");
@@ -254,14 +255,15 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, keywordMode, location, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]);
+  }, [search, keywordMode, location, course, specialization, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]);
 
   const filters = useMemo(
     () => ({
       search: search || undefined,
       keywordMode,
       jobLocationId: location?.id || undefined,
-      qualification: qualification || undefined,
+      course: course || undefined,
+      specialization: course && specialization ? specialization : undefined,
       expMin: expMin === "" ? undefined : expMin,
       expMax: expMax === "" ? undefined : expMax,
       ageMax: ageMax === "" ? undefined : ageMax,
@@ -269,7 +271,7 @@ export default function SearchCandidatesPage() {
       gender: gender || undefined,
       resumeWithinDays,
     }),
-    [search, keywordMode, location, qualification, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]
+    [search, keywordMode, location, course, specialization, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]
   );
 
   const loadCredits = useCallback(async () => {
@@ -301,7 +303,6 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     if (user && (user.role === "employer" || user.role === "sub_admin" || user.role === "admin")) {
-      getQualifications().then(setQualifications).catch(() => {});
       loadCandidates();
     }
   }, [user, loadCandidates]);
@@ -311,6 +312,12 @@ export default function SearchCandidatesPage() {
   }
 
   const selected = candidates.find((c) => c.userId === selectedUserId) ?? null;
+  // Course/Specialization replaced the old free-text Qualification field
+  // (see backend courseSpecializations.js) -- derive the detail panel's
+  // summary from structured education entries, falling back to the legacy
+  // string for rows saved before this existed.
+  const selectedCourses = [...new Set((selected?.education ?? []).map((e) => e.course).filter((c): c is string => Boolean(c)))];
+  const selectedCourseSummary = selectedCourses.length > 0 ? selectedCourses.join(", ") : selected?.qualification ?? null;
 
   const handleSelect = (c: ATSCandidate) => {
     setSelectedUserId(c.userId);
@@ -360,7 +367,16 @@ export default function SearchCandidatesPage() {
         onRemove: () => setLocation(null),
       });
     }
-    if (qualification) chips.push({ key: "qualification", label: qualification, onRemove: () => setQualification("") });
+    if (course) {
+      chips.push({
+        key: "course",
+        label: course && specialization ? `${course} · ${specialization}` : course,
+        onRemove: () => {
+          setCourse("");
+          setSpecialization("");
+        },
+      });
+    }
     if (expMin !== "" || expMax !== "") {
       chips.push({
         key: "exp",
@@ -384,14 +400,15 @@ export default function SearchCandidatesPage() {
       });
     }
     return chips;
-  }, [searchInput, location, qualification, expMin, expMax, ageMax, gender, nationality, resumeWithinDays]);
+  }, [searchInput, location, course, specialization, expMin, expMax, ageMax, gender, nationality, resumeWithinDays]);
 
   const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
     setSearchInput("");
     setKeywordMode("any");
     setLocation(null);
-    setQualification("");
+    setCourse("");
+    setSpecialization("");
     setExpMin("");
     setExpMax("");
     setAgeMax("");
@@ -443,7 +460,7 @@ export default function SearchCandidatesPage() {
               <input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Name, position, qualification..."
+                placeholder="Name, position, industry..."
                 className="w-full pl-9 pr-24 py-3 rounded-xl border-[1.5px] border-border bg-white shadow-sm hover:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm font-medium"
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex bg-secondary/60 rounded-full p-0.5">
@@ -490,13 +507,34 @@ export default function SearchCandidatesPage() {
         {showMoreFilters && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-3 border-t border-border/60">
             <div className="space-y-1.5">
-              <label className={filterLabelClass}>Qualification</label>
-              <SimpleSelect
-                value={qualification}
-                onChange={setQualification}
-                options={qualifications.map((q) => ({ value: q.name, label: q.name }))}
-                placeholder="Any qualification"
+              <SearchableSelect
+                label="Course"
+                placeholder="Any course"
+                value={course}
+                onChange={(next) => {
+                  setCourse(next);
+                  setSpecialization("");
+                }}
+                options={COURSE_SELECT_OPTIONS}
               />
+            </div>
+            <div className="space-y-1.5">
+              {course && course !== "Other" ? (
+                <SearchableSelect
+                  label="Specialization"
+                  placeholder="Any specialization"
+                  value={specialization}
+                  onChange={setSpecialization}
+                  options={getSpecializationOptions(course).map((s) => ({ value: s, label: s }))}
+                />
+              ) : (
+                <div>
+                  <label className={filterLabelClass}>Specialization</label>
+                  <div className={`${filterSelectClass} flex items-center text-muted-foreground cursor-not-allowed`}>
+                    {course === "Other" ? "Not applicable" : "Pick a course first"}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Experience</label>
@@ -730,7 +768,7 @@ export default function SearchCandidatesPage() {
 
               <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 border-b border-border/60">
                 {[
-                  ["Qualification", selected.qualification],
+                  ["Qualification", selectedCourseSummary],
                   ["Industry", selected.industry],
                   [
                     "Experience · India",
@@ -795,6 +833,7 @@ export default function SearchCandidatesPage() {
                     <div key={entry.id || i} className="text-sm">
                       <div className="font-bold text-foreground">
                         {entry.title}
+                        {entry.specialization ? ` - ${entry.specialization}` : ""}
                         {entry.subtitle ? ` · ${entry.subtitle}` : ""}
                       </div>
                       {entry.date && <div className="text-xs text-muted-foreground">{entry.date}</div>}
