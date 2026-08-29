@@ -338,7 +338,6 @@ export interface CandidateProfileAdmin {
   name: string;
   position: string;
   nationality: string | null;
-  qualification: string | null;
   industry: string | null;
   whatsapp: string;
   email: string;
@@ -654,6 +653,11 @@ export interface ProfileEntry {
   subtitle: string;
   date: string;
   content: string;
+  // Only Education entries populate these (see courseSpecializations.ts) --
+  // shared here rather than a parallel type so ProfileEntryList/Experience/
+  // Projects keep working unchanged, they just never set them.
+  course?: string;
+  specialization?: string;
 }
 
 export interface MyCandidateProfile {
@@ -669,7 +673,6 @@ export interface MyCandidateProfile {
   gulfExp: string | null;
   indianExpYears: number | null;
   gulfExpYears: number | null;
-  qualification: string | null;
   industry: string | null;
   whatsapp: string;
   email: string;
@@ -707,7 +710,6 @@ export interface MyCandidateProfilePayload {
   gulfExp?: string;
   indianExpYears?: number;
   gulfExpYears?: number;
-  qualification?: string;
   industry?: string;
   preferredLocationId?: string;
   summary?: string;
@@ -772,7 +774,6 @@ export interface ParsedResumeData {
   email: string;
   whatsapp: string;
   currentLocation: string;
-  qualification: string;
   industry: string;
   summary: string;
   skills: string[];
@@ -825,6 +826,8 @@ export interface ATSCandidate {
   name: string;
   position: string;
   nationality: string | null;
+  // Legacy free-text field, retired from the profile form -- shown only as
+  // a fallback for candidates saved before Course/Specialization existed.
   qualification: string | null;
   industry: string | null;
   indianExp: string | null;
@@ -862,7 +865,8 @@ export interface ATSSearchFilters extends AdminListParams {
   keywordMode?: "all" | "any";
   resumeWithinDays?: number;
   industry?: string;
-  qualification?: string;
+  course?: string;
+  specialization?: string;
   expMin?: number;
   expMax?: number;
   ageMax?: number;
@@ -884,7 +888,8 @@ export function searchCandidates(filters?: ATSSearchFilters) {
     keywordMode: filters?.keywordMode,
     resumeWithinDays: filters?.resumeWithinDays,
     industry: filters?.industry,
-    qualification: filters?.qualification,
+    course: filters?.course,
+    specialization: filters?.specialization,
     expMin: filters?.expMin,
     expMax: filters?.expMax,
     ageMax: filters?.ageMax,
