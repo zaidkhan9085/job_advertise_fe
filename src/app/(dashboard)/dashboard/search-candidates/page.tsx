@@ -44,7 +44,8 @@ const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
 const AGE_OPTIONS = Array.from({ length: 48 }, (_, i) => i + 18); // 18-65
 
 const PAGE_LIMIT = 20;
-const UNLOCK_COST = 1;
+const RESUME_UNLOCK_COST = 1;
+const PROFILE_UNLOCK_COST = 1;
 
 // Shared by every "More filters" control so they all sit on the same
 // visual baseline as CityAutocomplete/MultiSelectCombobox's own built-in
@@ -316,20 +317,21 @@ export default function SearchCandidatesPage() {
     setMobileDetailOpen(true);
   };
 
-  const handleUnlock = async (candidate: ATSCandidate, openResume = true) => {
+  const handleUnlock = async (candidate: ATSCandidate, type: "resume" | "profile", openResume = true) => {
     setUnlockingId(candidate.userId);
     try {
-      const result = await unlockCandidate(candidate.userId);
-      toast.success(candidate.isUnlocked ? "Resume opened" : `Unlocked — ${result.creditsRemaining} credit(s) remaining`);
+      const result = await unlockCandidate(candidate.userId, type);
+      const alreadyHadTier = type === "resume" ? candidate.isResumeUnlocked : candidate.isUnlocked;
+      toast.success(alreadyHadTier ? "Resume opened" : `Unlocked — ${result.creditsRemaining} credit(s) remaining`);
       // Refetch rather than patching local state piecemeal — once
-      // isUnlocked flips server-side, searchCandidates also reveals
-      // summary/skills/experience/education/certifications/projects (see
-      // atsController.js), which unlockCandidate's own response doesn't
-      // carry back. loadCandidates already refreshes credits too.
+      // isUnlocked/isResumeUnlocked flip server-side, searchCandidates also
+      // reveals summary/skills/experience/education/certifications/projects
+      // (see atsController.js), which unlockCandidate's own response
+      // doesn't carry back. loadCandidates already refreshes credits too.
       await loadCandidates();
       if (openResume)
         setViewing({
-          candidate: { ...candidate, isUnlocked: true, ...result.candidate },
+          candidate: { ...candidate, isResumeUnlocked: true, ...result.candidate },
           resume: result.resume,
           uploadedResumeUrl: result.uploadedResumeUrl,
         });
@@ -672,42 +674,54 @@ export default function SearchCandidatesPage() {
                   {selected.isUnlocked ? (
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
                       {isStaff ? <ShieldCheck className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      {isStaff ? "Admin access" : "Unlocked"}
+                      {isStaff ? "Admin access" : "Full profile unlocked"}
+                    </span>
+                  ) : selected.isResumeUnlocked ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Resume unlocked
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground">
                       <Lock className="w-3.5 h-3.5" /> Locked
                     </span>
                   )}
-                  <div className="flex gap-2">
-                    {selected.isUnlocked ? (
-                      <>
-                        {selected.whatsapp && (
-                          <a
-                            href={`https://wa.me/${selected.whatsapp.replace(/[^\d+]/g, "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                          </a>
-                        )}
-                        <button
-                          disabled={!selected.hasResume}
-                          onClick={() => handleUnlock(selected, true)}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80 disabled:opacity-40"
-                        >
-                          <FileText className="w-3.5 h-3.5" /> View Resume
-                        </button>
-                      </>
-                    ) : (
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    {selected.isUnlocked && selected.whatsapp && (
+                      <a
+                        href={`https://wa.me/${selected.whatsapp.replace(/[^\d+]/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                      </a>
+                    )}
+                    {selected.isResumeUnlocked && (
+                      <button
+                        onClick={() => handleUnlock(selected, "resume", true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> View Resume
+                      </button>
+                    )}
+                    {selected.hasResume && !selected.isResumeUnlocked && (
                       <button
                         disabled={unlockingId === selected.userId}
-                        onClick={() => handleUnlock(selected)}
+                        onClick={() => handleUnlock(selected, "resume", true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80 disabled:opacity-60"
+                      >
+                        {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
+                        Unlock Resume &middot; {RESUME_UNLOCK_COST} credit
+                      </button>
+                    )}
+                    {!selected.isUnlocked && (
+                      <button
+                        disabled={unlockingId === selected.userId}
+                        onClick={() => handleUnlock(selected, "profile", false)}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-blue text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-60"
                       >
                         {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
-                        Unlock &middot; {UNLOCK_COST} credit
+                        Unlock Full Profile &middot; {PROFILE_UNLOCK_COST} credit
                       </button>
                     )}
                   </div>
@@ -826,9 +840,9 @@ export default function SearchCandidatesPage() {
                     <FileText className="w-5 h-5 opacity-40 shrink-0" />
                     This candidate hasn&apos;t uploaded a resume yet.
                   </div>
-                ) : selected.isUnlocked ? (
+                ) : selected.isResumeUnlocked ? (
                   <button
-                    onClick={() => handleUnlock(selected, true)}
+                    onClick={() => handleUnlock(selected, "resume", true)}
                     className="w-full rounded-xl border border-border/60 bg-secondary/30 p-5 flex items-center gap-3 text-left hover:bg-secondary/50 transition-colors"
                   >
                     <FileText className="w-5 h-5 text-brand-blue shrink-0" />
@@ -838,7 +852,11 @@ export default function SearchCandidatesPage() {
                     </div>
                   </button>
                 ) : (
-                  <div className="relative rounded-xl border border-border/60 bg-secondary/30 p-5 overflow-hidden">
+                  <button
+                    disabled={unlockingId === selected.userId}
+                    onClick={() => handleUnlock(selected, "resume", true)}
+                    className="relative w-full rounded-xl border border-border/60 bg-secondary/30 p-5 overflow-hidden text-left disabled:opacity-60"
+                  >
                     <div className="space-y-2.5 blur-[3px] opacity-70">
                       <div className="h-2 rounded bg-border w-2/5" />
                       <div className="h-2 rounded bg-border w-4/5" />
@@ -848,9 +866,11 @@ export default function SearchCandidatesPage() {
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-secondary/50 backdrop-blur-[1px]">
                       <Lock className="w-6 h-6 text-muted-foreground" />
-                      <span className="text-xs font-bold text-muted-foreground">Unlock to view the full resume</span>
+                      <span className="text-xs font-bold text-muted-foreground">
+                        Unlock Resume &middot; {RESUME_UNLOCK_COST} credit to view
+                      </span>
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
             </>

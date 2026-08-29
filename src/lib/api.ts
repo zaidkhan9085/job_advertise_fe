@@ -839,6 +839,7 @@ export interface ATSCandidate {
   hasResume: boolean;
   resumeUpdatedAt: string | null;
   isUnlocked: boolean;
+  isResumeUnlocked: boolean;
   whatsapp: string | null;
   email: string | null;
   summary: string | null;
@@ -902,8 +903,11 @@ export interface UnlockCandidateResult {
   creditsRemaining: number;
 }
 
-export function unlockCandidate(userId: number) {
-  return apiFetch<UnlockCandidateResult>(`/api/ats/candidates/${userId}/unlock`, { method: "POST" });
+export function unlockCandidate(userId: number, type: "resume" | "profile") {
+  return apiFetch<UnlockCandidateResult>(`/api/ats/candidates/${userId}/unlock`, {
+    method: "POST",
+    body: JSON.stringify({ type }),
+  });
 }
 
 export function followCompany(id: string) {
