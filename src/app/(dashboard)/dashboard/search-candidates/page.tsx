@@ -309,10 +309,6 @@ export default function SearchCandidatesPage() {
     }
   }, [user, loadCandidates]);
 
-  if (user && user.role !== "employer" && user.role !== "sub_admin" && user.role !== "admin") {
-    return <ComingSoon title="Search Candidates" />;
-  }
-
   const selected = candidates.find((c) => c.userId === selectedUserId) ?? null;
   // Course/Specialization replaced the old free-text Qualification field
   // (see backend courseSpecializations.js) -- derive the detail panel's
@@ -404,6 +400,14 @@ export default function SearchCandidatesPage() {
     }
     return chips;
   }, [searchInput, location, course, specialization, expMin, expMax, fresherOnly, ageMax, gender, nationality, resumeWithinDays]);
+
+  // Every hook this component calls must run above this line -- a candidate
+  // (or any other non-employer role) landing here on a direct URL used to
+  // trip a real "rendered fewer hooks than expected" React error, not just
+  // a lint warning, because this early return sat before the useMemo above.
+  if (user && user.role !== "employer" && user.role !== "sub_admin" && user.role !== "admin") {
+    return <ComingSoon title="Search Candidates" />;
+  }
 
   const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
