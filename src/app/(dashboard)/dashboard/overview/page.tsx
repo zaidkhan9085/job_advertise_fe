@@ -160,7 +160,7 @@ function CandidateOverview() {
           <p className="text-muted-foreground mt-1">Your job search activity at a glance.</p>
         </div>
         <Link
-          href="/dashboard/browse-jobs"
+          href="/jobs"
           className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm whitespace-nowrap"
         >
           <Search className="w-4 h-4" />
