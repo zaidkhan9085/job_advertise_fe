@@ -1,13 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 
-export default function LoginPage() {
+// proxy.ts sends here with ?redirect=<original path> when it bounces an
+// unauthenticated /dashboard/* request -- only ever a same-app dashboard
+// path, but validated anyway so a malformed/foreign value can't be handed
+// straight to the router.
+function resolveRedirectTarget(searchParams: URLSearchParams): string {
+  const redirect = searchParams.get("redirect");
+  return redirect && redirect.startsWith("/dashboard") ? redirect : "/dashboard";
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,12 +24,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const { user, isLoading: authLoading, login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.replace("/dashboard");
+      router.replace(resolveRedirectTarget(searchParams));
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +39,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push("/dashboard");
+      router.push(resolveRedirectTarget(searchParams));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -122,5 +132,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
