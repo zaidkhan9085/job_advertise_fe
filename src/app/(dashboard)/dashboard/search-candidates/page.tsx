@@ -697,8 +697,18 @@ export default function SearchCandidatesPage() {
         {/* ── Detail ── */}
         {/* DashboardHeader is a normal flex sibling above <main>, not sticky/fixed
             itself, so it never overlaps <main>'s scrolled content — this only
-            needs a small breathing-room offset, not clearance for a header. */}
-        <div className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden xl:sticky xl:top-0 ${!mobileDetailOpen ? "hidden xl:block" : ""}`}>
+            needs a small breathing-room offset, not clearance for a header.
+            Capped to the viewport (minus DashboardHeader's h-16 and <main>'s
+            own p-4/md:p-8) with its own overflow-y-auto so a candidate with a
+            long summary/many skills/lots of experience entries scrolls inside
+            this panel instead of growing the whole page — the roster column
+            alongside it is unaffected either way since grid items size
+            independently. min-h-0 isn't needed here since max-height is set
+            directly on this scrolling element rather than derived from a
+            flex/grid ancestor squeezing it. */}
+        <div
+          className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden xl:overflow-y-auto xl:sticky xl:top-0 xl:max-h-[calc(100vh-8rem)] ${!mobileDetailOpen ? "hidden xl:block" : ""}`}
+        >
           <button
             onClick={() => setMobileDetailOpen(false)}
             className="xl:hidden flex items-center gap-1.5 px-4 py-3 text-xs font-bold text-muted-foreground border-b border-border/60"
