@@ -70,10 +70,8 @@ export default function MyProfilePage() {
   const [email, setEmail] = useState("");
   const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
   const [industry, setIndustry] = useState("");
-  const [indianExp, setIndianExp] = useState("");
-  const [gulfExp, setGulfExp] = useState("");
-  const [indianExpYears, setIndianExpYears] = useState<number | "">("");
-  const [gulfExpYears, setGulfExpYears] = useState<number | "">("");
+  const [experienceYears, setExperienceYears] = useState<number | "">("");
+  const [isFresher, setIsFresher] = useState(false);
   const [nationality, setNationality] = useState("");
   const [passportNo, setPassportNo] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -108,10 +106,8 @@ export default function MyProfilePage() {
         setEmail(profile.email ?? "");
         setJobLocation(toLocationValue(profile.jobLocation));
         setIndustry(profile.industry ?? "");
-        setIndianExp(profile.indianExp ?? "");
-        setGulfExp(profile.gulfExp ?? "");
-        setIndianExpYears(profile.indianExpYears ?? "");
-        setGulfExpYears(profile.gulfExpYears ?? "");
+        setExperienceYears(profile.experienceYears ?? "");
+        setIsFresher(profile.isFresher ?? false);
         setNationality(profile.nationality ?? "");
         setPassportNo(profile.passportNo ?? "");
         setDateOfBirth(profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "");
@@ -147,13 +143,14 @@ export default function MyProfilePage() {
       whatsapp,
       email,
       industry,
-      indianExp,
-      gulfExp,
       nationality,
       passportNo,
       dateOfBirth,
       gender,
     ];
+    // isFresher is as much a real answer as a number -- "I have no
+    // experience yet" isn't an unfilled field.
+    const experienceAnswered = isFresher || experienceYears !== "";
     const sectionChecks = [
       { label: "Professional Summary", filled: summary.trim().length > 0 },
       { label: "Skills", filled: skills.length > 0 },
@@ -164,9 +161,13 @@ export default function MyProfilePage() {
     ];
     const sectionsFilled = sectionChecks.filter((s) => s.filled).length;
     const filled =
-      fields.filter((f) => f.trim().length > 0).length + (jobLocation ? 1 : 0) + (preferredLocation ? 1 : 0) + sectionsFilled;
+      fields.filter((f) => f.trim().length > 0).length +
+      (jobLocation ? 1 : 0) +
+      (preferredLocation ? 1 : 0) +
+      (experienceAnswered ? 1 : 0) +
+      sectionsFilled;
     return {
-      completeness: Math.round((filled / (fields.length + 2 + sectionChecks.length)) * 100),
+      completeness: Math.round((filled / (fields.length + 3 + sectionChecks.length)) * 100),
       missingSections: sectionChecks.filter((s) => !s.filled).map((s) => s.label),
     };
   }, [
@@ -175,14 +176,14 @@ export default function MyProfilePage() {
     whatsapp,
     email,
     industry,
-    indianExp,
-    gulfExp,
     nationality,
     passportNo,
     dateOfBirth,
     gender,
     preferredLocation,
     jobLocation,
+    experienceYears,
+    isFresher,
     summary,
     skills,
     experience,
@@ -216,6 +217,8 @@ export default function MyProfilePage() {
     if (parsed.whatsapp) setWhatsapp(parsed.whatsapp);
     if (parsed.email) setEmail(parsed.email);
     if (parsed.industry) setIndustry(parsed.industry);
+    if (parsed.isFresher) setIsFresher(true);
+    if (parsed.totalExperienceYears != null) setExperienceYears(parsed.totalExperienceYears);
     if (parsed.summary) setSummary(parsed.summary);
     if (parsed.skills.length > 0) setSkills(parsed.skills);
     if (parsed.certifications.length > 0) setCertifications(parsed.certifications);
@@ -291,10 +294,8 @@ export default function MyProfilePage() {
       email,
       jobLocationId: jobLocation.id,
       industry: industry || undefined,
-      indianExp: indianExp || undefined,
-      gulfExp: gulfExp || undefined,
-      indianExpYears: indianExpYears === "" ? undefined : indianExpYears,
-      gulfExpYears: gulfExpYears === "" ? undefined : gulfExpYears,
+      isFresher,
+      experienceYears: isFresher ? 0 : experienceYears === "" ? undefined : experienceYears,
       nationality: nationality || undefined,
       passportNo: passportNo || undefined,
       dateOfBirth: dateOfBirth || undefined,
@@ -477,12 +478,17 @@ export default function MyProfilePage() {
           </div>
         </div>
 
-        {/* Basic Info */}
+        {/* Basic Info -- every field the profile hard-requires lives here,
+            so filling just this one card and saving always works. */}
         <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
           <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Basic Info</h2>
           <div className="space-y-2">
             <label className={labelClass}><User className="w-4 h-4" /> Full Name *</label>
             <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+          </div>
+          <div className="space-y-2">
+            <label className={labelClass}><Briefcase className="w-4 h-4" /> Position / Job Title *</label>
+            <input value={position} onChange={(e) => setPosition(e.target.value)} required className={inputClass} />
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -494,9 +500,20 @@ export default function MyProfilePage() {
               <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required className={inputClass} />
             </div>
           </div>
-          <div className="space-y-2">
-            <label className={labelClass}><MapPin className="w-4 h-4" /> Current Location *</label>
-            <CityAutocomplete value={jobLocation} onChange={setJobLocation} required />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className={labelClass}>Gender</label>
+              <select value={gender} onChange={(e) => setGender(e.target.value)} className={`${inputClass} appearance-none cursor-pointer`}>
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className={labelClass}><MapPin className="w-4 h-4" /> Current Location *</label>
+              <CityAutocomplete value={jobLocation} onChange={setJobLocation} required />
+            </div>
           </div>
         </div>
 
@@ -521,9 +538,48 @@ export default function MyProfilePage() {
           <TagListInput values={skills} onChange={setSkills} placeholder="e.g. Welding, MS Excel, Customer Service..." />
         </div>
 
-        {/* Experience */}
+        {/* Employment Details -- total experience + industry summary up top
+            (Naukri's own layout), individual jobs below. */}
         <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
-          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Experience</h2>
+          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Employment Details</h2>
+          <label className="flex items-center gap-2 text-sm font-semibold text-foreground cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              checked={isFresher}
+              disabled={!isFresher && experience.length > 0}
+              onChange={(e) => {
+                setIsFresher(e.target.checked);
+                if (e.target.checked) setExperienceYears(0);
+              }}
+              className="w-4 h-4 rounded accent-brand-blue"
+            />
+            I&apos;m a fresher — no work experience yet
+          </label>
+          {!isFresher && experience.length > 0 && (
+            <p className="text-xs text-muted-foreground -mt-2">Remove your work experience entries below to mark yourself as a fresher.</p>
+          )}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className={labelClass}>Total Experience</label>
+              <select
+                value={isFresher ? 0 : experienceYears}
+                disabled={isFresher}
+                onChange={(e) => setExperienceYears(e.target.value === "" ? "" : Number(e.target.value))}
+                className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                <option value="">Years of experience (optional)</option>
+                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>
+                    {y} {y === 1 ? "year" : "years"}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className={labelClass}><Building2 className="w-4 h-4" /> Industry</label>
+              <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={inputClass} />
+            </div>
+          </div>
           <ProfileEntryList
             entries={experience}
             onChange={setExperience}
@@ -561,53 +617,6 @@ export default function MyProfilePage() {
           />
         </div>
 
-        {/* Professional Details */}
-        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
-          <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Professional Details</h2>
-          <div className="space-y-2">
-            <label className={labelClass}><Briefcase className="w-4 h-4" /> Position / Job Title *</label>
-            <input value={position} onChange={(e) => setPosition(e.target.value)} required className={inputClass} />
-          </div>
-          <div className="space-y-2">
-            <label className={labelClass}><Building2 className="w-4 h-4" /> Industry</label>
-            <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={inputClass} />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className={labelClass}>India Experience</label>
-              <input value={indianExp} onChange={(e) => setIndianExp(e.target.value)} placeholder="e.g. 3 years" className={inputClass} />
-              <select
-                value={indianExpYears}
-                onChange={(e) => setIndianExpYears(e.target.value === "" ? "" : Number(e.target.value))}
-                className={inputClass}
-              >
-                <option value="">Years of experience (optional)</option>
-                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
-                  <option key={y} value={y}>
-                    {y} {y === 1 ? "year" : "years"}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className={labelClass}>Gulf Experience</label>
-              <input value={gulfExp} onChange={(e) => setGulfExp(e.target.value)} placeholder="e.g. 2 years" className={inputClass} />
-              <select
-                value={gulfExpYears}
-                onChange={(e) => setGulfExpYears(e.target.value === "" ? "" : Number(e.target.value))}
-                className={inputClass}
-              >
-                <option value="">Years of experience (optional)</option>
-                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
-                  <option key={y} value={y}>
-                    {y} {y === 1 ? "year" : "years"}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
         {/* Identity & Travel */}
         <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 space-y-4">
           <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Identity & Travel</h2>
@@ -621,20 +630,9 @@ export default function MyProfilePage() {
               <input value={passportNo} onChange={(e) => setPassportNo(e.target.value)} className={inputClass} />
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className={labelClass}><Calendar className="w-4 h-4" /> Date of Birth</label>
-              <input value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} type="date" className={inputClass} />
-            </div>
-            <div className="space-y-2">
-              <label className={labelClass}>Gender</label>
-              <select value={gender} onChange={(e) => setGender(e.target.value)} className={`${inputClass} appearance-none cursor-pointer`}>
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+          <div className="space-y-2 sm:w-1/2 sm:pr-2">
+            <label className={labelClass}><Calendar className="w-4 h-4" /> Date of Birth</label>
+            <input value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} type="date" className={inputClass} />
           </div>
         </div>
 
