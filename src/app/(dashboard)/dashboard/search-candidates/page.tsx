@@ -232,6 +232,7 @@ export default function SearchCandidatesPage() {
   const [specialization, setSpecialization] = useState("");
   const [expMin, setExpMin] = useState<number | "">("");
   const [expMax, setExpMax] = useState<number | "">("");
+  const [fresherOnly, setFresherOnly] = useState(false);
   const [ageMax, setAgeMax] = useState<number | "">("");
   const [nationality, setNationality] = useState("");
   const [gender, setGender] = useState("");
@@ -255,7 +256,7 @@ export default function SearchCandidatesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, keywordMode, location, course, specialization, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]);
+  }, [search, keywordMode, location, course, specialization, expMin, expMax, fresherOnly, ageMax, nationality, gender, resumeWithinDays]);
 
   const filters = useMemo(
     () => ({
@@ -266,12 +267,13 @@ export default function SearchCandidatesPage() {
       specialization: course && specialization ? specialization : undefined,
       expMin: expMin === "" ? undefined : expMin,
       expMax: expMax === "" ? undefined : expMax,
+      fresherOnly: fresherOnly || undefined,
       ageMax: ageMax === "" ? undefined : ageMax,
       nationality: nationality || undefined,
       gender: gender || undefined,
       resumeWithinDays,
     }),
-    [search, keywordMode, location, course, specialization, expMin, expMax, ageMax, nationality, gender, resumeWithinDays]
+    [search, keywordMode, location, course, specialization, expMin, expMax, fresherOnly, ageMax, nationality, gender, resumeWithinDays]
   );
 
   const loadCredits = useCallback(async () => {
@@ -387,6 +389,7 @@ export default function SearchCandidatesPage() {
         },
       });
     }
+    if (fresherOnly) chips.push({ key: "fresherOnly", label: "Fresher only", onRemove: () => setFresherOnly(false) });
     if (ageMax !== "") {
       chips.push({ key: "age", label: `Age: up to ${ageMax}`, onRemove: () => setAgeMax("") });
     }
@@ -400,7 +403,7 @@ export default function SearchCandidatesPage() {
       });
     }
     return chips;
-  }, [searchInput, location, course, specialization, expMin, expMax, ageMax, gender, nationality, resumeWithinDays]);
+  }, [searchInput, location, course, specialization, expMin, expMax, fresherOnly, ageMax, gender, nationality, resumeWithinDays]);
 
   const hasActiveFilters = activeFilterChips.length > 0;
   const resetFilters = () => {
@@ -411,6 +414,7 @@ export default function SearchCandidatesPage() {
     setSpecialization("");
     setExpMin("");
     setExpMax("");
+    setFresherOnly(false);
     setAgeMax("");
     setNationality("");
     setGender("");
@@ -546,6 +550,15 @@ export default function SearchCandidatesPage() {
                 options={EXPERIENCE_YEAR_OPTIONS}
                 formatOption={(y) => `${y} yr${y === 1 ? "" : "s"}`}
               />
+              <label className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground cursor-pointer w-fit">
+                <input
+                  type="checkbox"
+                  checked={fresherOnly}
+                  onChange={(e) => setFresherOnly(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded accent-brand-blue"
+                />
+                Fresher only
+              </label>
             </div>
             <div className="space-y-1.5">
               <label className={filterLabelClass}>Age (up to)</label>
@@ -770,14 +783,7 @@ export default function SearchCandidatesPage() {
                 {[
                   ["Qualification", selectedCourseSummary],
                   ["Industry", selected.industry],
-                  [
-                    "Experience · India",
-                    [selected.indianExp, selected.indianExpYears != null ? `(${selected.indianExpYears} yrs)` : null].filter(Boolean).join(" "),
-                  ],
-                  [
-                    "Experience · Gulf",
-                    [selected.gulfExp, selected.gulfExpYears != null ? `(${selected.gulfExpYears} yrs)` : null].filter(Boolean).join(" "),
-                  ],
+                  ["Experience", selected.isFresher ? "Fresher" : selected.experienceYears != null ? `${selected.experienceYears} yrs` : null],
                   ["Age", selected.age != null ? `${selected.age}` : null],
                   ["Nationality", [selected.nationality, selected.gender].filter(Boolean).join(" · ")],
                   ["Current location", selected.currentLocation || selected.region?.name],

@@ -669,10 +669,8 @@ export interface MyCandidateProfile {
   dateOfBirth: string | null;
   nationality: string | null;
   gender: string | null;
-  indianExp: string | null;
-  gulfExp: string | null;
-  indianExpYears: number | null;
-  gulfExpYears: number | null;
+  experienceYears: number | null;
+  isFresher: boolean;
   industry: string | null;
   whatsapp: string;
   email: string;
@@ -706,10 +704,8 @@ export interface MyCandidateProfilePayload {
   dateOfBirth?: string;
   nationality?: string;
   gender?: string;
-  indianExp?: string;
-  gulfExp?: string;
-  indianExpYears?: number;
-  gulfExpYears?: number;
+  experienceYears?: number;
+  isFresher?: boolean;
   industry?: string;
   preferredLocationId?: string;
   summary?: string;
@@ -775,6 +771,11 @@ export interface ParsedResumeData {
   whatsapp: string;
   currentLocation: string;
   industry: string;
+  // null when Gemini couldn't form a confident estimate -- never a guess,
+  // see geminiParseResume.js's prompt. isFresher forces this to 0 already
+  // (backend-side), so the two never arrive contradictory.
+  totalExperienceYears: number | null;
+  isFresher: boolean;
   summary: string;
   skills: string[];
   certifications: string[];
@@ -830,10 +831,8 @@ export interface ATSCandidate {
   // a fallback for candidates saved before Course/Specialization existed.
   qualification: string | null;
   industry: string | null;
-  indianExp: string | null;
-  gulfExp: string | null;
-  indianExpYears: number | null;
-  gulfExpYears: number | null;
+  experienceYears: number | null;
+  isFresher: boolean;
   age: number | null;
   gender: string | null;
   currentLocation: string | null;
@@ -869,6 +868,7 @@ export interface ATSSearchFilters extends AdminListParams {
   specialization?: string;
   expMin?: number;
   expMax?: number;
+  fresherOnly?: boolean;
   ageMax?: number;
   skills?: string[];
 }
@@ -892,6 +892,7 @@ export function searchCandidates(filters?: ATSSearchFilters) {
     specialization: filters?.specialization,
     expMin: filters?.expMin,
     expMax: filters?.expMax,
+    fresherOnly: filters?.fresherOnly,
     ageMax: filters?.ageMax,
     skills: filters?.skills,
   });
