@@ -1,0 +1,252 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  applyToJob,
+  applyToJobProxy,
+  getMyCandidateProfile,
+  getIndustries,
+  ApiError,
+  type ApplyPayload,
+  type Industry,
+} from "@/lib/api";
+import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
+import SearchableSelect from "@/components/common/SearchableSelect";
+import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
+
+const COURSE_SELECT_OPTIONS = COURSE_OPTIONS.map((c) => ({ value: c, label: c }));
+const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
+
+const inputClass =
+  "w-full px-3.5 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium";
+const labelClass = "block text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5";
+
+export default function ApplyDialog({
+  jobId,
+  jobTitle,
+  mode = "self",
+  onClose,
+  onSuccess,
+}: {
+  jobId: string;
+  jobTitle: string;
+  // "self" = the logged-in candidate applying for themselves (redirects to
+  // WhatsApp on success). "proxy" = an employer/admin logging someone
+  // else's application (no WhatsApp redirect -- they're the recruiter, not
+  // the applicant).
+  mode?: "self" | "proxy";
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [isLoadingProfile, setIsLoadingProfile] = useState(mode === "self");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [industries, setIndustries] = useState<Industry[]>([]);
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [position, setPosition] = useState("");
+  const [location, setLocation] = useState<LocationValue | null>(null);
+  const [industry, setIndustry] = useState("");
+  const [course, setCourse] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [experienceYears, setExperienceYears] = useState<number | "">("");
+  const [isFresher, setIsFresher] = useState(false);
+
+  useEffect(() => {
+    getIndustries().then(setIndustries).catch(() => {});
+  }, []);
+
+  // Pre-fill from the candidate's own profile (if any) so they don't retype
+  // what they've already told the platform -- only for self-apply, a
+  // recruiter logging someone else has nothing of theirs to pre-fill from.
+  useEffect(() => {
+    if (mode !== "self") return;
+    getMyCandidateProfile()
+      .then((profile) => {
+        if (!profile) return;
+        setName(profile.name || "");
+        setPhone(profile.whatsapp || "");
+        setPosition(profile.position || "");
+        setLocation(toLocationValue(profile.jobLocation));
+        setIndustry(profile.industry || "");
+        setExperienceYears(profile.experienceYears ?? "");
+        setIsFresher(profile.isFresher);
+        const firstEdu = profile.education?.find((e) => e.course);
+        if (firstEdu) {
+          setCourse(firstEdu.course || "");
+          setSpecialization(firstEdu.specialization || "");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingProfile(false));
+  }, [mode]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim()) {
+      toast.error("Name and phone are required.");
+      return;
+    }
+
+    const payload: ApplyPayload = {
+      name: name.trim(),
+      phone: phone.trim(),
+      position: position.trim() || undefined,
+      jobLocationId: location?.id,
+      industry: industry || undefined,
+      course: course || undefined,
+      specialization: course && specialization ? specialization : undefined,
+      isFresher,
+      experienceYears: isFresher ? 0 : experienceYears === "" ? undefined : experienceYears,
+    };
+
+    setIsSubmitting(true);
+    try {
+      if (mode === "proxy") {
+        const result = await applyToJobProxy(jobId, payload);
+        toast.success(result.message);
+        onSuccess();
+        onClose();
+        return;
+      }
+
+      const result = await applyToJob(jobId, payload);
+      toast.success(result.message);
+
+      if (result.contactWhatsapp) {
+        const message = [
+          `Hi, I've applied for "${jobTitle}".`,
+          `Name: ${payload.name}`,
+          `Phone: ${payload.phone}`,
+          result.resumeLink ? `Resume: ${result.resumeLink}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n");
+        const cleanedNumber = result.contactWhatsapp.replace(/[^\d+]/g, "");
+        window.open(`https://wa.me/${cleanedNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+      }
+
+      onSuccess();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to apply.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-lg my-8 shadow-xl">
+        <div className="flex items-start justify-between p-5 sm:p-6 border-b border-border/60">
+          <div>
+            <h2 className="font-black text-lg text-foreground">{mode === "proxy" ? "Add Applicant" : "Apply for this job"}</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">{jobTitle}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 -m-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {isLoadingProfile ? (
+          <div className="p-12 flex justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
+            <div>
+              <label className={labelClass}>Full Name *</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Phone Number *</label>
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} required className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Position Applied For</label>
+              <input value={position} onChange={(e) => setPosition(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Current Location</label>
+              <CityAutocomplete value={location} onChange={setLocation} placeholder="Any location" />
+            </div>
+            <SearchableSelect
+              label="Industry"
+              placeholder="Search and select an industry..."
+              value={industry}
+              onChange={setIndustry}
+              options={industries.map((i) => ({ value: i.name, label: i.name }))}
+            />
+            <div className="grid sm:grid-cols-2 gap-3">
+              <SearchableSelect
+                label="Qualification"
+                placeholder="Search and select a course..."
+                value={course}
+                onChange={(next) => {
+                  setCourse(next);
+                  setSpecialization("");
+                }}
+                options={COURSE_SELECT_OPTIONS}
+              />
+              {course && course !== "Other" ? (
+                <SearchableSelect
+                  label="Specialization"
+                  placeholder="Search and select..."
+                  value={specialization}
+                  onChange={setSpecialization}
+                  options={getSpecializationOptions(course).map((s) => ({ value: s, label: s }))}
+                />
+              ) : (
+                <div>
+                  <label className={labelClass}>Specialization</label>
+                  <div className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
+                    {course === "Other" ? "Not applicable" : "Pick a qualification first"}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-foreground cursor-pointer w-fit mb-2">
+                <input
+                  type="checkbox"
+                  checked={isFresher}
+                  onChange={(e) => {
+                    setIsFresher(e.target.checked);
+                    if (e.target.checked) setExperienceYears(0);
+                  }}
+                  className="w-4 h-4 rounded accent-brand-blue"
+                />
+                I&apos;m a fresher — no work experience yet
+              </label>
+              <label className={labelClass}>Total Experience</label>
+              <select
+                value={isFresher ? 0 : experienceYears}
+                disabled={isFresher}
+                onChange={(e) => setExperienceYears(e.target.value === "" ? "" : Number(e.target.value))}
+                className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                <option value="">Years of experience (optional)</option>
+                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>
+                    {y} {y === 1 ? "year" : "years"}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue/90 py-3 rounded-xl font-bold transition-colors disabled:opacity-60"
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {isSubmitting ? "Submitting..." : mode === "proxy" ? "Add Applicant" : "Submit Application"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
