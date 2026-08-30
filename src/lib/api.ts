@@ -178,6 +178,8 @@ export interface JobPost {
   status: JobPostStatus;
   views: number;
   clicks: number;
+  // Only present on getMyJobs() rows -- see jobController.js's getMyJobs.
+  applicationsCount?: number;
   employerId: number;
   companyId: string | null;
   jobLocationId: string | null;
@@ -551,15 +553,89 @@ export function upsertMyResume(payload: { theme: unknown; sections: unknown }) {
 }
 
 // --- Applications ---
-export function applyToJob(jobId: string, resumeId?: string) {
-  return apiFetch<{ success: boolean; message: string }>(`/api/applications/apply/${jobId}`, {
+// Everything the apply-dialog collects -- all optional, so a bare
+// applyToJob(jobId) with no payload still works exactly like before
+// (backend auto-picks the candidate's latest resume either way). Also used
+// (with `email`, which self-apply never sends) for applyToJobProxy below.
+export interface ApplyPayload {
+  resumeId?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  position?: string;
+  jobLocationId?: string;
+  industry?: string;
+  course?: string;
+  specialization?: string;
+  experienceYears?: number;
+  isFresher?: boolean;
+}
+
+export interface ApplyResult {
+  success: boolean;
+  message: string;
+  data: { id: string; status: string };
+  // Only present on a real (non-duplicate) self-apply -- used to build the
+  // wa.me redirect to the recruiter. Null if the job has no WhatsApp number
+  // on file.
+  contactWhatsapp?: string | null;
+  resumeLink?: string;
+}
+
+export function applyToJob(jobId: string, payload: ApplyPayload = {}) {
+  return apiFetch<ApplyResult>(`/api/applications/apply/${jobId}`, {
     method: "POST",
-    body: JSON.stringify(resumeId ? { resumeId } : {}),
+    body: JSON.stringify(payload),
+  });
+}
+
+// Employer/admin logging a candidate's application on their behalf (walk-in,
+// phone referral) -- same payload shape, `phone` is required by the backend
+// since that's what it matches an existing candidate account by.
+export function applyToJobProxy(jobId: string, payload: ApplyPayload) {
+  return apiFetch<{ success: boolean; message: string; data: { id: string } }>(`/api/applications/apply-proxy/${jobId}`, {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 
 export function getMyApplications() {
   return apiFetch<{ success: boolean; count: number; data: unknown[] }>("/api/applications/my");
+}
+
+// Contact Leads -- every applicant against the caller's own jobs (every job,
+// for admin/sub_admin), optionally scoped to one job for the per-job
+// Applicants page. Deliberately not credit-gated (see atsController.js's
+// two-tier unlock for the DIFFERENT, credit-gated "browse the whole
+// candidate database" feature) -- these are people who reached out about
+// the employer's own postings.
+export interface JobLead {
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  source: "CANDIDATE" | "EMPLOYER" | "ADMIN";
+  createdAt: string;
+  name: string;
+  phone: string;
+  location: string | null;
+  position: string;
+  industry: string;
+  qualification: string;
+  experienceYears: number | null;
+  isFresher: boolean;
+  resumeLink: string;
+}
+
+export function getJobLeads(jobId?: string) {
+  const query = buildQuery({ jobId });
+  return apiFetch<{ success: boolean; count: number; data: JobLead[] }>(`/api/applications/leads${query}`);
+}
+
+// Fire-and-forget Call/WhatsApp click tracking on a job listing -- feeds
+// Contact Leads alongside real applications. Never blocks or fails loudly:
+// the actual tel:/wa.me navigation should proceed either way.
+export function recordJobInteraction(jobId: string, type: "CALL" | "WHATSAPP") {
+  apiFetch(`/api/jobs/${jobId}/interaction`, { method: "POST", body: JSON.stringify({ type }) }).catch(() => {});
 }
 
 // --- Company / Region ---

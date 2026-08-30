@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Trash2, MapPin, Loader2 } from "lucide-react";
+import { Plus, Search, Trash2, MapPin, Loader2, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { getMyJobs, deleteJob, type JobPost, ApiError } from "@/lib/api";
+import { getMyJobs, deleteJob, getJobLeads, type JobPost, type JobLead, ApiError } from "@/lib/api";
+import LeadsTable from "@/components/dashboard/LeadsTable";
 
 const STATUS_STYLES: Record<JobPost["status"], string> = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -14,12 +16,17 @@ const STATUS_STYLES: Record<JobPost["status"], string> = {
   EXPIRED: "bg-secondary text-muted-foreground border-border/60",
 };
 
-export default function ManageJobsPage() {
+function ManageJobsContent() {
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"jobs" | "leads">(searchParams.get("tab") === "leads" ? "leads" : "jobs");
   const [searchTerm, setSearchTerm] = useState("");
   const [jobs, setJobs] = useState<JobPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
+
+  const [leads, setLeads] = useState<JobLead[]>([]);
+  const [isLoadingLeads, setIsLoadingLeads] = useState(true);
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
@@ -33,9 +40,23 @@ export default function ManageJobsPage() {
     }
   }, []);
 
+  const loadLeads = useCallback(async () => {
+    setIsLoadingLeads(true);
+    try {
+      const result = await getJobLeads();
+      setLeads(result.data);
+    } catch {
+      // Contact Leads is secondary to the jobs table -- fail quietly, the
+      // empty-state row already covers "nothing to show".
+    } finally {
+      setIsLoadingLeads(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadJobs();
-  }, [loadJobs]);
+    loadLeads();
+  }, [loadJobs, loadLeads]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this job posting? This cannot be undone.")) return;
@@ -73,6 +94,29 @@ export default function ManageJobsPage() {
         </Link>
       </div>
 
+      <div className="inline-flex bg-secondary/60 rounded-xl p-1 gap-1">
+        <button
+          onClick={() => setActiveTab("jobs")}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+            activeTab === "jobs" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          Your Jobs
+        </button>
+        <button
+          onClick={() => setActiveTab("leads")}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+            activeTab === "leads" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          Contact Leads {leads.length > 0 && `(${leads.length})`}
+        </button>
+      </div>
+
+      {activeTab === "leads" ? (
+        <LeadsTable leads={leads} isLoading={isLoadingLeads} />
+      ) : (
+        <>
       <div className="relative flex-1 max-w-md group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-blue transition-colors" />
         <input
@@ -140,19 +184,27 @@ export default function ManageJobsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className={`flex items-center justify-end gap-1 transition-opacity ${actioningId === job.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
-                        <button
-                          title="Delete Job"
-                          disabled={actioningId === job.id}
-                          onClick={() => handleDelete(job.id)}
-                          className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-50"
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/dashboard/jobs/${job.id}/applicants`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-brand-blue hover:bg-brand-blue/10"
                         >
-                          {actioningId === job.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
+                          <Users className="w-3.5 h-3.5" /> Applicants{job.applicationsCount ? ` (${job.applicationsCount})` : ""}
+                        </Link>
+                        <div className={`flex items-center transition-opacity ${actioningId === job.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                          <button
+                            title="Delete Job"
+                            disabled={actioningId === job.id}
+                            onClick={() => handleDelete(job.id)}
+                            className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-50"
+                          >
+                            {actioningId === job.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -162,6 +214,16 @@ export default function ManageJobsPage() {
           </table>
         </div>
       </div>
+        </>
+      )}
     </div>
+  );
+}
+
+export default function ManageJobsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ManageJobsContent />
+    </Suspense>
   );
 }

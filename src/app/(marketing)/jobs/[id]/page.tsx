@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import {
   getJobById,
   getRelatedJobs,
-  applyToJob,
+  recordJobInteraction,
   getCompanyById,
   followCompany,
   unfollowCompany,
@@ -42,6 +42,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import JobPosterImage from "@/components/common/JobPosterImage";
+import ApplyDialog from "@/components/jobs/ApplyDialog";
 
 function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: string }) {
   return (
@@ -113,7 +114,8 @@ export default function JobDetailPage() {
   const [company, setCompany] = useState<CompanyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [applyState, setApplyState] = useState<"idle" | "applying" | "applied" | "error">("idle");
+  const [hasApplied, setHasApplied] = useState(false);
+  const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [myRating, setMyRating] = useState(0);
 
@@ -154,17 +156,8 @@ export default function JobDetailPage() {
     alert("Link copied to clipboard");
   };
 
-  const handleApply = async () => {
-    if (!job) return;
-    setApplyState("applying");
-    try {
-      const result = await applyToJob(job.id);
-      toast.success(result.message);
-      setApplyState("applied");
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to apply.");
-      setApplyState("error");
-    }
+  const handleTrackInteraction = (type: "CALL" | "WHATSAPP") => {
+    if (job) recordJobInteraction(job.id, type);
   };
 
   const handleToggleFollow = async () => {
@@ -247,6 +240,14 @@ export default function JobDetailPage() {
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
       {isReportOpen && <ReportModal onClose={() => setIsReportOpen(false)} onSubmit={handleReport} />}
+      {isApplyDialogOpen && job && (
+        <ApplyDialog
+          jobId={job.id}
+          jobTitle={job.title}
+          onClose={() => setIsApplyDialogOpen(false)}
+          onSuccess={() => setHasApplied(true)}
+        />
+      )}
 
       <div className="bg-[oklch(0.12_0.02_260)] text-white pt-8 pb-32">
         <div className="container-site">
@@ -356,17 +357,16 @@ export default function JobDetailPage() {
                   >
                     <ArrowUpRight className="w-5 h-5" /> Sign In to Apply
                   </Link>
-                ) : applyState === "applied" ? (
+                ) : hasApplied ? (
                   <div className="w-full flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 py-3 px-4 rounded-xl font-bold">
                     <CheckCircle2 className="w-5 h-5" /> Applied
                   </div>
                 ) : (
                   <button
-                    onClick={handleApply}
-                    disabled={applyState === "applying"}
-                    className="w-full flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] py-3 px-4 rounded-xl font-bold transition-colors shadow-sm disabled:opacity-70"
+                    onClick={() => setIsApplyDialogOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] py-3 px-4 rounded-xl font-bold transition-colors shadow-sm"
                   >
-                    <ArrowUpRight className="w-5 h-5" /> {applyState === "applying" ? "Applying..." : "Apply Now"}
+                    <ArrowUpRight className="w-5 h-5" /> Apply Now
                   </button>
                 )}
 
@@ -375,6 +375,7 @@ export default function JobDetailPage() {
                     href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => handleTrackInteraction("WHATSAPP")}
                     className="w-full flex items-center justify-center gap-2 bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 py-3 px-4 rounded-xl font-bold transition-colors"
                   >
                     <MessageCircle className="w-5 h-5" /> Chat on WhatsApp
@@ -384,6 +385,7 @@ export default function JobDetailPage() {
                 {job.contactPhone && (
                   <a
                     href={`tel:${job.contactPhone}`}
+                    onClick={() => handleTrackInteraction("CALL")}
                     className="w-full flex items-center justify-center gap-2 bg-secondary text-foreground hover:bg-border/60 py-3 px-4 rounded-xl font-bold transition-colors"
                   >
                     <Phone className="w-5 h-5" /> Call

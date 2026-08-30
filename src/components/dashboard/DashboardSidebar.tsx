@@ -44,7 +44,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
     { label: "Search Candidates", href: "/dashboard/search-candidates", icon: Search },
     { label: "Stories", href: "/dashboard/stories", icon: PlayCircle },
-    { label: "Applicants", href: "/dashboard/coming-soon", icon: Users },
+    { label: "Contact Leads", href: "/dashboard/jobs?tab=leads", icon: Users },
     { label: "Company Profile", href: "/dashboard/profile", icon: Building },
     { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
