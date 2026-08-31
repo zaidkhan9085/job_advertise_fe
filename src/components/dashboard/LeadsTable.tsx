@@ -122,7 +122,7 @@ export default function LeadsTable({
               </th>
               <th className="px-4 py-3 font-black uppercase tracking-widest text-[10px]">Candidate</th>
               {showJobColumn && <th className="px-4 py-3 font-black uppercase tracking-widest text-[10px]">Job</th>}
-              <th className="px-4 py-3 font-black uppercase tracking-widest text-[10px]">Details</th>
+              <th className="px-4 py-3 font-black uppercase tracking-widest text-[10px]">Status</th>
               <th className="px-4 py-3 font-black uppercase tracking-widest text-[10px]">Applied</th>
               <th className="px-4 py-3 font-black uppercase tracking-widest text-[10px] text-right">Actions</th>
             </tr>
@@ -157,23 +157,20 @@ export default function LeadsTable({
                       {[lead.phone, lead.location].filter(Boolean).join(" · ")}
                     </div>
                   </td>
-                  {showJobColumn && <td className="px-4 py-4 text-muted-foreground font-medium">{lead.jobTitle}</td>}
-                  <td className="px-4 py-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {lead.qualification && (
-                        <span className="text-[11px] font-bold bg-secondary/60 rounded-full px-2 py-0.5">{lead.qualification}</span>
-                      )}
-                      {(lead.isFresher || lead.experienceYears != null) && (
-                        <span className="text-[11px] font-bold bg-secondary/60 rounded-full px-2 py-0.5">
-                          {lead.isFresher ? "Fresher" : `${lead.experienceYears} yrs`}
-                        </span>
-                      )}
-                      {lead.industry && <span className="text-[11px] font-bold bg-secondary/60 rounded-full px-2 py-0.5">{lead.industry}</span>}
+                  {showJobColumn && <td className="px-4 py-4 text-muted-foreground font-medium max-w-40 truncate">{lead.jobTitle}</td>}
+                  <td className="px-4 py-4 max-w-45">
+                    <div className="font-bold text-foreground text-sm truncate">
+                      {lead.position || (lead.isFresher ? "Fresher" : "Job seeker")}
                     </div>
-                    <div className="text-[11px] text-muted-foreground font-semibold mt-1">{SOURCE_LABEL[lead.source]}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {[lead.qualification, lead.isFresher ? "Fresher" : lead.experienceYears != null ? `${lead.experienceYears} yrs exp` : null]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
+                    </div>
                   </td>
                   <td className="px-4 py-4 text-muted-foreground font-medium">
-                    {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
+                    <div>{formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}</div>
+                    <div className="text-[11px] font-semibold text-muted-foreground/70">{SOURCE_LABEL[lead.source]}</div>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-1.5">
