@@ -14,10 +14,14 @@ import {
 } from "@/lib/api";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 import SearchableSelect from "@/components/common/SearchableSelect";
+import SimpleSelect from "@/components/common/SimpleSelect";
 import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
 
 const COURSE_SELECT_OPTIONS = COURSE_OPTIONS.map((c) => ({ value: c, label: c }));
-const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
+const EXPERIENCE_YEAR_SELECT_OPTIONS = Array.from({ length: 41 }, (_, i) => ({
+  value: String(i),
+  label: `${i} ${i === 1 ? "year" : "years"}`,
+}));
 
 const inputClass =
   "w-full px-3.5 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium";
@@ -247,7 +251,12 @@ export default function ApplyDialog({
                 ) : (
                   <div>
                     <label className={labelClass}>Specialization</label>
-                    <div className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
+                    {/* Matches SearchableSelect's own trigger classes exactly
+                        (pl-4 pr-9 py-3 border-2) so this placeholder is the
+                        same height as the real dropdown next to it -- a
+                        shorter/differently-padded stand-in here is what
+                        made the two columns misalign. */}
+                    <div className="w-full pl-4 pr-9 py-3 rounded-xl bg-secondary/30 border-2 border-transparent text-sm font-medium text-muted-foreground">
                       {course === "Other" ? "Not applicable" : "Pick a qualification first"}
                     </div>
                   </div>
@@ -267,19 +276,14 @@ export default function ApplyDialog({
                   I&apos;m a fresher — no work experience yet
                 </label>
                 <label className={labelClass}>Total Experience</label>
-                <select
-                  value={isFresher ? 0 : experienceYears}
+                <SimpleSelect
+                  value={isFresher ? "0" : experienceYears === "" ? "" : String(experienceYears)}
                   disabled={isFresher}
-                  onChange={(e) => setExperienceYears(e.target.value === "" ? "" : Number(e.target.value))}
-                  className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
-                >
-                  <option value="">Years of experience (optional)</option>
-                  {EXPERIENCE_YEAR_OPTIONS.map((y) => (
-                    <option key={y} value={y}>
-                      {y} {y === 1 ? "year" : "years"}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setExperienceYears(v === "" ? "" : Number(v))}
+                  options={EXPERIENCE_YEAR_SELECT_OPTIONS}
+                  placeholder="Years of experience (optional)"
+                  className={`${inputClass} flex items-center justify-between cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+                />
               </div>
             </div>
 
