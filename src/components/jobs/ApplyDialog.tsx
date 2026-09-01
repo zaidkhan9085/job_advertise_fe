@@ -81,6 +81,15 @@ export default function ApplyDialog({
     getIndustries().then(setIndustries).catch(() => {});
   }, []);
 
+  // Same body-scroll-lock pattern as MobileNav.tsx -- without it the page
+  // behind this fixed-position overlay keeps scrolling with it.
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   // Pre-fill from the candidate's own profile (if any) so they don't retype
   // what they've already told the platform -- only for self-apply, a
   // recruiter logging someone else has nothing of theirs to pre-fill from.
