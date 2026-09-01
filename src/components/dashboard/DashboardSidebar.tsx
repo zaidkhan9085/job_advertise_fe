@@ -46,7 +46,6 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Stories", href: "/dashboard/stories", icon: PlayCircle },
     { label: "Contact Leads", href: "/dashboard/jobs?tab=leads", icon: Users },
     { label: "Company Profile", href: "/dashboard/profile", icon: Building },
-    { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
   // sub_admin has no dedicated nav yet — it's promoted from Employer and
   // gains moderation permissions, not a distinct dashboard (see [[api.ts]]).
@@ -65,7 +64,6 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Browse Jobs", href: "/jobs", icon: Search },
     { label: "My Applications", href: "/dashboard/applications", icon: Briefcase },
     { label: "My Resume", href: "/resume-builder", icon: FileText },
-    { label: "Settings", href: "/dashboard/coming-soon", icon: Settings },
   ],
 };
 
