@@ -157,6 +157,15 @@ export function resetPasswordRequest(token: string, password: string) {
   });
 }
 
+// Logged-in user changing their own password -- distinct from
+// forgot/reset above, which are for someone locked out with no session.
+export function changePassword(currentPassword: string, newPassword: string) {
+  return apiFetch<{ message: string }>("/api/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
 // --- Jobs ---
 export type JobPostType = "FEATURED" | "NORMAL" | "STORY";
 export type JobPostStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";

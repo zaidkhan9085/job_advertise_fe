@@ -2,9 +2,10 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Building, ImagePlus, Globe } from "lucide-react";
+import { Building, ImagePlus, Globe, KeyRound } from "lucide-react";
 import { getMyCompany, updateMyCompany, ApiError, resolveImageUrl } from "@/lib/api";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
+import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 
 export default function CompanyProfilePage() {
   const [name, setName] = useState("");
@@ -18,6 +19,7 @@ export default function CompanyProfilePage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -81,12 +83,23 @@ export default function CompanyProfilePage() {
 
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-      <div>
-        <h1 className="text-2xl font-black text-foreground tracking-tight">Company Profile</h1>
-        <p className="text-muted-foreground mt-1 text-sm font-medium">
-          Shown to candidates on your job posts. Location is required — it controls which candidates can find you.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Company Profile</h1>
+          <p className="text-muted-foreground mt-1 text-sm font-medium">
+            Shown to candidates on your job posts. Location is required — it controls which candidates can find you.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsChangePasswordOpen(true)}
+          className="self-start shrink-0 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border/60 bg-white text-sm font-bold text-foreground hover:bg-secondary/60 transition-colors"
+        >
+          <KeyRound className="w-4 h-4" /> Change Password
+        </button>
       </div>
+
+      {isChangePasswordOpen && <ChangePasswordDialog onClose={() => setIsChangePasswordOpen(false)} />}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-border/60 shadow-sm p-8 space-y-6">
         <div className="space-y-2">

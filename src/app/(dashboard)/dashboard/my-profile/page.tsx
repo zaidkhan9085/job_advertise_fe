@@ -23,6 +23,7 @@ import {
   FileCheck2,
   ExternalLink,
   Loader2,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -43,6 +44,7 @@ import TagListInput from "@/components/dashboard/TagListInput";
 import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
 import EducationEntryList from "@/components/dashboard/EducationEntryList";
 import SimpleSelect from "@/components/common/SimpleSelect";
+import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 
 // 0-40 years covers the realistic working-life range for this platform's
 // audience — a plain dropdown (not free text) so the ATS min-max experience
@@ -73,6 +75,7 @@ export default function MyProfilePage() {
   const [isExisting, setIsExisting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [position, setPosition] = useState("");
@@ -351,12 +354,23 @@ export default function MyProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
-      <div>
-        <h1 className="text-2xl font-black text-foreground tracking-tight">My Profile</h1>
-        <p className="text-muted-foreground mt-1 text-sm font-medium">
-          Employers screen candidates by this information before opening a resume.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">My Profile</h1>
+          <p className="text-muted-foreground mt-1 text-sm font-medium">
+            Employers screen candidates by this information before opening a resume.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsChangePasswordOpen(true)}
+          className="self-start shrink-0 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border/60 bg-white text-sm font-bold text-foreground hover:bg-secondary/60 transition-colors"
+        >
+          <KeyRound className="w-4 h-4" /> Change Password
+        </button>
       </div>
+
+      {isChangePasswordOpen && <ChangePasswordDialog onClose={() => setIsChangePasswordOpen(false)} />}
 
       {/* Resume upload — first step: upload once and most of the form
           below can pre-fill itself. Distinct from the Resume Builder link
