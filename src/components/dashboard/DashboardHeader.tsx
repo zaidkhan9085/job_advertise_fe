@@ -2,15 +2,20 @@
 
 import { Menu, Bell, User, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useSidebar } from "@/context/SidebarContext";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
+  const { openMobileSidebar } = useSidebar();
 
   return (
     <header className="h-16 bg-white border-b border-border/60 px-4 md:px-8 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-4">
-        {/* Mobile menu toggle (functionality can be wired later) */}
-        <button className="md:hidden p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors">
+        <button
+          onClick={openMobileSidebar}
+          className="md:hidden p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors"
+          aria-label="Open menu"
+        >
           <Menu className="w-5 h-5" />
         </button>
         <div className="hidden md:block">
