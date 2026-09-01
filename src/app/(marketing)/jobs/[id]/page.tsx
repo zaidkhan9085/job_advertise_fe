@@ -36,6 +36,7 @@ import {
   unblockCompany,
   reportContent,
   resolveImageUrl,
+  getMyApplications,
   type JobPost,
   type CompanyDetail,
   ApiError,
@@ -137,6 +138,20 @@ export default function JobDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Whether the candidate already applied to THIS job -- checked against
+  // their real applications on load, not just set in-session after a fresh
+  // submit, so revisiting the page still shows "Applied" instead of letting
+  // them submit a duplicate.
+  useEffect(() => {
+    if (user?.role !== "candidate") return;
+    getMyApplications()
+      .then((res) => {
+        const applied = (res.data as { jobId: string }[]).some((a) => a.jobId === params.id);
+        if (applied) setHasApplied(true);
+      })
+      .catch(() => {});
+  }, [user, params.id]);
 
   const requireLogin = () => {
     router.push("/login");

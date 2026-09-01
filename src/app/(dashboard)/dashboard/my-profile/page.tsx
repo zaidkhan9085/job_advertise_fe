@@ -42,11 +42,21 @@ import CityAutocomplete, { toLocationValue, type LocationValue } from "@/compone
 import TagListInput from "@/components/dashboard/TagListInput";
 import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
 import EducationEntryList from "@/components/dashboard/EducationEntryList";
+import SimpleSelect from "@/components/common/SimpleSelect";
 
 // 0-40 years covers the realistic working-life range for this platform's
 // audience — a plain dropdown (not free text) so the ATS min-max experience
 // filter has a clean number to query against.
 const EXPERIENCE_YEAR_OPTIONS = Array.from({ length: 41 }, (_, i) => i);
+const EXPERIENCE_YEAR_SELECT_OPTIONS = EXPERIENCE_YEAR_OPTIONS.map((y) => ({
+  value: String(y),
+  label: `${y} ${y === 1 ? "year" : "years"}`,
+}));
+const GENDER_SELECT_OPTIONS = [
+  { value: "Male", label: "Male" },
+  { value: "Female", label: "Female" },
+  { value: "Other", label: "Other" },
+];
 
 function initials(name: string) {
   return name
@@ -503,12 +513,13 @@ export default function MyProfilePage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className={labelClass}>Gender</label>
-              <select value={gender} onChange={(e) => setGender(e.target.value)} className={`${inputClass} appearance-none cursor-pointer`}>
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+              <SimpleSelect
+                value={gender}
+                onChange={setGender}
+                options={GENDER_SELECT_OPTIONS}
+                placeholder="Select"
+                className={`${inputClass} flex items-center justify-between cursor-pointer`}
+              />
             </div>
             <div className="space-y-2">
               <label className={labelClass}><MapPin className="w-4 h-4" /> Current Location *</label>
@@ -561,19 +572,14 @@ export default function MyProfilePage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className={labelClass}>Total Experience</label>
-              <select
-                value={isFresher ? 0 : experienceYears}
+              <SimpleSelect
+                value={isFresher ? "0" : experienceYears === "" ? "" : String(experienceYears)}
                 disabled={isFresher}
-                onChange={(e) => setExperienceYears(e.target.value === "" ? "" : Number(e.target.value))}
-                className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
-              >
-                <option value="">Years of experience (optional)</option>
-                {EXPERIENCE_YEAR_OPTIONS.map((y) => (
-                  <option key={y} value={y}>
-                    {y} {y === 1 ? "year" : "years"}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setExperienceYears(v === "" ? "" : Number(v))}
+                options={EXPERIENCE_YEAR_SELECT_OPTIONS}
+                placeholder="Years of experience (optional)"
+                className={`${inputClass} flex items-center justify-between cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+              />
             </div>
             <div className="space-y-2">
               <label className={labelClass}><Building2 className="w-4 h-4" /> Industry</label>

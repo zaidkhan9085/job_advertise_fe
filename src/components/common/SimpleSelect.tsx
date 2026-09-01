@@ -22,23 +22,26 @@ export default function SimpleSelect({
   options,
   placeholder = "Select",
   className,
+  disabled,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: SimpleSelectOption[];
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const selected = options.find((o) => o.value === value);
 
   return (
-    <Select.Root value={value} onValueChange={(v) => onChange(v as string)}>
+    <Select.Root value={value} onValueChange={(v) => onChange(v as string)} disabled={disabled}>
       <Select.Trigger
         ref={triggerRef}
         className={
-          className ??
-          "w-full flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium cursor-pointer"
+          (className ??
+            "w-full flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none text-sm font-medium cursor-pointer") +
+          " disabled:opacity-60 disabled:cursor-not-allowed"
         }
       >
         <span className={`truncate ${selected ? "" : "text-muted-foreground"}`}>{selected?.label ?? placeholder}</span>

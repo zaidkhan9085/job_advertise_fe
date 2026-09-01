@@ -538,7 +538,10 @@ export default function SearchCandidatesPage() {
               ) : (
                 <div>
                   <label className={filterLabelClass}>Specialization</label>
-                  <div className={`${filterSelectClass} flex items-center text-muted-foreground cursor-not-allowed`}>
+                  {/* Matches SearchableSelect's own trigger classes exactly
+                      (pl-4 pr-9 py-3 border-2) so this placeholder is the
+                      same height as the real dropdown next to it. */}
+                  <div className="w-full pl-4 pr-9 py-3 rounded-xl bg-secondary/30 border-2 border-transparent text-sm font-medium text-muted-foreground flex items-center cursor-not-allowed">
                     {course === "Other" ? "Not applicable" : "Pick a course first"}
                   </div>
                 </div>

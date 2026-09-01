@@ -14,6 +14,7 @@ import {
   RotateCcw,
   ChevronDown,
   Star,
+  CheckCircle2,
 } from "lucide-react";
 import {
   getJobs,
@@ -21,6 +22,7 @@ import {
   getIndustries,
   searchJobLocations,
   recordJobInteraction,
+  getMyApplications,
   type JobPost,
   ApiError,
 } from "@/lib/api";
@@ -58,6 +60,7 @@ function parseCsv(value: string | null): string[] {
 function JobsListingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
   const [timeFilter, setTimeFilter] = useState(searchParams.get("time") || "any");
@@ -68,6 +71,7 @@ function JobsListingContent() {
   const [industryOptions, setIndustryOptions] = useState<ComboOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
   const [selectedLocations, setSelectedLocations] = useState<LocationValue[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<ComboOption[]>([]);
@@ -91,6 +95,23 @@ function JobsListingContent() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Which jobs this candidate has already applied to, so cards can show
+  // "Applied" instead of letting them submit a duplicate (backend already
+  // blocks it, but that's a worse UX than never offering it in the first
+  // place). Only candidates apply, so this is skipped for employers/admin.
+  useEffect(() => {
+    if (user?.role !== "candidate") {
+      setAppliedJobIds(new Set());
+      return;
+    }
+    getMyApplications()
+      .then((res) => {
+        const ids = (res.data as { jobId: string }[]).map((a) => a.jobId);
+        setAppliedJobIds(new Set(ids));
+      })
+      .catch(() => {});
+  }, [user]);
 
   // One-time hydration from homepage links (?industry=id, ?location=slug) —
   // waits for industryOptions to load so its chip can actually be shown as
@@ -328,7 +349,13 @@ function JobsListingContent() {
             <>
               <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}>
                 {visibleJobs.map((job) => (
-                  <JobCardView key={job.id} job={job} mode={viewMode} />
+                  <JobCardView
+                    key={job.id}
+                    job={job}
+                    mode={viewMode}
+                    hasApplied={appliedJobIds.has(job.id)}
+                    onApplied={() => setAppliedJobIds((prev) => new Set(prev).add(job.id))}
+                  />
                 ))}
               </div>
 
@@ -350,7 +377,17 @@ function JobsListingContent() {
   );
 }
 
-function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
+function JobCardView({
+  job,
+  mode,
+  hasApplied,
+  onApplied,
+}: {
+  job: JobPost;
+  mode: "grid" | "list";
+  hasApplied: boolean;
+  onApplied: () => void;
+}) {
   const router = useRouter();
   const { user } = useAuth();
   const isNew = useIsRecent(job.createdAt);
@@ -360,18 +397,26 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
   // Two actions only on the card itself (per explicit request): Apply, and
   // Call for a one-tap direct contact on mobile -- WhatsApp is still
   // available, just reached through Apply's own post-submit step
-  // (ApplyDialog) rather than a separate always-visible icon here.
+  // (ApplyDialog) rather than a separate always-visible icon here. Once the
+  // candidate has already applied, Apply is replaced with a disabled
+  // "Applied" state -- Call stays exactly as-is either way.
   const handleApplyClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
       router.push("/login");
       return;
     }
+    if (hasApplied) return;
     setIsApplyOpen(true);
   };
 
   const applyDialog = isApplyOpen && (
-    <ApplyDialog jobId={job.id} jobTitle={job.title} onClose={() => setIsApplyOpen(false)} onSuccess={() => {}} />
+    <ApplyDialog
+      jobId={job.id}
+      jobTitle={job.title}
+      onClose={() => setIsApplyOpen(false)}
+      onSuccess={onApplied}
+    />
   );
 
   if (mode === "grid") {
@@ -424,13 +469,22 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
                   <Phone className="w-3.5 h-3.5" />
                 </a>
               )}
-              <button
-                onClick={handleApplyClick}
-                className="p-1.5 rounded-md bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all"
-                title="Apply"
-              >
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
+              {hasApplied ? (
+                <span
+                  className="p-1.5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center"
+                  title="Applied"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </span>
+              ) : (
+                <button
+                  onClick={handleApplyClick}
+                  className="p-1.5 rounded-md bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all"
+                  title="Apply"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -488,12 +542,18 @@ function JobCardView({ job, mode }: { job: JobPost; mode: "grid" | "list" }) {
                 <Phone className="w-4 h-4" /> Call
               </a>
             )}
-            <button
-              onClick={handleApplyClick}
-              className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white font-bold text-[13px] transition-all"
-            >
-              Apply <ArrowUpRight className="w-4 h-4" />
-            </button>
+            {hasApplied ? (
+              <span className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-[13px]">
+                <CheckCircle2 className="w-4 h-4" /> Applied
+              </span>
+            ) : (
+              <button
+                onClick={handleApplyClick}
+                className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white font-bold text-[13px] transition-all"
+              >
+                Apply <ArrowUpRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

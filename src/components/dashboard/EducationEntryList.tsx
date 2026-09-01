@@ -79,7 +79,10 @@ export default function EducationEntryList({
                 ) : (
                   <div>
                     <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Specialization</label>
-                    <div className="w-full px-4 py-3 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
+                    {/* Matches SearchableSelect's own trigger classes exactly
+                        (pl-4 pr-9 py-3 border-2) so this placeholder is the
+                        same height as the real dropdown next to it. */}
+                    <div className="w-full pl-4 pr-9 py-3 rounded-xl bg-secondary/30 border-2 border-transparent text-sm font-medium text-muted-foreground">
                       {course === "Other" ? "Not applicable" : "Select a course first"}
                     </div>
                   </div>
