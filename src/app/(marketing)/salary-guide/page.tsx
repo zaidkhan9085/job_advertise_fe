@@ -1,5 +1,6 @@
 import { BadgeDollarSign, TrendingUp, BarChart3, Search, ChevronRight, Briefcase } from "lucide-react";
 import Link from "next/link";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 const guides = [
   { region: "Gulf Regions", growth: "+12.4%", avg: "$45k - $120k", tag: "Hot Market" },
@@ -13,7 +14,7 @@ export default function SalaryGuidePage() {
     <div className="bg-white min-h-screen">
       {/* Hero Header */}
       <section className="bg-hero-gradient text-white py-24 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue-light/10 -translate-y-1/2 translate-x-1/2" />
         <div className="container-site relative z-10 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-8 border border-white/10">
             <BadgeDollarSign className="w-4 h-4 text-brand-blue-light" />
@@ -52,7 +53,7 @@ export default function SalaryGuidePage() {
             </div>
             
             <div className="p-10 rounded-[40px] bg-brand-blue text-white overflow-hidden relative group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <DecorativeBlur size="md" className="top-0 right-0 bg-white/10 -translate-y-1/2 translate-x-1/2" />
                 <h3 className="text-2xl font-black mb-4 relative z-10">Premium Market Report</h3>
                 <p className="text-white/70 mb-8 max-w-md relative z-10">
                   Get deeper insights into specialized sectors like AI, Renewables, and FinTech with our 100-page deep dive.

@@ -2,6 +2,7 @@
 
 import { CheckCircle2, ArrowRight, Zap, Target, Users, Globe } from "lucide-react";
 import Link from "next/link";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 const benefits = [
   {
@@ -33,11 +34,11 @@ export default function PostJobLandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-[oklch(0.12_0.02_260)] text-white pt-24 pb-32 md:pt-32 md:pb-48">
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-brand-blue blur-3xl" />
-          <div className="absolute bottom-0 -left-24 w-80 h-80 rounded-full bg-brand-blue-light blur-3xl" />
+          <DecorativeBlur size="xl" className="-top-24 -right-24 bg-brand-blue" />
+          <DecorativeBlur size="lg" className="bottom-0 -left-24 bg-brand-blue-light" />
         </div>
 
-        <div className="container-site px-4 relative z-10 text-center">
+        <div className="container-site relative z-10 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-8">
              <span className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em]">Recruiter Solutions</span>
           </div>
@@ -66,7 +67,7 @@ export default function PostJobLandingPage() {
       </section>
 
       {/* Benefits Content */}
-      <section className="container-site px-4 -mt-16 relative z-20 pb-24">
+      <section className="container-site -mt-16 relative z-20 pb-24">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {benefits.map((benefit) => (
             <div key={benefit.title} className="bg-white p-8 rounded-3xl border border-border/60 shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -118,7 +119,7 @@ export default function PostJobLandingPage() {
             <div className="absolute inset-0 bg-brand-blue/10 rounded-[3rem] blur-3xl" />
             <div className="relative bg-white border border-border/60 p-8 sm:p-12 rounded-[3.5rem] shadow-2xl">
               <h3 className="text-2xl font-black text-center mb-8">Trusted by Global Giants</h3>
-              <div className="grid grid-cols-2 gap-8 items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+              <div className="grid grid-cols-2 gap-4 sm:gap-8 items-center min-w-0 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
                 <div className="h-12 flex items-center justify-center"><img src="https://placehold.co/200x60/f8fafc/94a3b8?text=Aramco" alt="Logo" className="max-h-full" /></div>
                 <div className="h-12 flex items-center justify-center"><img src="https://placehold.co/200x60/f8fafc/94a3b8?text=Shell" alt="Logo" className="max-h-full" /></div>
                 <div className="h-12 flex items-center justify-center"><img src="https://placehold.co/200x60/f8fafc/94a3b8?text=Samsung" alt="Logo" className="max-h-full" /></div>

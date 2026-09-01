@@ -5,6 +5,7 @@ import { Search, MapPin, Briefcase, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { jobCategories, searchLocations } from "@/data/categories";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 const stats = [
   { value: "50,000+", label: "Live Jobs" },
@@ -21,9 +22,9 @@ export default function HeroSection() {
     <section className="relative overflow-hidden bg-hero-gradient min-h-[640px] flex items-center">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[oklch(0.47_0.20_250)]/20 blur-3xl" />
-        <div className="absolute bottom-0 -left-24 w-80 h-80 rounded-full bg-[oklch(0.68_0.21_45)]/15 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/3 blur-3xl" />
+        <DecorativeBlur size="xl" className="-top-24 -right-24 bg-[oklch(0.47_0.20_250)]/20" />
+        <DecorativeBlur size="lg" className="bottom-0 -left-24 bg-[oklch(0.68_0.21_45)]/15" />
+        <DecorativeBlur size="3xl" className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/3" />
       </div>
 
       <div className="container-site relative z-10 py-20">

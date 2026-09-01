@@ -27,6 +27,7 @@ import {
   ApiError,
 } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 import MultiSelectCombobox, { type ComboOption } from "@/components/common/MultiSelectCombobox";
 import LocationCountFilter, { type LocationValue } from "@/components/common/LocationCountFilter";
 import { useIsRecent } from "@/hooks/useIsRecent";
@@ -230,8 +231,8 @@ function JobsListingContent() {
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
       <div className="bg-hero-gradient text-white pt-16 pb-24 md:pt-20 md:pb-28 border-b border-white/10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="container-site relative text-center px-4">
+        <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue-light/10 -translate-y-1/2 translate-x-1/2" />
+        <div className="container-site relative text-center">
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">{headingLabel}</h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg">
             Browse verified overseas job vacancies across the Middle East, Europe, and Asia.
@@ -239,7 +240,7 @@ function JobsListingContent() {
         </div>
       </div>
 
-      <div className="container-site relative -mt-10 mb-8 z-10 px-4">
+      <div className="container-site relative -mt-10 mb-8 z-10">
         <div className="bg-white rounded-2xl p-4 md:p-5 shadow-xl border border-border/60 space-y-4">
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
@@ -303,7 +304,7 @@ function JobsListingContent() {
         </div>
       </div>
 
-      <div className="container-site px-4">
+      <div className="container-site">
         <div className="flex-1 w-full space-y-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-bold text-foreground">

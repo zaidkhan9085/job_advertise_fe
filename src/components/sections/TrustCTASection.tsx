@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FileText, UserPlus, ArrowRight } from "lucide-react";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 export default function TrustCTASection() {
   return (
@@ -29,7 +30,7 @@ export default function TrustCTASection() {
             </div>
             
             {/* Decorative background element */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <DecorativeBlur size="lg" className="top-0 right-0 bg-white/5 -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
           </div>
 
@@ -54,7 +55,7 @@ export default function TrustCTASection() {
             </div>
 
             {/* Decorative background element */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-brand-blue/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <DecorativeBlur size="lg" className="top-0 right-0 bg-brand-blue/5 -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-brand-blue/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
           </div>
         </div>

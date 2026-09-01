@@ -105,7 +105,7 @@ export default function AdminEmployerDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-5 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-blue/10 text-brand-blue flex items-center justify-center shrink-0">
             <Briefcase className="w-5 h-5" />

@@ -128,8 +128,8 @@ function ResumeModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-border/60 shrink-0">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-border/60 shrink-0">
+          <div className="min-w-0">
             <h3 className="font-bold text-foreground">{candidate.name}</h3>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
               {candidate.whatsapp && (
@@ -149,7 +149,7 @@ function ResumeModal({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2 shrink-0">
             {uploadedResumeUrl && (
               <a
                 href={uploadedResumeUrl}
