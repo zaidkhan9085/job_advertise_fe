@@ -162,7 +162,7 @@ export default function PostStoryPage() {
           <p className="text-xs text-muted-foreground">Shown as a tag on the story card.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-bold text-foreground/80 flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5" /> Phone Number

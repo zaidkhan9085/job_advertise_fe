@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, MessageCircle, Star, Crown, ArrowRight } from "lucide-react";
 import { getFeaturedJobs, type JobPost, ApiError } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 export default function PremiumAdsSection() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function PremiumAdsSection() {
 
   return (
     <section className="pt-6 pb-10 md:pb-14 bg-gradient-to-b from-[#f0f4ff] via-white to-[#f0f4ff] overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue/5 -translate-y-1/2 translate-x-1/2" />
 
       <div className="container-site relative">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-6">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, ArrowRight, Zap, Star, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { pricingPlans } from "@/data/pricing";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
@@ -43,8 +44,8 @@ export default function PricingPage() {
       {/* Header Section */}
       <div className="bg-hero-gradient text-white pt-20 pb-32 md:pt-24 md:pb-48 border-b border-white/10 relative overflow-hidden">
         {/* Decor */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-        <div className="container-site px-4 relative z-10 text-center">
+        <DecorativeBlur size="2xl" blur="strong" className="top-0 left-0 bg-brand-blue-light/10 -translate-x-1/2 -translate-y-1/2" />
+        <div className="container-site relative z-10 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-6 border border-white/10">
              <span className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em]">Simple Pricing</span>
           </div>
@@ -57,13 +58,13 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="container-site px-4 -mt-24 relative z-10">
+      <div className="container-site -mt-24 relative z-10">
         
         {/* Dynamic Toggles Container - PLACED ABOVE CARDS */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-16">
           
           {/* Billing Cycle Toggle */}
-          <div className="bg-white p-1.5 rounded-2xl border border-border/60 shadow-xl flex items-center relative min-w-[280px]">
+          <div className="bg-white p-1.5 rounded-2xl border border-border/60 shadow-xl flex items-center relative w-full sm:w-auto sm:min-w-[280px]">
             <button 
               onClick={() => setBilling("monthly")}
               className={`relative z-10 flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${billing === "monthly" ? "text-white" : "text-muted-foreground hover:text-foreground"}`}
@@ -86,7 +87,7 @@ export default function PricingPage() {
           </div>
 
           {/* Currency Toggle */}
-          <div className="bg-white p-1.5 rounded-2xl border border-border/60 shadow-xl flex items-center relative min-w-[220px]">
+          <div className="bg-white p-1.5 rounded-2xl border border-border/60 shadow-xl flex items-center relative w-full sm:w-auto sm:min-w-[220px]">
             <button 
               onClick={() => setCurrency("INR")}
               className={`relative z-10 flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${currency === "INR" ? "text-white" : "text-muted-foreground hover:text-foreground"}`}

@@ -11,6 +11,7 @@ import {
   MoreHorizontal, type LucideIcon,
 } from "lucide-react";
 import { getIndustries, getJobs, type Industry, ApiError } from "@/lib/api";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 
@@ -97,7 +98,7 @@ export default function IndustrySection() {
 
   return (
     <section className="py-10 md:py-14 bg-gradient-to-r from-white via-[#f0f7ff] to-white relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-brand-blue/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <DecorativeBlur size="3xl" blur="strong" className="top-0 left-0 bg-brand-blue/5 -translate-x-1/2 -translate-y-1/2" />
 
       <div className="container-site relative">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
@@ -140,14 +141,14 @@ export default function IndustrySection() {
             >
               {chunkedCards.map((chunk, slideIdx) => (
                 <SwiperSlide key={slideIdx}>
-                  <div className="grid grid-cols-2 gap-4 px-1">
+                  <div className="grid grid-cols-2 gap-4 px-1 w-full min-w-0">
                     {chunk.map((industry) => {
                       const Icon = INDUSTRY_ICONS[industry.name] || MoreHorizontal;
                       return (
                         <Link
                           key={industry.id}
                           href={`/jobs?industry=${industry.id}`}
-                          className="group bg-white rounded-2xl border border-brand-blue/10 p-4 text-center shadow-sm hover:shadow-md transition-all h-[150px] flex flex-col items-center justify-center"
+                          className="group bg-white rounded-2xl border border-brand-blue/10 p-4 text-center shadow-sm hover:shadow-md transition-all h-[150px] min-w-0 flex flex-col items-center justify-center"
                         >
                           <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-brand-blue-muted/30 flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all duration-300">
                             <Icon className="w-6 h-6" />

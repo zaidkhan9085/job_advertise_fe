@@ -1,11 +1,12 @@
 import { ShieldCheck, FileText, Lock } from "lucide-react";
+import DecorativeBlur from "@/components/common/DecorativeBlur";
 
 export default function PrivacyPage() {
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Header */}
       <section className="bg-hero-gradient text-white py-24 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue-light/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue-light/10 -translate-y-1/2 translate-x-1/2" />
         <div className="container-site relative z-10 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-8 border border-white/10">
             <Lock className="w-4 h-4 text-brand-blue-light" />

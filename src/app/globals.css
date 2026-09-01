@@ -153,12 +153,19 @@
   html {
     scroll-behavior: smooth;
     font-family: var(--font-sans);
+    /* Backstop against accidental horizontal bleed (a hardcoded-width
+       decoration, a third-party carousel mid-layout, etc.) rather than
+       chasing every possible source individually -- any INTENTIONAL
+       horizontal scroller (dashboard tables, story rails) uses its own
+       overflow-x-auto container and is unaffected by this. */
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 }
 
@@ -208,7 +215,10 @@
     @apply py-16 md:py-24;
   }
 
+  /* Every page/section wraps its content in this single utility -- change
+     the padding or max-width scale here and it applies everywhere at once,
+     rather than each of the ~30 consuming files hand-tuning its own. */
   .container-site {
-    @apply w-full mx-auto px-10;
+    @apply w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10;
   }
 }

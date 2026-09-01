@@ -140,7 +140,7 @@ export default function PostJobPage() {
           </div>
         </div>
 
-        <div className="bg-muted/30 p-1 rounded-2xl flex items-center border border-border/40 shadow-inner min-w-[280px]">
+        <div className="bg-muted/30 p-1 rounded-2xl flex items-center border border-border/40 shadow-inner w-full sm:w-auto sm:min-w-[280px]">
           <button
             type="button"
             onClick={() => setListingType("General")}
