@@ -236,11 +236,7 @@ export default function AdminAllJobsPage() {
       align: "right",
       minWidth: 140,
       render: (_, job) => (
-        <div
-          className={`flex items-center justify-end gap-1 transition-opacity ${
-            actioningId === job.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          }`}
-        >
+        <div className="flex items-center justify-end gap-1">
           <button
             title={job.type === "FEATURED" ? "Move to General" : "Make Featured"}
             disabled={actioningId === job.id || job.type === "STORY"}

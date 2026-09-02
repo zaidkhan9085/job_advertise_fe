@@ -361,11 +361,7 @@ export default function AdminCandidatesPage() {
       align: "right",
       minWidth: 170,
       render: (_, candidate) => (
-        <div
-          className={`flex items-center justify-end gap-1 transition-opacity ${
-            actioningId === candidate.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          }`}
-        >
+        <div className="flex items-center justify-end gap-1">
           <button
             title="Edit"
             disabled={actioningId === candidate.id}

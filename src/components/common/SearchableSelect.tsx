@@ -66,7 +66,7 @@ export default function SearchableSelect({
           <Combobox.Input
             placeholder={placeholder}
             required={required}
-            className="w-full pl-4 pr-9 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none text-sm font-medium"
+            className="w-full pl-4 pr-9 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none text-sm font-medium truncate"
           />
           {selectedOption ? (
             <Combobox.Clear className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">

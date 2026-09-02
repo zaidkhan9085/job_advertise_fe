@@ -145,7 +145,7 @@ export default function CompanyProfilePage() {
             required
             type="text"
             placeholder="e.g. Acme Facilities Management"
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium truncate"
           />
         </div>
 
@@ -169,7 +169,7 @@ export default function CompanyProfilePage() {
             onChange={(e) => setWebsite(e.target.value)}
             type="url"
             placeholder="https://www.example.com"
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium truncate"
           />
         </div>
 

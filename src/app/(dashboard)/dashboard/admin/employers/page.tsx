@@ -459,11 +459,7 @@ export default function AdminEmployersPage() {
       align: "right",
       minWidth: 250,
       render: (_, company) => (
-        <div
-          className={`flex items-center justify-end gap-1 transition-opacity ${
-            actioningId === company.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          }`}
-        >
+        <div className="flex items-center justify-end gap-1">
           <Link
             href={`/dashboard/admin/employers/${company.id}`}
             title="View Employer"
