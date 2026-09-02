@@ -508,11 +508,11 @@ export default function MyProfilePage() {
           <h2 className="font-black text-foreground text-sm uppercase tracking-wide">Basic Info</h2>
           <div className="space-y-2">
             <label className={labelClass}><User className="w-4 h-4" /> Full Name *</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+            <input value={name} onChange={(e) => setName(e.target.value)} required className={`${inputClass} truncate`} />
           </div>
           <div className="space-y-2">
             <label className={labelClass}><Briefcase className="w-4 h-4" /> Position / Job Title *</label>
-            <input value={position} onChange={(e) => setPosition(e.target.value)} required className={inputClass} />
+            <input value={position} onChange={(e) => setPosition(e.target.value)} required className={`${inputClass} truncate`} />
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -521,7 +521,7 @@ export default function MyProfilePage() {
             </div>
             <div className="space-y-2">
               <label className={labelClass}><Mail className="w-4 h-4" /> Email *</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required className={inputClass} />
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required className={`${inputClass} truncate`} />
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -597,7 +597,7 @@ export default function MyProfilePage() {
             </div>
             <div className="space-y-2">
               <label className={labelClass}><Building2 className="w-4 h-4" /> Industry</label>
-              <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={inputClass} />
+              <input value={industry} onChange={(e) => setIndustry(e.target.value)} className={`${inputClass} truncate`} />
             </div>
           </div>
           <ProfileEntryList
@@ -643,7 +643,7 @@ export default function MyProfilePage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className={labelClass}><Globe2 className="w-4 h-4" /> Nationality</label>
-              <input value={nationality} onChange={(e) => setNationality(e.target.value)} className={inputClass} />
+              <input value={nationality} onChange={(e) => setNationality(e.target.value)} className={`${inputClass} truncate`} />
             </div>
             <div className="space-y-2">
               <label className={labelClass}><Plane className="w-4 h-4" /> Passport No.</label>

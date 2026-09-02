@@ -278,7 +278,7 @@ export default function BuilderForm({ resumeData, setResumeData }: BuilderFormPr
                    <button onClick={() => {
                      const newSkills = resumeData.skills.filter((_: any, i: number) => i !== index);
                      setResumeData({...resumeData, skills: newSkills});
-                   }} className="text-rose-500 opacity-0 group-hover/skill:opacity-100 transition-opacity">
+                   }} className="text-rose-500">
                      <Plus className="w-3 h-3 rotate-45" />
                    </button>
                 </div>

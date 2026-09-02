@@ -225,7 +225,7 @@ export default function ApplyDialog({
               </div>
               <div>
                 <label className={labelClass}>Position Applied For</label>
-                <input value={position} onChange={(e) => setPosition(e.target.value)} className={inputClass} />
+                <input value={position} onChange={(e) => setPosition(e.target.value)} className={`${inputClass} truncate`} />
               </div>
               <div>
                 <label className={labelClass}>Current Location</label>

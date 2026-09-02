@@ -191,7 +191,7 @@ function ManageJobsContent() {
                         >
                           <Users className="w-3.5 h-3.5" /> Applicants{job.applicationsCount ? ` (${job.applicationsCount})` : ""}
                         </Link>
-                        <div className={`flex items-center transition-opacity ${actioningId === job.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                        <div className="flex items-center">
                           <button
                             title="Delete Job"
                             disabled={actioningId === job.id}

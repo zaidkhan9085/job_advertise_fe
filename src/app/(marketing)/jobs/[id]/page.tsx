@@ -266,11 +266,11 @@ export default function JobDetailPage() {
 
       <div className="bg-[oklch(0.12_0.02_260)] text-white pt-8 pb-32">
         <div className="container-site">
-          <div className="flex items-center justify-between mb-8">
-            <Link href="/jobs" className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
+            <Link href="/jobs" className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors w-fit">
               <ArrowLeft className="w-4 h-4" /> Back to Jobs
             </Link>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center flex-wrap gap-2">
               <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold transition-colors">
                 <Share2 className="w-4 h-4" /> Share
               </button>

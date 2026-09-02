@@ -94,7 +94,7 @@ export default function CityAutocomplete({
           <Combobox.Input
             placeholder={placeholder}
             required={required}
-            className="w-full pl-10 pr-9 py-3 rounded-xl border-[1.5px] border-border bg-white shadow-sm hover:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm font-medium"
+            className="w-full pl-10 pr-9 py-3 rounded-xl border-[1.5px] border-border bg-white shadow-sm hover:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm font-medium truncate"
           />
           {value ? (
             <Combobox.Clear className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
