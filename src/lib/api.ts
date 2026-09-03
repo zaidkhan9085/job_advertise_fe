@@ -1,6 +1,6 @@
 import { getTokenFromDocumentCookie } from "./auth-token";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 // File URLs are now Cloudinary URLs (already absolute, e.g.
 // "https://res.cloudinary.com/..."), but records created before that
@@ -24,7 +24,10 @@ export class ApiError extends Error {
   }
 }
 
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
   const token = getTokenFromDocumentCookie();
   const isFormData = options.body instanceof FormData;
 
@@ -43,7 +46,8 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   const body = isJson ? await res.json().catch(() => null) : await res.text();
 
   if (!res.ok) {
-    const message = (isJson && body?.message) || (isJson && body?.error) || "Request failed";
+    const message =
+      (isJson && body?.message) || (isJson && body?.error) || "Request failed";
     throw new ApiError(message, res.status, isJson ? body : undefined);
   }
 
@@ -73,9 +77,15 @@ export interface AdminListParams {
 
 export type BulkDeletePayload =
   | { ids: (string | number)[] }
-  | { selectAllMatching: true; filters: Record<string, unknown>; excludeIds: (string | number)[] };
+  | {
+      selectAllMatching: true;
+      filters: Record<string, unknown>;
+      excludeIds: (string | number)[];
+    };
 
-function buildQuery(params: Record<string, string | number | boolean | string[] | undefined>): string {
+function buildQuery(
+  params: Record<string, string | number | boolean | string[] | undefined>,
+): string {
   const usp = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === "") return;
@@ -101,7 +111,10 @@ const FRONTEND_TO_BACKEND_ROLE: Record<FrontendRole, BackendRole> = {
   Recruiter: "employer",
 };
 
-const BACKEND_TO_FRONTEND_ROLE: Record<BackendRole, "Candidate" | "Recruiter" | "Admin"> = {
+const BACKEND_TO_FRONTEND_ROLE: Record<
+  BackendRole,
+  "Candidate" | "Recruiter" | "Admin"
+> = {
   candidate: "Candidate",
   employer: "Recruiter",
   sub_admin: "Recruiter",
@@ -134,13 +147,14 @@ export function registerRequest(payload: RegisterPayload) {
 }
 
 export function loginRequest(email: string, password: string) {
-  return apiFetch<{ token: string; role: BackendRole; full_name: string | null }>(
-    "/api/auth/login",
-    {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }
-  );
+  return apiFetch<{
+    token: string;
+    role: BackendRole;
+    full_name: string | null;
+  }>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 }
 
 export function forgotPasswordRequest(email: string) {
@@ -264,7 +278,8 @@ function buildJobBody(payload: CreateJobPayload): BodyInit {
 
   const form = new FormData();
   Object.entries(fields).forEach(([key, value]) => {
-    if (value !== undefined) form.append(key, typeof value === "boolean" ? String(value) : value);
+    if (value !== undefined)
+      form.append(key, typeof value === "boolean" ? String(value) : value);
   });
   form.append("poster", poster);
   return form;
@@ -292,14 +307,20 @@ export function updateJob(id: string, payload: UpdateJobPayload) {
 
 // --- Admin: job moderation ---
 export function getPendingJobs() {
-  return apiFetch<(JobPost & { employer: { id: number; full_name: string | null; email: string } })[]>(
-    "/api/jobs/pending"
-  );
+  return apiFetch<
+    (JobPost & {
+      employer: { id: number; full_name: string | null; email: string };
+    })[]
+  >("/api/jobs/pending");
 }
 
-export type AdminJob = JobPost & { employer: { id: number; full_name: string | null; email: string } };
+export type AdminJob = JobPost & {
+  employer: { id: number; full_name: string | null; email: string };
+};
 
-export function getAllJobsAdmin(filters?: AdminListParams & { status?: JobPostStatus; type?: JobPostType }) {
+export function getAllJobsAdmin(
+  filters?: AdminListParams & { status?: JobPostStatus; type?: JobPostType },
+) {
   const query = buildQuery({
     status: filters?.status,
     type: filters?.type,
@@ -314,13 +335,20 @@ export function getAllJobsAdmin(filters?: AdminListParams & { status?: JobPostSt
 }
 
 export function bulkDeleteJobs(payload: BulkDeletePayload) {
-  return apiFetch<{ deleted: string[]; count: number }>("/api/jobs/admin/bulk-delete", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return apiFetch<{ deleted: string[]; count: number }>(
+    "/api/jobs/admin/bulk-delete",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
-export function updateJobStatus(id: string, status: "APPROVED" | "REJECTED", trustEmployer?: boolean) {
+export function updateJobStatus(
+  id: string,
+  status: "APPROVED" | "REJECTED",
+  trustEmployer?: boolean,
+) {
   return apiFetch<{ message: string; job: JobPost }>(`/api/jobs/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify({ status, trustEmployer }),
@@ -359,19 +387,29 @@ export interface CandidateProfileAdmin {
   user: { id: number; full_name: string | null; email: string };
 }
 
-export function getAllCandidateProfilesAdmin(filters?: { status?: ProfileStatus }) {
+export function getAllCandidateProfilesAdmin(filters?: {
+  status?: ProfileStatus;
+}) {
   const params = new URLSearchParams();
   if (filters?.status) params.set("status", filters.status);
   const query = params.toString();
-  return apiFetch<CandidateProfileAdmin[]>(`/api/candidate/admin/profiles${query ? `?${query}` : ""}`);
+  return apiFetch<CandidateProfileAdmin[]>(
+    `/api/candidate/admin/profiles${query ? `?${query}` : ""}`,
+  );
 }
 
 export function approveCandidateProfile(id: number) {
-  return apiFetch<CandidateProfileAdmin>(`/api/candidate/admin/profile/approve/${id}`, { method: "PUT" });
+  return apiFetch<CandidateProfileAdmin>(
+    `/api/candidate/admin/profile/approve/${id}`,
+    { method: "PUT" },
+  );
 }
 
 export function rejectCandidateProfile(id: number) {
-  return apiFetch<CandidateProfileAdmin>(`/api/candidate/admin/profile/reject/${id}`, { method: "PUT" });
+  return apiFetch<CandidateProfileAdmin>(
+    `/api/candidate/admin/profile/reject/${id}`,
+    { method: "PUT" },
+  );
 }
 
 // --- Admin: candidate accounts ---
@@ -389,7 +427,9 @@ export interface CandidateUserAdmin {
   created_at: string;
 }
 
-export function getAllCandidateUsers(filters?: AdminListParams & { dateFrom?: string; dateTo?: string }) {
+export function getAllCandidateUsers(
+  filters?: AdminListParams & { dateFrom?: string; dateTo?: string },
+) {
   const query = buildQuery({
     page: filters?.page,
     limit: filters?.limit,
@@ -400,19 +440,29 @@ export function getAllCandidateUsers(filters?: AdminListParams & { dateFrom?: st
     dateFrom: filters?.dateFrom,
     dateTo: filters?.dateTo,
   });
-  return apiFetch<Paginated<CandidateUserAdmin>>(`/api/candidate/admin/users${query}`);
+  return apiFetch<Paginated<CandidateUserAdmin>>(
+    `/api/candidate/admin/users${query}`,
+  );
 }
 
 export function bulkDeleteCandidateUsers(payload: BulkDeletePayload) {
-  return apiFetch<{ deleted: number[]; failed: { id: number; reason: string }[] }>(
-    "/api/candidate/admin/users/bulk-delete",
-    { method: "POST", body: JSON.stringify(payload) }
-  );
+  return apiFetch<{
+    deleted: number[];
+    failed: { id: number; reason: string }[];
+  }>("/api/candidate/admin/users/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function updateCandidateUser(
   id: number,
-  payload: { full_name?: string; email?: string; phone?: string; location?: string }
+  payload: {
+    full_name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+  },
 ) {
   return apiFetch<CandidateUserAdmin>(`/api/candidate/admin/users/${id}`, {
     method: "PUT",
@@ -421,21 +471,29 @@ export function updateCandidateUser(
 }
 
 export function deleteCandidateUser(id: number) {
-  return apiFetch<{ message: string }>(`/api/candidate/admin/users/${id}`, { method: "DELETE" });
+  return apiFetch<{ message: string }>(`/api/candidate/admin/users/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export function setCandidateBlocked(id: number, isBlocked: boolean) {
-  return apiFetch<{ message: string; user: CandidateUserAdmin }>(`/api/candidate/admin/users/${id}/block`, {
-    method: "PATCH",
-    body: JSON.stringify({ isBlocked }),
-  });
+  return apiFetch<{ message: string; user: CandidateUserAdmin }>(
+    `/api/candidate/admin/users/${id}/block`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ isBlocked }),
+    },
+  );
 }
 
 export function resetCandidatePassword(id: number, password: string) {
-  return apiFetch<{ message: string }>(`/api/candidate/admin/users/${id}/password`, {
-    method: "PUT",
-    body: JSON.stringify({ password }),
-  });
+  return apiFetch<{ message: string }>(
+    `/api/candidate/admin/users/${id}/password`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ password }),
+    },
+  );
 }
 
 // --- Admin: employer/company moderation ---
@@ -455,7 +513,12 @@ export interface CompanyAdminListItem extends Company {
 
 export interface CompanyAdminDetail extends CompanyDetail {
   owner: CompanyAdminOwner;
-  jobs: { id: string; title: string; status: JobPostStatus; createdAt: string }[];
+  jobs: {
+    id: string;
+    title: string;
+    status: JobPostStatus;
+    createdAt: string;
+  }[];
   reports: {
     id: string;
     reason: string;
@@ -474,7 +537,9 @@ export function getAllCompaniesAdmin(filters?: AdminListParams) {
     sortOrder: filters?.sortOrder,
     all: filters?.all,
   });
-  return apiFetch<Paginated<CompanyAdminListItem>>(`/api/admin/companies${query}`);
+  return apiFetch<Paginated<CompanyAdminListItem>>(
+    `/api/admin/companies${query}`,
+  );
 }
 
 export function getCompanyAdminDetail(id: string) {
@@ -485,16 +550,22 @@ export function getCompanyAdminDetail(id: string) {
 // if the company has jobs and confirm wasn't passed — callers should catch
 // that specific case and re-call with confirm=true after the admin confirms.
 export function deleteCompanyAdmin(id: string, confirm?: boolean) {
-  return apiFetch<{ message: string }>(`/api/admin/companies/${id}${confirm ? "?confirm=true" : ""}`, {
-    method: "DELETE",
-  });
+  return apiFetch<{ message: string }>(
+    `/api/admin/companies/${id}${confirm ? "?confirm=true" : ""}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export function bulkDeleteCompanies(payload: BulkDeletePayload) {
-  return apiFetch<{ deleted: string[]; failed: { id: string; reason: string }[] }>(
-    "/api/admin/companies/bulk-delete",
-    { method: "POST", body: JSON.stringify(payload) }
-  );
+  return apiFetch<{
+    deleted: string[];
+    failed: { id: string; reason: string }[];
+  }>("/api/admin/companies/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // --- Admin: reports queue ---
@@ -506,13 +577,23 @@ export interface AdminReport {
   status: ReportStatus;
   createdAt: string;
   reporter: { id: number; full_name: string | null; email: string };
-  job: { id: string; title: string; company: string; status: JobPostStatus } | null;
+  job: {
+    id: string;
+    title: string;
+    company: string;
+    status: JobPostStatus;
+  } | null;
   company: { id: string; name: string } | null;
 }
 
 export type ReportTargetType = "JOB" | "COMPANY";
 
-export function getReports(filters?: AdminListParams & { status?: ReportStatus; targetType?: ReportTargetType }) {
+export function getReports(
+  filters?: AdminListParams & {
+    status?: ReportStatus;
+    targetType?: ReportTargetType;
+  },
+) {
   const query = buildQuery({
     status: filters?.status,
     targetType: filters?.targetType,
@@ -527,10 +608,13 @@ export function getReports(filters?: AdminListParams & { status?: ReportStatus; 
 }
 
 export function updateReportStatus(id: string, status: ReportStatus) {
-  return apiFetch<{ message: string; report: AdminReport }>(`/api/reports/${id}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
+  return apiFetch<{ message: string; report: AdminReport }>(
+    `/api/reports/${id}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
 }
 
 // --- Resume Builder ---
@@ -555,10 +639,13 @@ export function getMyResume() {
 }
 
 export function upsertMyResume(payload: { theme: unknown; sections: unknown }) {
-  return apiFetch<{ message: string; resume: ResumeRecord }>("/api/resume/mine", {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  return apiFetch<{ message: string; resume: ResumeRecord }>(
+    "/api/resume/mine",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 // --- Applications ---
@@ -602,14 +689,19 @@ export function applyToJob(jobId: string, payload: ApplyPayload = {}) {
 // phone referral) -- same payload shape, `phone` is required by the backend
 // since that's what it matches an existing candidate account by.
 export function applyToJobProxy(jobId: string, payload: ApplyPayload) {
-  return apiFetch<{ success: boolean; message: string; data: { id: string } }>(`/api/applications/apply-proxy/${jobId}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return apiFetch<{ success: boolean; message: string; data: { id: string } }>(
+    `/api/applications/apply-proxy/${jobId}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export function getMyApplications() {
-  return apiFetch<{ success: boolean; count: number; data: unknown[] }>("/api/applications/my");
+  return apiFetch<{ success: boolean; count: number; data: unknown[] }>(
+    "/api/applications/my",
+  );
 }
 
 // Contact Leads -- every applicant against the caller's own jobs (every job,
@@ -637,14 +729,19 @@ export interface JobLead {
 
 export function getJobLeads(jobId?: string) {
   const query = buildQuery({ jobId });
-  return apiFetch<{ success: boolean; count: number; data: JobLead[] }>(`/api/applications/leads${query}`);
+  return apiFetch<{ success: boolean; count: number; data: JobLead[] }>(
+    `/api/applications/leads${query}`,
+  );
 }
 
 // Fire-and-forget Call/WhatsApp click tracking on a job listing -- feeds
 // Contact Leads alongside real applications. Never blocks or fails loudly:
 // the actual tel:/wa.me navigation should proceed either way.
 export function recordJobInteraction(jobId: string, type: "CALL" | "WHATSAPP") {
-  apiFetch(`/api/jobs/${jobId}/interaction`, { method: "POST", body: JSON.stringify({ type }) }).catch(() => {});
+  apiFetch(`/api/jobs/${jobId}/interaction`, {
+    method: "POST",
+    body: JSON.stringify({ type }),
+  }).catch(() => {});
 }
 
 // --- Company / Region ---
@@ -706,14 +803,18 @@ export function updateMyCompany(payload: {
   if (payload.logo) {
     const formData = new FormData();
     formData.append("name", payload.name);
-    if (payload.description) formData.append("description", payload.description);
+    if (payload.description)
+      formData.append("description", payload.description);
     formData.append("jobLocationId", payload.jobLocationId);
     if (payload.website) formData.append("website", payload.website);
     formData.append("logo", payload.logo);
-    return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
-      method: "PUT",
-      body: formData,
-    });
+    return apiFetch<{ message: string; company: Company }>(
+      "/api/companies/me",
+      {
+        method: "PUT",
+        body: formData,
+      },
+    );
   }
   return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
     method: "PUT",
@@ -802,7 +903,9 @@ export interface MyCandidateProfilePayload {
   profileImage?: File;
 }
 
-function buildCandidateProfileFormData(payload: MyCandidateProfilePayload): FormData {
+function buildCandidateProfileFormData(
+  payload: MyCandidateProfilePayload,
+): FormData {
   const formData = new FormData();
   const { profileImage, ...fields } = payload;
   Object.entries(fields).forEach(([key, value]) => {
@@ -810,7 +913,10 @@ function buildCandidateProfileFormData(payload: MyCandidateProfilePayload): Form
     // Array fields (skills/experience/education/certifications/projects)
     // travel as JSON strings — this is multipart/form-data (profileImage
     // rides along), which can't carry real arrays/objects.
-    formData.append(key, typeof value === "string" ? value : JSON.stringify(value));
+    formData.append(
+      key,
+      typeof value === "string" ? value : JSON.stringify(value),
+    );
   });
   if (profileImage) formData.append("profileImage", profileImage);
   return formData;
@@ -821,10 +927,13 @@ export function getMyCandidateProfile() {
 }
 
 export function createCandidateProfile(payload: MyCandidateProfilePayload) {
-  return apiFetch<{ message: string; profile: MyCandidateProfile }>("/api/candidate/profile", {
-    method: "POST",
-    body: buildCandidateProfileFormData(payload),
-  });
+  return apiFetch<{ message: string; profile: MyCandidateProfile }>(
+    "/api/candidate/profile",
+    {
+      method: "POST",
+      body: buildCandidateProfileFormData(payload),
+    },
+  );
 }
 
 // Uploads (or replaces) the candidate's resume file — a separate, focused
@@ -836,7 +945,11 @@ export function createCandidateProfile(payload: MyCandidateProfilePayload) {
 export function uploadCandidateResume(file: File) {
   const formData = new FormData();
   formData.append("resume", file);
-  return apiFetch<{ message: string; resumeUrl: string; profile: MyCandidateProfile }>("/api/candidate/profile/resume", {
+  return apiFetch<{
+    message: string;
+    resumeUrl: string;
+    profile: MyCandidateProfile;
+  }>("/api/candidate/profile/resume", {
     method: "POST",
     body: formData,
   });
@@ -873,9 +986,12 @@ export interface ParsedResumeData {
 }
 
 export function parseCandidateResume() {
-  return apiFetch<{ message: string; parsed: ParsedResumeData }>("/api/resume/parse", {
-    method: "POST",
-  });
+  return apiFetch<{ message: string; parsed: ParsedResumeData }>(
+    "/api/resume/parse",
+    {
+      method: "POST",
+    },
+  );
 }
 
 export function updateCandidateProfile(payload: MyCandidateProfilePayload) {
@@ -896,11 +1012,18 @@ export function getMyCredits() {
   return apiFetch<CreditsSummary>("/api/employer/credits");
 }
 
-export function grantCreditsToCompany(companyId: string, amount: number, note?: string) {
-  return apiFetch<{ message: string }>(`/api/admin/companies/${companyId}/credits`, {
-    method: "POST",
-    body: JSON.stringify({ amount, note }),
-  });
+export function grantCreditsToCompany(
+  companyId: string,
+  amount: number,
+  note?: string,
+) {
+  return apiFetch<{ message: string }>(
+    `/api/admin/companies/${companyId}/credits`,
+    {
+      method: "POST",
+      body: JSON.stringify({ amount, note }),
+    },
+  );
 }
 
 // --- ATS: candidate search ---
@@ -995,18 +1118,25 @@ export interface UnlockCandidateResult {
 }
 
 export function unlockCandidate(userId: number, type: "resume" | "profile") {
-  return apiFetch<UnlockCandidateResult>(`/api/ats/candidates/${userId}/unlock`, {
-    method: "POST",
-    body: JSON.stringify({ type }),
-  });
+  return apiFetch<UnlockCandidateResult>(
+    `/api/ats/candidates/${userId}/unlock`,
+    {
+      method: "POST",
+      body: JSON.stringify({ type }),
+    },
+  );
 }
 
 export function followCompany(id: string) {
-  return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, { method: "POST" });
+  return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, {
+    method: "POST",
+  });
 }
 
 export function unfollowCompany(id: string) {
-  return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, { method: "DELETE" });
+  return apiFetch<{ message: string }>(`/api/companies/${id}/follow`, {
+    method: "DELETE",
+  });
 }
 
 export function rateCompany(id: string, rating: number, review?: string) {
@@ -1017,14 +1147,22 @@ export function rateCompany(id: string, rating: number, review?: string) {
 }
 
 export function blockCompany(id: string) {
-  return apiFetch<{ message: string }>(`/api/companies/${id}/block`, { method: "POST" });
+  return apiFetch<{ message: string }>(`/api/companies/${id}/block`, {
+    method: "POST",
+  });
 }
 
 export function unblockCompany(id: string) {
-  return apiFetch<{ message: string }>(`/api/companies/${id}/block`, { method: "DELETE" });
+  return apiFetch<{ message: string }>(`/api/companies/${id}/block`, {
+    method: "DELETE",
+  });
 }
 
-export function reportContent(payload: { jobId?: string; companyId?: string; reason: string }) {
+export function reportContent(payload: {
+  jobId?: string;
+  companyId?: string;
+  reason: string;
+}) {
   return apiFetch<{ message: string }>("/api/reports", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -1065,7 +1203,9 @@ export interface JobLocationSearchResult {
 }
 
 export function searchJobLocations(q: string) {
-  return apiFetch<JobLocationSearchResult[]>(`/api/job-locations/search?q=${encodeURIComponent(q)}`);
+  return apiFetch<JobLocationSearchResult[]>(
+    `/api/job-locations/search?q=${encodeURIComponent(q)}`,
+  );
 }
 
 export function getJobTypes() {
