@@ -187,9 +187,13 @@ function ManageJobsContent() {
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           href={`/dashboard/jobs/${job.id}/applicants`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-brand-blue hover:bg-brand-blue/10"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                            job.applicationsCount
+                              ? "text-brand-blue hover:bg-brand-blue/10"
+                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          }`}
                         >
-                          <Users className="w-3.5 h-3.5" /> Applicants{job.applicationsCount ? ` (${job.applicationsCount})` : ""}
+                          <Users className="w-3.5 h-3.5" fill={job.applicationsCount ? "currentColor" : "none"} /> Applicants{job.applicationsCount ? ` (${job.applicationsCount})` : ""}
                         </Link>
                         <div className="flex items-center">
                           <button

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { MapPin, Trash2, Pencil, Star, Loader2 } from "lucide-react";
+import { MapPin, Trash2, Pencil, Star, Loader2, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -234,7 +234,7 @@ export default function AdminAllJobsPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      minWidth: 140,
+      minWidth: 180,
       render: (_, job) => (
         <div className="flex items-center justify-end gap-1">
           <button
@@ -253,6 +253,17 @@ export default function AdminAllJobsPage() {
               <Star className="w-4 h-4" fill={job.type === "FEATURED" ? "currentColor" : "none"} />
             )}
           </button>
+          <Link
+            href={`/dashboard/admin/all-jobs/${job.id}/applicants`}
+            title={job.applicationsCount ? `Applicants (${job.applicationsCount})` : "No applicants yet"}
+            className={`p-2 rounded-lg transition-colors ${
+              job.applicationsCount
+                ? "text-brand-blue hover:bg-brand-blue/10"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
+          >
+            <Users className="w-4 h-4" fill={job.applicationsCount ? "currentColor" : "none"} />
+          </Link>
           <Link
             href={`/dashboard/admin/all-jobs/${job.id}/edit`}
             title="Edit Job"

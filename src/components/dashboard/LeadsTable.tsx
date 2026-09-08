@@ -12,12 +12,13 @@ const SOURCE_LABEL: Record<JobLead["source"], string> = {
 };
 
 function toCsv(leads: JobLead[]): string {
-  const header = ["Name", "Phone", "Location", "Job", "Position", "Industry", "Qualification", "Experience", "Source", "Date"];
+  const header = ["Name", "Phone", "Location", "Job", "Employer", "Position", "Industry", "Qualification", "Experience", "Source", "Date"];
   const rows = leads.map((l) => [
     l.name,
     l.phone,
     l.location ?? "",
     l.jobTitle,
+    l.employerName,
     l.position,
     l.industry,
     l.qualification,
@@ -58,7 +59,7 @@ export default function LeadsTable({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return leads;
-    return leads.filter((l) => [l.name, l.phone, l.jobTitle, l.qualification, l.position].some((v) => v.toLowerCase().includes(q)));
+    return leads.filter((l) => [l.name, l.phone, l.jobTitle, l.employerName, l.qualification, l.position].some((v) => v.toLowerCase().includes(q)));
   }, [leads, search]);
 
   const allSelected = filtered.length > 0 && filtered.every((l) => selected.has(l.applicationId));
@@ -157,7 +158,12 @@ export default function LeadsTable({
                       {[lead.phone, lead.location].filter(Boolean).join(" · ")}
                     </div>
                   </td>
-                  {showJobColumn && <td className="px-4 py-4 text-muted-foreground font-medium max-w-40 truncate">{lead.jobTitle}</td>}
+                  {showJobColumn && (
+                    <td className="px-4 py-4 max-w-40">
+                      <div className="font-bold text-foreground truncate">{lead.jobTitle}</div>
+                      <div className="text-xs text-muted-foreground truncate">{lead.employerName}</div>
+                    </td>
+                  )}
                   <td className="px-4 py-4 max-w-45">
                     <div className="font-bold text-foreground text-sm truncate">
                       {lead.position || (lead.isFresher ? "Fresher" : "Job seeker")}

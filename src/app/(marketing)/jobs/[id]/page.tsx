@@ -246,7 +246,7 @@ export default function JobDetailPage() {
         <div className="text-center">
           <h1 className="text-xl font-bold text-foreground mb-2">Job not found</h1>
           <p className="text-muted-foreground mb-6">This listing may have been removed or isn&apos;t approved yet.</p>
-          <Link href="/jobs" className="text-brand-blue font-bold hover:underline">Back to Jobs</Link>
+          <button onClick={() => router.back()} className="text-brand-blue font-bold hover:underline">Back to Jobs</button>
         </div>
       </div>
     );
@@ -267,9 +267,13 @@ export default function JobDetailPage() {
       <div className="bg-[oklch(0.12_0.02_260)] text-white pt-8 pb-32">
         <div className="container-site">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
-            <Link href="/jobs" className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors w-fit">
-              <ArrowLeft className="w-4 h-4" /> Back to Jobs
-            </Link>
+            {/* Reachable from the /jobs listing, the public homepage, the
+                logged-in dashboard home, and other jobs' "related" links --
+                router.back() returns to whichever one the visitor actually
+                came from, instead of always forcing them into /jobs. */}
+            <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors w-fit">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
             <div className="flex items-center flex-wrap gap-2">
               <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold transition-colors">
                 <Share2 className="w-4 h-4" /> Share
