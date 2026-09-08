@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Mail } from "lucide-react";
 import PhoneInput from "@/components/common/PhoneInput";
@@ -99,7 +98,10 @@ export default function AdminEditJobPage() {
         industryId: industryId || undefined,
       });
       toast.success(result.message);
-      router.push("/dashboard/admin/all-jobs");
+      // This page is reachable from All Jobs, an Employer's own detail
+      // page, and the Reports queue -- go back to whichever one the admin
+      // actually came from, not always the All Jobs list.
+      router.back();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to save job.");
       setIsSubmitting(false);
@@ -117,9 +119,9 @@ export default function AdminEditJobPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="space-y-2">
-        <Link href="/dashboard/admin/all-jobs" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-brand-blue transition-colors w-fit">
-          <ArrowLeft className="w-4 h-4" /> Back to All Jobs
-        </Link>
+        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-brand-blue transition-colors w-fit">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
         <h1 className="text-2xl font-black text-foreground tracking-tight">Edit Job</h1>
         <p className="text-muted-foreground mt-1 text-sm font-medium">Admin-only — full edit access to any posted job.</p>
       </div>

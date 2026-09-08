@@ -518,6 +518,7 @@ export interface CompanyAdminDetail extends CompanyDetail {
     title: string;
     status: JobPostStatus;
     createdAt: string;
+    applicationsCount: number;
   }[];
   reports: {
     id: string;
@@ -714,6 +715,7 @@ export interface JobLead {
   applicationId: string;
   jobId: string;
   jobTitle: string;
+  employerName: string;
   source: "CANDIDATE" | "EMPLOYER" | "ADMIN";
   createdAt: string;
   name: string;

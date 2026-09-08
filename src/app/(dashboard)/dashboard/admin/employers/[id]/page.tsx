@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { Building, Globe, Star, Users, Briefcase, Flag } from "lucide-react";
+import { Building, Globe, Star, Users, Briefcase, Flag, ArrowLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 import { getCompanyAdminDetail, resolveImageUrl, type CompanyAdminDetail, type JobPostStatus, type ReportStatus, ApiError } from "@/lib/api";
@@ -26,6 +26,7 @@ const REPORT_STATUS_STYLES: Record<ReportStatus, string> = {
 export default function AdminEmployerDetailPage() {
   const { user } = useAuth();
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [company, setCompany] = useState<CompanyAdminDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,12 @@ export default function AdminEmployerDetailPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Reachable from both the Employers list and the Reports queue --
+          router.back() returns to whichever one the admin actually came
+          from, instead of assuming a single fixed origin. */}
+      <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="w-3.5 h-3.5" /> Back
+      </button>
       <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center gap-4">
         {company.logo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -158,12 +165,13 @@ export default function AdminEmployerDetailPage() {
                 <th className="px-6 py-3 font-black uppercase tracking-widest text-[10px]">Title</th>
                 <th className="px-6 py-3 font-black uppercase tracking-widest text-[10px]">Status</th>
                 <th className="px-6 py-3 font-black uppercase tracking-widest text-[10px]">Posted</th>
+                <th className="px-6 py-3 font-black uppercase tracking-widest text-[10px]">Applicants</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {company.jobs.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground font-medium">
+                  <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground font-medium">
                     No jobs posted yet.
                   </td>
                 </tr>
@@ -180,6 +188,14 @@ export default function AdminEmployerDetailPage() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground font-medium">
                       {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link
+                        href={`/dashboard/admin/all-jobs/${job.id}/applicants`}
+                        className="font-bold text-brand-blue hover:underline"
+                      >
+                        {job.applicationsCount || 0}
+                      </Link>
                     </td>
                   </tr>
                 ))
