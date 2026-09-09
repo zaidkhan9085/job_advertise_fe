@@ -796,8 +796,14 @@ export function getRegions() {
   return apiFetch<Region[]>("/api/regions");
 }
 
+export interface MyCompany extends Company {
+  followerCount: number;
+  averageRating: number;
+  ratingCount: number;
+}
+
 export function getMyCompany() {
-  return apiFetch<Company | null>("/api/companies/me");
+  return apiFetch<MyCompany | null>("/api/companies/me");
 }
 
 export function getCompanyById(id: string) {
@@ -1164,6 +1170,12 @@ export function rateCompany(id: string, rating: number, review?: string) {
   return apiFetch<{ message: string }>(`/api/companies/${id}/ratings`, {
     method: "POST",
     body: JSON.stringify({ rating, review }),
+  });
+}
+
+export function unrateCompany(id: string) {
+  return apiFetch<{ message: string }>(`/api/companies/${id}/ratings`, {
+    method: "DELETE",
   });
 }
 

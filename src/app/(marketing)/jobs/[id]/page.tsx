@@ -32,6 +32,7 @@ import {
   followCompany,
   unfollowCompany,
   rateCompany,
+  unrateCompany,
   blockCompany,
   unblockCompany,
   reportContent,
@@ -207,6 +208,19 @@ export default function JobDetailPage() {
       setCompany(refreshed);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to submit rating.");
+    }
+  };
+
+  const handleClearRating = async () => {
+    if (!company) return;
+    setMyRating(0);
+    try {
+      const result = await unrateCompany(company.id);
+      toast.success(result.message);
+      const refreshed = await getCompanyById(company.id);
+      setCompany(refreshed);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to remove rating.");
     }
   };
 
@@ -473,7 +487,7 @@ export default function JobDetailPage() {
 
                   <div className="pt-2 border-t border-border/60">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
-                    <StarRatingInput value={myRating} onChange={handleRate} />
+                    <StarRatingInput value={myRating} onChange={handleRate} onClear={handleClearRating} />
                   </div>
                 </>
               ) : (

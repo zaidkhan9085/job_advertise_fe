@@ -7,7 +7,7 @@ import { Building, Globe, Star, Users, Briefcase, Flag, ArrowLeft, Pencil, Check
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { getCompanyAdminDetail, rateCompany, setCompanyBonusFollowers, resolveImageUrl, type CompanyAdminDetail, type JobPostStatus, type ReportStatus, ApiError } from "@/lib/api";
+import { getCompanyAdminDetail, rateCompany, unrateCompany, setCompanyBonusFollowers, resolveImageUrl, type CompanyAdminDetail, type JobPostStatus, type ReportStatus, ApiError } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import StarRatingInput from "@/components/common/StarRatingInput";
@@ -37,15 +37,20 @@ export default function AdminEmployerDetailPage() {
   const [bonusInput, setBonusInput] = useState("0");
   const [isBonusSaving, setIsBonusSaving] = useState(false);
 
-  const loadCompany = useCallback(async () => {
-    setIsLoading(true);
+  // `silent` skips the full-page loading state -- used when refreshing
+  // after an in-place action (rating, clearing a rating, saving bonus
+  // followers) so the whole page doesn't flash to "Loading employer..."
+  // and back for what should be a small, local update. Only the initial
+  // load (no data on screen yet) needs the full loading placeholder.
+  const loadCompany = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setIsLoading(true);
     setError(null);
     try {
       setCompany(await getCompanyAdminDetail(params.id));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load employer.");
     } finally {
-      setIsLoading(false);
+      if (!options?.silent) setIsLoading(false);
     }
   }, [params.id]);
 
@@ -62,9 +67,22 @@ export default function AdminEmployerDetailPage() {
     try {
       await rateCompany(params.id, rating);
       toast.success("Rating submitted");
-      await loadCompany();
+      await loadCompany({ silent: true });
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to submit rating.");
+    } finally {
+      setIsRatingSaving(false);
+    }
+  };
+
+  const handleClearRating = async () => {
+    setIsRatingSaving(true);
+    try {
+      await unrateCompany(params.id);
+      toast.success("Rating removed");
+      await loadCompany({ silent: true });
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to remove rating.");
     } finally {
       setIsRatingSaving(false);
     }
@@ -86,7 +104,7 @@ export default function AdminEmployerDetailPage() {
       await setCompanyBonusFollowers(params.id, value);
       toast.success("Bonus followers updated");
       setIsEditingBonus(false);
-      await loadCompany();
+      await loadCompany({ silent: true });
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update bonus followers.");
     } finally {
@@ -202,7 +220,7 @@ export default function AdminEmployerDetailPage() {
       <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center gap-6">
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Your rating</div>
-          <StarRatingInput value={company.myRating ?? 0} onChange={handleRate} size={isRatingSaving ? "w-6 h-6 opacity-50 pointer-events-none" : "w-6 h-6"} />
+          <StarRatingInput value={company.myRating ?? 0} onChange={handleRate} onClear={handleClearRating} size={isRatingSaving ? "w-6 h-6 opacity-50 pointer-events-none" : "w-6 h-6"} />
         </div>
         <div className="sm:border-l sm:border-border/60 sm:pl-6">
           <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Bonus followers</div>

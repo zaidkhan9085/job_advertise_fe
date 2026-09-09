@@ -2,8 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Building, ImagePlus, Globe, KeyRound } from "lucide-react";
-import { getMyCompany, updateMyCompany, ApiError, resolveImageUrl } from "@/lib/api";
+import { Building, ImagePlus, Globe, KeyRound, Users, Star } from "lucide-react";
+import { getMyCompany, updateMyCompany, ApiError, resolveImageUrl, type MyCompany } from "@/lib/api";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 
@@ -16,6 +16,7 @@ export default function CompanyProfilePage() {
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stats, setStats] = useState<Pick<MyCompany, "followerCount" | "averageRating" | "ratingCount"> | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,6 +32,7 @@ export default function CompanyProfilePage() {
         setWebsite(company.website ?? "");
         setJobLocation(toLocationValue(company.jobLocation));
         if (company.logo) setLogoPreview(resolveImageUrl(company.logo));
+        setStats({ followerCount: company.followerCount, averageRating: company.averageRating, ratingCount: company.ratingCount });
       }
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to load company profile.");
@@ -100,6 +102,31 @@ export default function CompanyProfilePage() {
       </div>
 
       {isChangePasswordOpen && <ChangePasswordDialog onClose={() => setIsChangePasswordOpen(false)} />}
+
+      {stats && (
+        <div className="flex items-center gap-6 bg-white rounded-2xl border border-border/60 shadow-sm p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-blue/10 text-brand-blue flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl font-black text-foreground">{stats.followerCount}</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Followers</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 border-l border-border/60 pl-6">
+            <div className="w-10 h-10 rounded-xl bg-brand-blue/10 text-brand-blue flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl font-black text-foreground">
+                {stats.averageRating.toFixed(1)} <span className="text-xs font-bold text-muted-foreground">({stats.ratingCount})</span>
+              </div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rating</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-border/60 shadow-sm p-8 space-y-6">
         <div className="space-y-2">
