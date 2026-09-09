@@ -8,6 +8,7 @@ import { ArrowLeft, Clock, ImagePlus, Phone, MessageSquare, Zap } from "lucide-r
 import { createJob, ApiError, type StoryTag } from "@/lib/api";
 import PhoneInput from "@/components/common/PhoneInput";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
+import { validateFileSize } from "@/lib/fileValidation";
 
 const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
 
@@ -27,6 +28,13 @@ export default function PostStoryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePosterChange = (file: File | null) => {
+    if (file) {
+      const error = validateFileSize(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+    }
     setPoster(file);
     setPosterPreview(file ? URL.createObjectURL(file) : null);
   };

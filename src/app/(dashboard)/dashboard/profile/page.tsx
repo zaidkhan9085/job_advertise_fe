@@ -3,9 +3,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Building, ImagePlus, Globe, KeyRound, Users, Star } from "lucide-react";
-import { getMyCompany, updateMyCompany, ApiError, resolveImageUrl, type MyCompany } from "@/lib/api";
+import { getMyCompany, updateMyCompany, getMe, ApiError, resolveImageUrl, type MyCompany } from "@/lib/api";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
+import { validateFileSize } from "@/lib/fileValidation";
 
 export default function CompanyProfilePage() {
   const [name, setName] = useState("");
@@ -33,6 +34,11 @@ export default function CompanyProfilePage() {
         setJobLocation(toLocationValue(company.jobLocation));
         if (company.logo) setLogoPreview(resolveImageUrl(company.logo));
         setStats({ followerCount: company.followerCount, averageRating: company.averageRating, ratingCount: company.ratingCount });
+      } else {
+        // No Company row yet (fresh employer) -- prefill the name they
+        // already gave at registration instead of asking again.
+        const me = await getMe();
+        setName(me.full_name ?? "");
       }
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to load company profile.");
@@ -46,6 +52,13 @@ export default function CompanyProfilePage() {
   }, [loadData]);
 
   const handleLogoChange = (file: File | null) => {
+    if (file) {
+      const error = validateFileSize(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+    }
     setLogo(file);
     setLogoPreview(file ? URL.createObjectURL(file) : logoPreview);
   };

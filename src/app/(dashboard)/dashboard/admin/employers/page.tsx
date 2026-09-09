@@ -23,6 +23,8 @@ import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
+import PasswordInput from "@/components/common/PasswordInput";
+import { isValidEmail } from "@/lib/isValidEmail";
 
 const PAGE_LIMIT = 20;
 
@@ -73,6 +75,10 @@ function EditOwnerModal({
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
+    if (!isValidEmail(email)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
     setIsSaving(true);
     try {
       const updated = await updateCandidateUser(company.owner.id, { full_name: fullName, email, phone });
@@ -160,13 +166,7 @@ function PasswordModal({ company, onClose }: { company: CompanyAdminListItem; on
         <p className="text-sm text-muted-foreground">
           Set a new password for {company.owner.full_name || company.owner.email} ({company.name}).
         </p>
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="New password"
-          type="password"
-          className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-        />
+        <PasswordInput value={password} onChange={setPassword} placeholder="New password" variant="compact" />
         <button
           onClick={handleSave}
           disabled={isSaving}

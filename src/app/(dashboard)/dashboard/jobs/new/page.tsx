@@ -28,9 +28,12 @@ import {
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import PhoneInput from "@/components/common/PhoneInput";
 import SearchableSelect from "@/components/common/SearchableSelect";
+import { validateFileSize } from "@/lib/fileValidation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function PostJobPage() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [listingType, setListingType] = useState<"General" | "Premium">("General");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingCompany, setIsCheckingCompany] = useState(true);
@@ -55,11 +58,16 @@ export default function PostJobPage() {
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isStaff = user?.role === "admin" || user?.role === "sub_admin";
+
   const loadFormData = useCallback(async () => {
     setIsCheckingCompany(true);
     try {
+      // Admin/sub_admin have no Company of their own -- they're allowed to
+      // post regardless (backend already permits this), so only employers
+      // get redirected here for a missing company profile.
       const company = await getMyCompany();
-      if (!company) {
+      if (!company && !isStaff) {
         toast.error("Complete your company profile before posting a job.");
         router.push("/dashboard/profile");
         return;
@@ -75,13 +83,21 @@ export default function PostJobPage() {
     } finally {
       setIsCheckingCompany(false);
     }
-  }, [router]);
+  }, [router, isStaff]);
 
   useEffect(() => {
+    if (isAuthLoading) return;
     loadFormData();
-  }, [loadFormData]);
+  }, [loadFormData, isAuthLoading]);
 
   const handlePosterChange = (file: File | null) => {
+    if (file) {
+      const error = validateFileSize(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+    }
     setPoster(file);
     setPosterPreview(file ? URL.createObjectURL(file) : null);
   };

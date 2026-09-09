@@ -219,7 +219,7 @@ export default function SearchCandidatesPage() {
 
   const [candidates, setCandidates] = useState<ATSCandidate[]>([]);
   const [meta, setMeta] = useState<PaginatedMeta | null>(null);
-  const [stats, setStats] = useState<{ totalCandidates: number; withResumeCount: number } | null>(null);
+  const [stats, setStats] = useState<{ totalCandidates: number } | null>(null);
   const [credits, setCredits] = useState<CreditsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -445,13 +445,8 @@ export default function SearchCandidatesPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <StatCard label="Total candidates" value={stats ? stats.totalCandidates.toLocaleString() : "—"} />
-        <StatCard
-          label="With a resume on file"
-          value={stats ? stats.withResumeCount.toLocaleString() : "—"}
-          sub={stats && stats.totalCandidates > 0 ? `${Math.round((stats.withResumeCount / stats.totalCandidates) * 100)}%` : undefined}
-        />
         <StatCard label="Matching current filters" value={meta ? meta.total.toLocaleString() : "—"} />
       </div>
 
