@@ -35,7 +35,7 @@ function toCsv(companies: CompanyAdminListItem[]): string {
     c.owner.phone ?? "",
     c.region?.name ?? "",
     String(c._count.jobs),
-    String(c._count.follows),
+    String(c.followerCount),
     String(c.pendingReportCount),
     c.owner.isBlocked ? "Yes" : "No",
     c.createdAt,
@@ -413,7 +413,7 @@ export default function AdminEmployersPage() {
       key: "followers",
       title: "Followers",
       minWidth: 100,
-      render: (_, company) => <span className="font-bold text-foreground">{company._count.follows}</span>,
+      render: (_, company) => <span className="font-bold text-foreground">{company.followerCount}</span>,
     },
     {
       key: "reports",

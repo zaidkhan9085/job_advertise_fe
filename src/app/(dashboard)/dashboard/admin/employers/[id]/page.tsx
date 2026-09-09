@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { Building, Globe, Star, Users, Briefcase, Flag, ArrowLeft } from "lucide-react";
+import { Building, Globe, Star, Users, Briefcase, Flag, ArrowLeft, Pencil, Check, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { getCompanyAdminDetail, resolveImageUrl, type CompanyAdminDetail, type JobPostStatus, type ReportStatus, ApiError } from "@/lib/api";
+import { getCompanyAdminDetail, rateCompany, setCompanyBonusFollowers, resolveImageUrl, type CompanyAdminDetail, type JobPostStatus, type ReportStatus, ApiError } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import StarRatingInput from "@/components/common/StarRatingInput";
 
 const JOB_STATUS_STYLES: Record<JobPostStatus, string> = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -30,6 +32,10 @@ export default function AdminEmployerDetailPage() {
   const [company, setCompany] = useState<CompanyAdminDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRatingSaving, setIsRatingSaving] = useState(false);
+  const [isEditingBonus, setIsEditingBonus] = useState(false);
+  const [bonusInput, setBonusInput] = useState("0");
+  const [isBonusSaving, setIsBonusSaving] = useState(false);
 
   const loadCompany = useCallback(async () => {
     setIsLoading(true);
@@ -48,6 +54,45 @@ export default function AdminEmployerDetailPage() {
       loadCompany();
     }
   }, [user, loadCompany]);
+
+  // Admin's own rating -- exactly the same rateCompany a candidate/employer
+  // uses, so it blends into the average as one real vote, not an override.
+  const handleRate = async (rating: number) => {
+    setIsRatingSaving(true);
+    try {
+      await rateCompany(params.id, rating);
+      toast.success("Rating submitted");
+      await loadCompany();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to submit rating.");
+    } finally {
+      setIsRatingSaving(false);
+    }
+  };
+
+  const startEditingBonus = () => {
+    setBonusInput(String(company?.bonusFollowers ?? 0));
+    setIsEditingBonus(true);
+  };
+
+  const saveBonus = async () => {
+    const value = Number(bonusInput);
+    if (!Number.isInteger(value) || value < 0) {
+      toast.error("Bonus followers must be a non-negative whole number");
+      return;
+    }
+    setIsBonusSaving(true);
+    try {
+      await setCompanyBonusFollowers(params.id, value);
+      toast.success("Bonus followers updated");
+      setIsEditingBonus(false);
+      await loadCompany();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update bonus followers.");
+    } finally {
+      setIsBonusSaving(false);
+    }
+  };
 
   if (user && user.role !== "admin") {
     return <ComingSoon title="Employers" />;
@@ -151,6 +196,39 @@ export default function AdminEmployerDetailPage() {
             <div className="text-xl font-black text-foreground">{company.reports.length}</div>
             <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Reports</div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center gap-6">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Your rating</div>
+          <StarRatingInput value={company.myRating ?? 0} onChange={handleRate} size={isRatingSaving ? "w-6 h-6 opacity-50 pointer-events-none" : "w-6 h-6"} />
+        </div>
+        <div className="sm:border-l sm:border-border/60 sm:pl-6">
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Bonus followers</div>
+          {isEditingBonus ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                value={bonusInput}
+                onChange={(e) => setBonusInput(e.target.value)}
+                disabled={isBonusSaving}
+                className="w-24 px-2 py-1.5 rounded-lg border border-border/60 text-sm font-bold"
+                autoFocus
+              />
+              <button onClick={saveBonus} disabled={isBonusSaving} title="Save" className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 disabled:opacity-50">
+                <Check className="w-4 h-4" />
+              </button>
+              <button onClick={() => setIsEditingBonus(false)} disabled={isBonusSaving} title="Cancel" className="p-1.5 rounded-lg text-muted-foreground hover:bg-secondary disabled:opacity-50">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={startEditingBonus} className="inline-flex items-center gap-1.5 text-sm font-bold text-foreground hover:text-brand-blue">
+              +{company.bonusFollowers} <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
