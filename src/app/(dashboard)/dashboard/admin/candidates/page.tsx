@@ -19,6 +19,7 @@ import {
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
 import PhoneInput from "@/components/common/PhoneInput";
+import CityAutocomplete, { type LocationValue, toLocationValue } from "@/components/common/CityAutocomplete";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
 
@@ -61,7 +62,7 @@ function EditCandidateModal({
   const [fullName, setFullName] = useState(candidate.full_name ?? "");
   const [email, setEmail] = useState(candidate.email);
   const [phone, setPhone] = useState(candidate.phone ?? "");
-  const [location, setLocation] = useState(candidate.location ?? "");
+  const [location, setLocation] = useState<LocationValue | null>(toLocationValue(candidate.jobLocation));
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -71,7 +72,7 @@ function EditCandidateModal({
         full_name: fullName,
         email,
         phone,
-        location,
+        jobLocationId: location?.id,
       });
       toast.success("Candidate updated");
       onSaved(updated);
@@ -106,12 +107,7 @@ function EditCandidateModal({
             className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
           />
           <PhoneInput value={phone} onChange={setPhone} />
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Location"
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-          />
+          <CityAutocomplete value={location} onChange={setLocation} />
         </div>
         <button
           onClick={handleSave}

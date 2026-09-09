@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Clock, ImagePlus, Phone, MessageSquare, Zap } from "lucide-react";
 import { createJob, ApiError, type StoryTag } from "@/lib/api";
 import PhoneInput from "@/components/common/PhoneInput";
+import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 
 const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
 
@@ -14,7 +15,7 @@ export default function PostStoryPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState<LocationValue | null>(null);
   const [tag, setTag] = useState<StoryTag>("Long Term");
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
@@ -43,7 +44,7 @@ export default function PostStoryPage() {
     try {
       const result = await createJob({
         title,
-        location: location || "Remote",
+        jobLocationId: location?.id,
         description,
         type: "STORY",
         tag,
@@ -139,13 +140,7 @@ export default function PostStoryPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-bold text-foreground/80">Location (optional)</label>
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            type="text"
-            placeholder="e.g. Mumbai, Delhi..."
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
-          />
+          <CityAutocomplete value={location} onChange={setLocation} />
         </div>
 
         <div className="space-y-2">
