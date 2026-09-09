@@ -43,6 +43,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import JobPosterImage from "@/components/common/JobPosterImage";
+import StarRatingInput from "@/components/common/StarRatingInput";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
 
 function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: string }) {
@@ -126,7 +127,10 @@ export default function JobDetailPage() {
       setJob(jobData);
       getRelatedJobs(params.id).then(setRelated).catch(() => {});
       if (jobData.companyId) {
-        getCompanyById(jobData.companyId).then(setCompany).catch(() => {});
+        getCompanyById(jobData.companyId).then((c) => {
+          setCompany(c);
+          setMyRating(c.myRating ?? 0);
+        }).catch(() => {});
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) setNotFound(true);
@@ -469,18 +473,7 @@ export default function JobDetailPage() {
 
                   <div className="pt-2 border-t border-border/60">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <button key={n} onClick={() => handleRate(n)} title={`${n} star${n > 1 ? "s" : ""}`}>
-                          <Star
-                            className={`w-6 h-6 transition-colors ${
-                              n <= myRating ? "text-amber-400" : "text-border hover:text-amber-300"
-                            }`}
-                            fill={n <= myRating ? "currentColor" : "none"}
-                          />
-                        </button>
-                      ))}
-                    </div>
+                    <StarRatingInput value={myRating} onChange={handleRate} />
                   </div>
                 </>
               ) : (

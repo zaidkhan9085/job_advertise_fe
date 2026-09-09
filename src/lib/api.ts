@@ -509,10 +509,16 @@ export interface CompanyAdminListItem extends Company {
   owner: CompanyAdminOwner;
   _count: { jobs: number; follows: number; reports: number };
   pendingReportCount: number;
+  // Blended total (real follows + admin's bonusFollowers) -- the same
+  // number the public and admin-detail views show, not _count.follows alone.
+  followerCount: number;
 }
 
 export interface CompanyAdminDetail extends CompanyDetail {
   owner: CompanyAdminOwner;
+  // Raw admin-editable component of followerCount -- see companyController.js's
+  // setCompanyBonusFollowers. Admin-only; not present on the public CompanyDetail.
+  bonusFollowers: number;
   jobs: {
     id: string;
     title: string;
@@ -781,6 +787,9 @@ export interface CompanyDetail extends Company {
   ratingCount: number;
   isFollowing: boolean;
   isBlocked: boolean;
+  // The caller's own existing rating for this company, if any -- lets the
+  // star-rating UI pre-fill instead of always starting blank.
+  myRating: number | null;
 }
 
 export function getRegions() {
@@ -1024,6 +1033,16 @@ export function grantCreditsToCompany(
     {
       method: "POST",
       body: JSON.stringify({ amount, note }),
+    },
+  );
+}
+
+export function setCompanyBonusFollowers(companyId: string, bonusFollowers: number) {
+  return apiFetch<{ message: string; bonusFollowers: number }>(
+    `/api/admin/companies/${companyId}/bonus-followers`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ bonusFollowers }),
     },
   );
 }
