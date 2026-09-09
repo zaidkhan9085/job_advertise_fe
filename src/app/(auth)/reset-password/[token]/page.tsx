@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Lock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { resetPasswordRequest, ApiError } from "@/lib/api";
+import PasswordInput from "@/components/common/PasswordInput";
 
 export default function ResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
@@ -60,18 +61,7 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-foreground">New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
-                    required
-                    minLength={6}
-                  />
-                </div>
+                <PasswordInput value={password} onChange={setPassword} required minLength={6} />
               </div>
 
               <button

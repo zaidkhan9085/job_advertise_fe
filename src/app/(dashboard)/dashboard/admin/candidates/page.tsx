@@ -19,9 +19,11 @@ import {
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
 import PhoneInput from "@/components/common/PhoneInput";
+import PasswordInput from "@/components/common/PasswordInput";
 import CityAutocomplete, { type LocationValue, toLocationValue } from "@/components/common/CityAutocomplete";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
+import { isValidEmail } from "@/lib/isValidEmail";
 
 const PAGE_LIMIT = 20;
 
@@ -66,6 +68,10 @@ function EditCandidateModal({
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
+    if (!isValidEmail(email)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
     setIsSaving(true);
     try {
       const updated = await updateCandidateUser(candidate.id, {
@@ -160,13 +166,7 @@ function PasswordModal({
         <p className="text-sm text-muted-foreground">
           Set a new password for {candidate.full_name || candidate.email}.
         </p>
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="New password"
-          type="password"
-          className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
-        />
+        <PasswordInput value={password} onChange={setPassword} placeholder="New password" variant="compact" />
         <button
           onClick={handleSave}
           disabled={isSaving}

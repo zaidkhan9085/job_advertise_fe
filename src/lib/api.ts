@@ -135,8 +135,6 @@ export interface RegisterPayload {
   password: string;
   role: FrontendRole;
   phone?: string;
-  location?: string;
-  jobLocationId?: string;
 }
 
 export function registerRequest(payload: RegisterPayload) {
@@ -178,6 +176,13 @@ export function changePassword(currentPassword: string, newPassword: string) {
     method: "POST",
     body: JSON.stringify({ currentPassword, newPassword }),
   });
+}
+
+// Lets Company Profile / My Profile prefill their form from whatever was
+// already given at registration (before a Company/CandidateProfile row
+// exists), instead of asking for it again.
+export function getMe() {
+  return apiFetch<{ id: number; full_name: string | null; email: string }>("/api/auth/me");
 }
 
 // --- Jobs ---
@@ -1093,7 +1098,7 @@ export interface ATSCandidate {
 }
 
 export interface ATSSearchResult extends Paginated<ATSCandidate> {
-  stats: { totalCandidates: number; withResumeCount: number };
+  stats: { totalCandidates: number };
 }
 
 export interface ATSSearchFilters extends AdminListParams {

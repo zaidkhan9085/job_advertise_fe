@@ -33,6 +33,7 @@ import {
   uploadCandidateResume,
   parseCandidateResume,
   resolveImageUrl,
+  getMe,
   ApiError,
   type ProfileEntry,
   type ParsedResumeData,
@@ -45,6 +46,7 @@ import ProfileEntryList from "@/components/dashboard/ProfileEntryList";
 import EducationEntryList from "@/components/dashboard/EducationEntryList";
 import SimpleSelect from "@/components/common/SimpleSelect";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
+import { validateFileSize } from "@/lib/fileValidation";
 
 // 0-40 years covers the realistic working-life range for this platform's
 // audience — a plain dropdown (not free text) so the ATS min-max experience
@@ -134,6 +136,12 @@ export default function MyProfilePage() {
         setProjects(profile.projects ?? []);
         setResumeUrl(profile.resumeUrl ?? null);
         if (profile.profileImage) setPhotoPreview(resolveImageUrl(profile.profileImage));
+      } else {
+        // No CandidateProfile row yet (fresh candidate) -- prefill what
+        // they already gave at registration instead of asking again.
+        const me = await getMe();
+        setName(me.full_name ?? "");
+        setEmail(me.email ?? "");
       }
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to load profile.");
@@ -210,6 +218,13 @@ export default function MyProfilePage() {
   }
 
   const handlePhotoChange = (file: File | null) => {
+    if (file) {
+      const error = validateFileSize(file);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+    }
     setPhoto(file);
     setPhotoPreview(file ? URL.createObjectURL(file) : photoPreview);
   };
@@ -255,6 +270,11 @@ export default function MyProfilePage() {
 
   const handleResumeFileChange = async (file: File | null) => {
     if (!file) return;
+    const sizeError = validateFileSize(file);
+    if (sizeError) {
+      toast.error(sizeError);
+      return;
+    }
     setIsUploadingResume(true);
     try {
       const result = await uploadCandidateResume(file);
