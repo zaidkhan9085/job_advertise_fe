@@ -229,9 +229,11 @@ export interface CreateJobPayload {
   jobTypeId?: string;
   industryId?: string;
   poster?: File;
-  // Stories only — a free-text location/tag, separate from the structured
-  // JobLocation/JobType lookups used by regular job posts.
+  // Legacy free-text location fallback -- jobLocationId is the real value
+  // for both regular jobs and Stories now, this only matters if it wasn't set.
   location?: string;
+  // Stories only — a free-text tag, separate from the structured JobType
+  // lookup used by regular job posts.
   tag?: string;
 }
 
@@ -422,6 +424,8 @@ export interface CandidateUserAdmin {
   email: string;
   phone: string | null;
   location: string | null;
+  jobLocationId: string | null;
+  jobLocation: JobLocationRef | null;
   is_verified: boolean;
   isBlocked: boolean;
   created_at: string;
@@ -462,6 +466,7 @@ export function updateCandidateUser(
     email?: string;
     phone?: string;
     location?: string;
+    jobLocationId?: string;
   },
 ) {
   return apiFetch<CandidateUserAdmin>(`/api/candidate/admin/users/${id}`, {
