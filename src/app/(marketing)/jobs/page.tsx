@@ -33,6 +33,7 @@ import LocationCountFilter, { type LocationValue } from "@/components/common/Loc
 import { useIsRecent } from "@/hooks/useIsRecent";
 import { useAuth } from "@/context/AuthContext";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
+import { slugify } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
 
@@ -49,10 +50,6 @@ const JOB_TYPE_OPTIONS: ComboOption[] = [
   { value: "Shutdown", label: "Shutdown" },
   { value: "Free", label: "Free Recruitment" },
 ];
-
-function slugify(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
 
 function parseCsv(value: string | null): string[] {
   return value ? value.split(",").filter(Boolean) : [];

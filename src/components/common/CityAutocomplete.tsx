@@ -31,18 +31,27 @@ export function toLocationValue(ref: JobLocationRef | null | undefined): Locatio
 // of thousands of rows, so it can't preload). Non-leaf nodes (e.g. "India"
 // itself) come back from the search endpoint like any other row, so
 // someone who doesn't want to pick an exact city isn't forced to.
+const DEFAULT_INPUT_CLASSES =
+  "w-full pl-10 pr-9 py-3 rounded-xl border-[1.5px] border-border bg-white shadow-sm hover:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm font-medium truncate";
+
 export default function CityAutocomplete({
   label,
   placeholder = "Search city, state, or country...",
   value,
   onChange,
   required,
+  inputClassName,
 }: {
   label?: string;
   placeholder?: string;
   value: LocationValue | null;
   onChange: (value: LocationValue | null) => void;
   required?: boolean;
+  // Escape hatch for embedding this picker inside another control's own
+  // bordered/pill shell (e.g. the homepage hero search bar) instead of
+  // rendering CityAutocomplete's own default bordered look. Every other
+  // caller leaves this unset and gets DEFAULT_INPUT_CLASSES as before.
+  inputClassName?: string;
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState(value ? formatLabel(value) : "");
@@ -60,7 +69,7 @@ export default function CityAutocomplete({
   }
 
   const term = inputValue.trim();
-  const isSearchable = term.length >= 2 && !(value && formatLabel(value) === term);
+  const isSearchable = !(value && formatLabel(value) === term);
 
   useEffect(() => {
     if (!isSearchable) return;
@@ -94,7 +103,7 @@ export default function CityAutocomplete({
           <Combobox.Input
             placeholder={placeholder}
             required={required}
-            className="w-full pl-10 pr-9 py-3 rounded-xl border-[1.5px] border-border bg-white shadow-sm hover:border-brand-blue/40 focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm font-medium truncate"
+            className={inputClassName ?? DEFAULT_INPUT_CLASSES}
           />
           {value ? (
             <Combobox.Clear className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
@@ -112,7 +121,7 @@ export default function CityAutocomplete({
                 <div className="px-3.5 py-3 text-sm text-muted-foreground text-center">Searching...</div>
               ) : (
                 <Combobox.Empty className="px-3.5 py-3 text-sm text-muted-foreground text-center">
-                  {term.length < 2 ? "Type at least 2 characters" : "No matches"}
+                  No matches
                 </Combobox.Empty>
               )}
               <Combobox.List>

@@ -119,7 +119,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
       <div className="fixed inset-y-0 right-0 z-[70] w-full max-w-[340px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-white sticky top-0 z-10">
-          <Link href={user ? "/dashboard" : "/"} onClick={onClose} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
+          <Link href="/" onClick={onClose} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
             <img 
               src={siteConfig.logo.url} 
               alt={siteConfig.logo.alt} 

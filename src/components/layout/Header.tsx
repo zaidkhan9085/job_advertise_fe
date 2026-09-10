@@ -154,7 +154,7 @@ export default function Header() {
       >
         <div className="container-site flex items-center justify-between">
             {/* Logo */}
-            <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
+            <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
               <img
                 src={siteConfig.logo.url}
                 alt={siteConfig.logo.alt}
