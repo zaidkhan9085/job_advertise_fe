@@ -54,10 +54,8 @@ export default function LocationCountFilter({
   const [isLoading, setIsLoading] = useState(false);
 
   const term = inputValue.trim();
-  const isSearchable = term.length >= 2;
 
   useEffect(() => {
-    if (!isSearchable) return;
     const timer = setTimeout(() => {
       setIsLoading(true);
       searchJobLocations(term)
@@ -66,14 +64,12 @@ export default function LocationCountFilter({
         .finally(() => setIsLoading(false));
     }, 400);
     return () => clearTimeout(timer);
-  }, [term, isSearchable]);
+  }, [term]);
 
   // Every matched location stays in the list (so the name is always
   // searchable/selectable) — only the count badge itself is real, and it's
   // simply blank for a location with no current jobs, never "0" or "-".
-  const results = isSearchable
-    ? rawResults.map((r) => ({ ...r, count: countJobsAt(jobs, r.id) })).sort((a, b) => b.count - a.count)
-    : [];
+  const results = rawResults.map((r) => ({ ...r, count: countJobsAt(jobs, r.id) })).sort((a, b) => b.count - a.count);
 
   const visibleChip = selected[0];
   const overflowChips = selected.slice(1);
@@ -142,11 +138,11 @@ export default function LocationCountFilter({
         <Combobox.Portal>
           <Combobox.Positioner anchor={fieldRef} side="bottom" align="start" sideOffset={6} className="z-50 outline-none">
             <Combobox.Popup className="w-[var(--anchor-width)] max-h-72 overflow-auto rounded-xl border border-border/60 bg-white shadow-xl py-1.5">
-              {isSearchable && isLoading ? (
+              {isLoading ? (
                 <div className="px-3.5 py-3 text-sm text-muted-foreground text-center">Searching...</div>
               ) : (
                 <Combobox.Empty className="px-3.5 py-3 text-sm text-muted-foreground text-center">
-                  {term.length < 2 ? "Type at least 2 characters" : "No matches"}
+                  No matches
                 </Combobox.Empty>
               )}
               <Combobox.List>

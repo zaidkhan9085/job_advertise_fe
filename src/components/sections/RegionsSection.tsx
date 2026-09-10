@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Globe2 } from "lucide-react";
 import { getJobs, getJobLocations, type JobLocation, ApiError } from "@/lib/api";
-
-function slugify(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
+import { slugify } from "@/lib/utils";
 
 interface RegionRow {
   id: string;

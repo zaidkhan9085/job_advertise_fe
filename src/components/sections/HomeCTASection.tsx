@@ -13,13 +13,13 @@ export default function HomeCTASection() {
     },
     {
       label: "Free Recruitment Jobs",
-      href: "/jobs?type=free-recruitment",
+      href: "/jobs?jobtype=Free",
       icon: Briefcase,
       className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
     },
     {
       label: "Shutdown Jobs",
-      href: "/jobs?type=shutdown",
+      href: "/jobs?jobtype=Shutdown",
       icon: Briefcase,
       className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
     },

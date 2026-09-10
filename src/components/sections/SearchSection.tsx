@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, MapPin } from "lucide-react";
+import { Search } from "lucide-react";
+import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
+import { slugify } from "@/lib/utils";
 
 const POPULAR_SEARCHES = ["Safety Officer", "Electrician", "HVAC Technician", "Welder", "Heavy Driver", "IT Jobs"];
 
 export default function SearchSection() {
   const router = useRouter();
   const [term, setTerm] = useState("");
-  const [location, setLocation] = useState("Any Location");
+  const [location, setLocation] = useState<LocationValue | null>(null);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     const params = new URLSearchParams();
     if (term) params.set("q", term);
-    if (location !== "Any Location") params.set("location", location);
+    // Same ?location=<slug> contract /jobs already resolves back to a real
+    // location via its own search-and-match round trip (see RegionsSection).
+    if (location) params.set("location", slugify(location.name));
     router.push(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
@@ -42,20 +46,13 @@ export default function SearchSection() {
               />
             </div>
             <div className="hidden sm:block w-px bg-border self-center h-6" />
-            <div className="flex items-center gap-2.5 px-3 sm:w-52">
-              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-              <select
+            <div className="sm:w-64">
+              <CityAutocomplete
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full h-11 border-none outline-none bg-transparent text-sm font-medium text-foreground appearance-none cursor-pointer"
-              >
-                <option>Any Location</option>
-                <option>Dubai, UAE</option>
-                <option>Riyadh, Saudi Arabia</option>
-                <option>GCC</option>
-                <option>Europe</option>
-                <option>India</option>
-              </select>
+                onChange={setLocation}
+                placeholder="Any Location"
+                inputClassName="w-full h-11 pl-10 pr-9 border-none outline-none bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground truncate"
+              />
             </div>
             <button type="submit" className="h-11 px-6 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors shrink-0">
               Search Jobs
