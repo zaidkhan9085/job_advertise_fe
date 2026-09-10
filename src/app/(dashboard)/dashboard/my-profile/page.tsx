@@ -47,6 +47,7 @@ import EducationEntryList from "@/components/dashboard/EducationEntryList";
 import SimpleSelect from "@/components/common/SimpleSelect";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 import { validateFileSize } from "@/lib/fileValidation";
+import { computeProfileCompleteness } from "@/lib/profileCompleteness";
 
 // 0-40 years covers the realistic working-life range for this platform's
 // audience — a plain dropdown (not free text) so the ATS min-max experience
@@ -154,43 +155,30 @@ export default function MyProfilePage() {
     loadData();
   }, [loadData]);
 
-  // Professional sections weigh into completeness alongside the original
-  // fields — each is either present or not, same "count what's filled"
-  // approach as before, just extended to cover the new sections.
+  // Shared with the Overview dashboard's completeness tile -- see
+  // src/lib/profileCompleteness.ts.
   const { completeness, missingSections } = useMemo(() => {
-    const fields = [
+    return computeProfileCompleteness({
       name,
       position,
       whatsapp,
       email,
-      industry,
-      nationality,
-      passportNo,
-      dateOfBirth,
-      gender,
-    ];
-    // isFresher is as much a real answer as a number -- "I have no
-    // experience yet" isn't an unfilled field.
-    const experienceAnswered = isFresher || experienceYears !== "";
-    const sectionChecks = [
-      { label: "Professional Summary", filled: summary.trim().length > 0 },
-      { label: "Skills", filled: skills.length > 0 },
-      { label: "Experience", filled: experience.length > 0 },
-      { label: "Education", filled: education.length > 0 },
-      { label: "Certifications", filled: certifications.length > 0 },
-      { label: "Projects", filled: projects.length > 0 },
-    ];
-    const sectionsFilled = sectionChecks.filter((s) => s.filled).length;
-    const filled =
-      fields.filter((f) => f.trim().length > 0).length +
-      (jobLocation ? 1 : 0) +
-      (preferredLocation ? 1 : 0) +
-      (experienceAnswered ? 1 : 0) +
-      sectionsFilled;
-    return {
-      completeness: Math.round((filled / (fields.length + 3 + sectionChecks.length)) * 100),
-      missingSections: sectionChecks.filter((s) => !s.filled).map((s) => s.label),
-    };
+      industry: industry || null,
+      nationality: nationality || null,
+      passportNo: passportNo || null,
+      dateOfBirth: dateOfBirth || null,
+      gender: gender || null,
+      jobLocation,
+      preferredLocation,
+      experienceYears: experienceYears === "" ? null : experienceYears,
+      isFresher,
+      summary: summary || null,
+      skills,
+      experience,
+      education,
+      certifications,
+      projects,
+    });
   }, [
     name,
     position,
