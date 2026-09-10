@@ -33,7 +33,7 @@ interface SidebarLink {
 
 const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
   admin: [
-    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: Briefcase },
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
     { label: "All Applicants", href: "/dashboard/admin/all-applicants", icon: Users },
@@ -43,7 +43,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   employer: [
-    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
     { label: "Search Candidates", href: "/dashboard/search-candidates", icon: Search },
     { label: "Stories", href: "/dashboard/stories", icon: PlayCircle },
@@ -53,7 +53,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
   // sub_admin has no dedicated nav yet — it's promoted from Employer and
   // gains moderation permissions, not a distinct dashboard (see [[api.ts]]).
   sub_admin: [
-    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { label: "Manage Jobs", href: "/dashboard/jobs", icon: Briefcase },
     { label: "Search Candidates", href: "/dashboard/search-candidates", icon: Search },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: ShieldCheck },
@@ -63,7 +63,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   candidate: [
-    { label: "Overview", href: "/dashboard/overview", icon: LayoutDashboard },
+    { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { label: "My Profile", href: "/dashboard/my-profile", icon: Users },
     { label: "Browse Jobs", href: "/jobs", icon: Search },
     { label: "My Applications", href: "/dashboard/applications", icon: Briefcase },
@@ -208,7 +208,7 @@ export default function DashboardSidebar() {
         <div className={`h-16 flex items-center border-b border-border/60 shrink-0 transition-all duration-300 ${
           isCollapsed ? "px-0 justify-center" : "px-6"
         }`}>
-          <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
+          <Link href="/" className="flex items-center gap-2 overflow-hidden" title="Back to the main site">
             <img
               src={siteConfig.logo.url}
               alt={siteConfig.logo.alt}
@@ -231,7 +231,7 @@ export default function DashboardSidebar() {
           />
           <div className="fixed inset-y-0 left-0 z-[70] w-full max-w-[300px] bg-white shadow-2xl flex flex-col md:hidden animate-in slide-in-from-left duration-300">
             <div className="h-16 flex items-center justify-between border-b border-border/60 shrink-0 px-4">
-              <Link href="/dashboard" onClick={closeMobileSidebar} className="flex items-center gap-2 overflow-hidden">
+              <Link href="/" onClick={closeMobileSidebar} className="flex items-center gap-2 overflow-hidden" title="Back to the main site">
                 <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} className="h-10 w-auto" />
               </Link>
               <button

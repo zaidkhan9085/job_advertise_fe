@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Menu, Bell, User, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
+import { siteConfig } from "@/data/branding";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -10,7 +12,7 @@ export default function DashboardHeader() {
 
   return (
     <header className="h-16 bg-white border-b border-border/60 px-4 md:px-8 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <button
           onClick={openMobileSidebar}
           className="md:hidden p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors"
@@ -18,9 +20,12 @@ export default function DashboardHeader() {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="hidden md:block">
-          <h2 className="text-lg font-bold text-foreground">Dashboard</h2>
-        </div>
+        {/* Always visible (unlike the sidebar, which is desktop-only unless
+            the drawer above is opened) -- the one guaranteed way back to the
+            public site from anywhere in the dashboard, on any device. */}
+        <Link href="/" className="flex items-center gap-2" title="Back to the main site">
+          <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} className="h-8 w-auto" />
+        </Link>
       </div>
 
       <div className="flex items-center gap-4">
