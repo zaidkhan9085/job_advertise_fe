@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 import {
   Coins,
   Lock,
@@ -18,13 +19,18 @@ import {
   Search,
   RotateCcw,
   ShieldCheck,
+  ShieldOff,
   SlidersHorizontal,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   searchCandidates,
   unlockCandidate,
   getMyCredits,
+  setCandidateBlocked,
+  deleteCandidateUser,
   type ATSCandidate,
   type CreditsSummary,
   type PaginatedMeta,
@@ -36,6 +42,8 @@ import CityAutocomplete, { type LocationValue } from "@/components/common/CityAu
 import SimpleSelect from "@/components/common/SimpleSelect";
 import SearchableSelect from "@/components/common/SearchableSelect";
 import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
+import EditCandidateModal from "@/components/dashboard/EditCandidateModal";
+import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 
 // Naukri-style min-max range filters, not fixed bands — a plain number
 // dropdown for each bound so a recruiter can build any custom range (e.g.
@@ -249,6 +257,13 @@ export default function SearchCandidatesPage() {
     uploadedResumeUrl: string | null;
   } | null>(null);
 
+  // Staff-only account management (Edit/Block/Delete) -- selected.account
+  // only exists for admin/sub_admin (see ATSCandidate.account).
+  const [editingCandidate, setEditingCandidate] = useState<ATSCandidate | null>(null);
+  const [blockingId, setBlockingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ATSCandidate | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
     return () => clearTimeout(t);
@@ -344,6 +359,38 @@ export default function SearchCandidatesPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to unlock candidate.");
     } finally {
       setUnlockingId(null);
+    }
+  };
+
+  // Staff-only: same endpoints/behavior as Admin > Candidates, just reached
+  // from here too now. Block/unblock has no confirm step there either
+  // (reversible, low-risk); only delete does.
+  const handleToggleBlock = async (candidate: ATSCandidate) => {
+    if (!candidate.account) return;
+    setBlockingId(candidate.userId);
+    try {
+      const result = await setCandidateBlocked(candidate.userId, !candidate.account.isBlocked);
+      toast.success(result.message);
+      await loadCandidates();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update candidate.");
+    } finally {
+      setBlockingId(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteCandidateUser(deleteTarget.userId);
+      toast.success(result.message);
+      setDeleteTarget(null);
+      await loadCandidates();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete candidate.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -445,10 +492,12 @@ export default function SearchCandidatesPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <StatCard label="Total candidates" value={stats ? stats.totalCandidates.toLocaleString() : "—"} />
-        <StatCard label="Matching current filters" value={meta ? meta.total.toLocaleString() : "—"} />
-      </div>
+      {!isStaff && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <StatCard label="Total candidates" value={stats ? stats.totalCandidates.toLocaleString() : "—"} />
+          <StatCard label="Matching current filters" value={meta ? meta.total.toLocaleString() : "—"} />
+        </div>
+      )}
 
       <div className="bg-white border border-border/60 rounded-2xl p-3 shadow-sm space-y-3">
         {/* Every control shares the same "small uppercase label + input"
@@ -787,9 +836,70 @@ export default function SearchCandidatesPage() {
                         Unlock Full Profile &middot; {PROFILE_UNLOCK_COST} credit
                       </button>
                     )}
+                    {isStaff && selected.account && (
+                      <>
+                        <button
+                          onClick={() => setEditingCandidate(selected)}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          disabled={blockingId === selected.userId}
+                          onClick={() => handleToggleBlock(selected)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-60 ${
+                            selected.account.isBlocked
+                              ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          }`}
+                        >
+                          {blockingId === selected.userId ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : selected.account.isBlocked ? (
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                          ) : (
+                            <ShieldOff className="w-3.5 h-3.5" />
+                          )}
+                          {selected.account.isBlocked ? "Unblock" : "Block"}
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(selected)}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {isStaff && selected.account && (
+                <div className="p-5 sm:p-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-b border-border/60 bg-secondary/20">
+                  {[
+                    ["Login Email", selected.account.email],
+                    ["Phone", selected.account.phone],
+                    ["Registered", formatDistanceToNow(new Date(selected.account.registeredAt), { addSuffix: true })],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{label}</div>
+                      <div className="text-sm font-semibold text-foreground truncate">{value || "—"}</div>
+                    </div>
+                  ))}
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Verified</div>
+                    <div className={`text-sm font-semibold ${selected.account.isVerified ? "text-emerald-600" : "text-muted-foreground"}`}>
+                      {selected.account.isVerified ? "Yes" : "No"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Account Status</div>
+                    <div className={`text-sm font-semibold ${selected.account.isBlocked ? "text-rose-600" : "text-emerald-600"}`}>
+                      {selected.account.isBlocked ? "Blocked" : "Active"}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 border-b border-border/60">
                 {[
@@ -943,6 +1053,34 @@ export default function SearchCandidatesPage() {
           onClose={() => setViewing(null)}
         />
       )}
+
+      {editingCandidate?.account && (
+        <EditCandidateModal
+          candidate={{
+            id: editingCandidate.userId,
+            full_name: editingCandidate.account.fullName,
+            email: editingCandidate.account.email,
+            phone: editingCandidate.account.phone,
+            jobLocation: editingCandidate.account.jobLocation,
+          }}
+          onClose={() => setEditingCandidate(null)}
+          onSaved={() => {
+            setEditingCandidate(null);
+            loadCandidates();
+          }}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Delete Candidate"
+        message={`Delete ${deleteTarget?.name ?? "this candidate"}'s account? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isConfirming={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

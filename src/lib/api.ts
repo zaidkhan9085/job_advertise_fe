@@ -1095,6 +1095,19 @@ export interface ATSCandidate {
   experience: ProfileEntry[] | null;
   education: ProfileEntry[] | null;
   projects: ProfileEntry[] | null;
+  // Staff (admin/sub_admin) only -- the backend omits this key entirely for
+  // employers, not just masks it, so it's never present in that response at
+  // all regardless of unlock state.
+  account?: {
+    fullName: string | null;
+    email: string;
+    phone: string | null;
+    jobLocationId: string | null;
+    jobLocation: JobLocationRef | null;
+    registeredAt: string;
+    isVerified: boolean;
+    isBlocked: boolean;
+  };
 }
 
 export interface ATSSearchResult extends Paginated<ATSCandidate> {
