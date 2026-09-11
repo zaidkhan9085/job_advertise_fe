@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { MapPin, Trash2, Pencil, Star, Loader2, Users } from "lucide-react";
+import { MapPin, Trash2, Pencil, Star, Loader2, Users, Plus, PlayCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -286,11 +286,29 @@ export default function AdminAllJobsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-black text-foreground">All Jobs</h1>
-        <p className="text-muted-foreground mt-1 text-sm font-medium">
-          Every job post site-wide, any status. Full edit access.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-foreground">All Jobs</h1>
+          <p className="text-muted-foreground mt-1 text-sm font-medium">
+            Every job post site-wide, any status. Full edit access.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/dashboard/stories/new"
+            className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-3 rounded-xl font-bold transition-all shadow-sm whitespace-nowrap active:scale-95"
+          >
+            <PlayCircle className="w-5 h-5" />
+            Post Story
+          </Link>
+          <Link
+            href="/dashboard/jobs/new"
+            className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20 whitespace-nowrap active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+            Post New Job
+          </Link>
+        </div>
       </div>
 
       {error && <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">{error}</div>}
