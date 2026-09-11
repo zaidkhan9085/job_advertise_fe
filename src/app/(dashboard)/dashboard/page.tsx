@@ -126,7 +126,7 @@ function AdminOverview() {
           <StatCard title="Total Jobs" value={String(stats.totalJobs)} icon={Briefcase} color="bg-blue-50 text-blue-600" href="/dashboard/admin/all-jobs" />
           <StatCard title="Pending Approval" value={String(stats.pendingJobs)} icon={Clock} color="bg-amber-50 text-amber-600" href="/dashboard/admin/jobs" />
           <StatCard title="Employers" value={String(stats.totalEmployers)} icon={Users} color="bg-emerald-50 text-emerald-600" href="/dashboard/admin/employers" />
-          <StatCard title="Candidates" value={String(stats.totalCandidates)} icon={Users} color="bg-purple-50 text-purple-600" href="/dashboard/admin/candidates" />
+          <StatCard title="Candidates" value={String(stats.totalCandidates)} icon={Users} color="bg-purple-50 text-purple-600" href="/dashboard/search-candidates" />
           <StatCard
             title="Open Reports"
             value={openReports === null ? "-" : String(openReports)}

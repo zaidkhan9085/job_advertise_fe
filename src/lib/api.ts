@@ -436,34 +436,6 @@ export interface CandidateUserAdmin {
   created_at: string;
 }
 
-export function getAllCandidateUsers(
-  filters?: AdminListParams & { dateFrom?: string; dateTo?: string },
-) {
-  const query = buildQuery({
-    page: filters?.page,
-    limit: filters?.limit,
-    search: filters?.search,
-    sortBy: filters?.sortBy,
-    sortOrder: filters?.sortOrder,
-    all: filters?.all,
-    dateFrom: filters?.dateFrom,
-    dateTo: filters?.dateTo,
-  });
-  return apiFetch<Paginated<CandidateUserAdmin>>(
-    `/api/candidate/admin/users${query}`,
-  );
-}
-
-export function bulkDeleteCandidateUsers(payload: BulkDeletePayload) {
-  return apiFetch<{
-    deleted: number[];
-    failed: { id: number; reason: string }[];
-  }>("/api/candidate/admin/users/bulk-delete", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
 export function updateCandidateUser(
   id: number,
   payload: {
@@ -1095,10 +1067,39 @@ export interface ATSCandidate {
   experience: ProfileEntry[] | null;
   education: ProfileEntry[] | null;
   projects: ProfileEntry[] | null;
+  // Staff (admin/sub_admin) only -- the backend omits this key entirely for
+  // employers, not just masks it, so it's never present in that response at
+  // all regardless of unlock state.
+  account?: {
+    fullName: string | null;
+    email: string;
+    phone: string | null;
+    jobLocationId: string | null;
+    jobLocation: JobLocationRef | null;
+    registeredAt: string;
+    isVerified: boolean;
+    isBlocked: boolean;
+  };
+}
+
+// Staff only -- a candidate User with no CandidateProfile yet, so none of
+// the rich search/filter machinery applies to them. See ATSCandidate.account
+// for the analogous shape on a candidate who does have a profile.
+export interface IncompleteSignupCandidate {
+  userId: number;
+  fullName: string | null;
+  email: string;
+  phone: string | null;
+  jobLocationId: string | null;
+  jobLocation: JobLocationRef | null;
+  registeredAt: string;
+  isVerified: boolean;
+  isBlocked: boolean;
 }
 
 export interface ATSSearchResult extends Paginated<ATSCandidate> {
   stats: { totalCandidates: number };
+  incompleteSignups?: IncompleteSignupCandidate[];
 }
 
 export interface ATSSearchFilters extends AdminListParams {

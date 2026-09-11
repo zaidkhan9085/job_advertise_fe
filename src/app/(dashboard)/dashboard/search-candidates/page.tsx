@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 import {
   Coins,
   Lock,
@@ -18,16 +19,26 @@ import {
   Search,
   RotateCcw,
   ShieldCheck,
+  ShieldOff,
   SlidersHorizontal,
+  Pencil,
+  Trash2,
+  KeyRound,
+  UserX,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   searchCandidates,
   unlockCandidate,
   getMyCredits,
+  setCandidateBlocked,
+  deleteCandidateUser,
   type ATSCandidate,
   type CreditsSummary,
   type PaginatedMeta,
+  type IncompleteSignupCandidate,
   ApiError,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
@@ -36,6 +47,10 @@ import CityAutocomplete, { type LocationValue } from "@/components/common/CityAu
 import SimpleSelect from "@/components/common/SimpleSelect";
 import SearchableSelect from "@/components/common/SearchableSelect";
 import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
+import EditCandidateModal from "@/components/dashboard/EditCandidateModal";
+import ResetPasswordModal from "@/components/dashboard/ResetPasswordModal";
+import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import { buildCsv, downloadCsv } from "@/lib/csv";
 
 // Naukri-style min-max range filters, not fixed bands — a plain number
 // dropdown for each bound so a recruiter can build any custom range (e.g.
@@ -201,6 +216,38 @@ function ResumeModal({
   );
 }
 
+// A roster candidate (via selected.account) and an Incomplete Signups row
+// are differently-shaped objects that both need the exact same Edit/Block/
+// Delete/Reset-Password actions -- this is the minimal common shape either
+// side can build so one set of handlers/modals serves both surfaces.
+interface StaffManageable {
+  userId: number;
+  displayName: string;
+  account: NonNullable<ATSCandidate["account"]>;
+}
+
+function fromCandidate(c: ATSCandidate): StaffManageable | null {
+  if (!c.account) return null;
+  return { userId: c.userId, displayName: c.name, account: c.account };
+}
+
+function fromIncompleteSignup(u: IncompleteSignupCandidate): StaffManageable {
+  return {
+    userId: u.userId,
+    displayName: u.fullName || u.email,
+    account: {
+      fullName: u.fullName,
+      email: u.email,
+      phone: u.phone,
+      jobLocationId: u.jobLocationId,
+      jobLocation: u.jobLocation,
+      registeredAt: u.registeredAt,
+      isVerified: u.isVerified,
+      isBlocked: u.isBlocked,
+    },
+  };
+}
+
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="bg-white border border-border/60 rounded-2xl px-4 py-3.5 shadow-sm">
@@ -249,6 +296,18 @@ export default function SearchCandidatesPage() {
     uploadedResumeUrl: string | null;
   } | null>(null);
 
+  // Staff-only account management (Edit/Block/Delete/Reset Password) --
+  // shared between roster candidates (via .account) and Incomplete Signups
+  // rows via the StaffManageable shape (see fromCandidate/fromIncompleteSignup).
+  const [incompleteSignups, setIncompleteSignups] = useState<IncompleteSignupCandidate[]>([]);
+  const [signupsExpanded, setSignupsExpanded] = useState(false);
+  const [editingCandidate, setEditingCandidate] = useState<StaffManageable | null>(null);
+  const [resettingPasswordFor, setResettingPasswordFor] = useState<StaffManageable | null>(null);
+  const [blockingId, setBlockingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StaffManageable | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
     return () => clearTimeout(t);
@@ -293,6 +352,7 @@ export default function SearchCandidatesPage() {
       setCandidates(result.data);
       setMeta(result.meta);
       setStats(result.stats);
+      setIncompleteSignups(result.incompleteSignups ?? []);
       setSelectedUserId((prev) =>
         prev && result.data.some((c) => c.userId === prev) ? prev : result.data[0]?.userId ?? null
       );
@@ -344,6 +404,74 @@ export default function SearchCandidatesPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to unlock candidate.");
     } finally {
       setUnlockingId(null);
+    }
+  };
+
+  // Staff-only: same endpoints/behavior as Admin > Candidates, just reached
+  // from here too now. Block/unblock has no confirm step there either
+  // (reversible, low-risk); only delete does.
+  const handleToggleBlock = async (candidate: StaffManageable) => {
+    setBlockingId(candidate.userId);
+    try {
+      const result = await setCandidateBlocked(candidate.userId, !candidate.account.isBlocked);
+      toast.success(result.message);
+      await loadCandidates();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update candidate.");
+    } finally {
+      setBlockingId(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteCandidateUser(deleteTarget.userId);
+      toast.success(result.message);
+      setDeleteTarget(null);
+      await loadCandidates();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete candidate.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Full parity with the old Admin > Candidates export: every candidate
+  // matching the current filters, plus every Incomplete Signup (which have
+  // no profile to filter by anyway, so they're always included as-is).
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const result = await searchCandidates({ ...filters, all: true });
+      const rows: string[][] = [
+        ...result.data.map((c) => [
+          c.account?.fullName ?? c.name,
+          c.position,
+          c.account?.email ?? "",
+          c.account?.phone ?? "",
+          c.currentLocation ?? "",
+          c.account?.isVerified ? "Yes" : "No",
+          c.account?.isBlocked ? "Yes" : "No",
+          c.account?.registeredAt ?? "",
+        ]),
+        ...incompleteSignups.map((u) => [
+          u.fullName ?? "",
+          "",
+          u.email,
+          u.phone ?? "",
+          u.jobLocation?.name ?? "",
+          u.isVerified ? "Yes" : "No",
+          u.isBlocked ? "Yes" : "No",
+          u.registeredAt,
+        ]),
+      ];
+      downloadCsv(buildCsv(["Name", "Position", "Email", "Phone", "Location", "Verified", "Blocked", "Registered"], rows), "candidates");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to export candidates.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -443,12 +571,99 @@ export default function SearchCandidatesPage() {
             <span className="text-xs text-muted-foreground font-medium">credits remaining</span>
           </div>
         )}
+        {isStaff && (
+          <button
+            onClick={handleExport}
+            disabled={isExporting || candidates.length === 0}
+            className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors disabled:opacity-60 shrink-0"
+          >
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Export CSV
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <StatCard label="Total candidates" value={stats ? stats.totalCandidates.toLocaleString() : "—"} />
-        <StatCard label="Matching current filters" value={meta ? meta.total.toLocaleString() : "—"} />
-      </div>
+      {!isStaff && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <StatCard label="Total candidates" value={stats ? stats.totalCandidates.toLocaleString() : "—"} />
+          <StatCard label="Matching current filters" value={meta ? meta.total.toLocaleString() : "—"} />
+        </div>
+      )}
+
+      {/* Registered but never finished their profile (or uploaded a resume)
+          -- invisible to the search below since nothing there applies to an
+          account with no profile, so they get their own small, collapsible
+          spot instead. */}
+      {isStaff && incompleteSignups.length > 0 && (
+        <div className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden">
+          <button
+            onClick={() => setSignupsExpanded((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 px-4 py-3.5 text-left"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-bold text-foreground">
+              <UserX className="w-4 h-4 text-amber-600" />
+              Incomplete Signups ({incompleteSignups.length})
+            </span>
+            {signupsExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          </button>
+          {signupsExpanded && (
+            <div className="border-t border-border/60 divide-y divide-border/60">
+              {incompleteSignups.map((u) => {
+                const manageable = fromIncompleteSignup(u);
+                return (
+                  <div key={u.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-foreground truncate">{u.fullName || "(no name)"}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {u.email} &middot; Registered {formatDistanceToNow(new Date(u.registeredAt), { addSuffix: true })}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                      <button
+                        onClick={() => setEditingCandidate(manageable)}
+                        title="Edit"
+                        className="p-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setResettingPasswordFor(manageable)}
+                        title="Reset Password"
+                        className="p-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80"
+                      >
+                        <KeyRound className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        disabled={blockingId === u.userId}
+                        onClick={() => handleToggleBlock(manageable)}
+                        title={u.isBlocked ? "Unblock" : "Block"}
+                        className={`p-2 rounded-lg disabled:opacity-60 ${
+                          u.isBlocked ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                        }`}
+                      >
+                        {blockingId === u.userId ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : u.isBlocked ? (
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        ) : (
+                          <ShieldOff className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(manageable)}
+                        title="Delete"
+                        className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-white border border-border/60 rounded-2xl p-3 shadow-sm space-y-3">
         {/* Every control shares the same "small uppercase label + input"
@@ -722,74 +937,144 @@ export default function SearchCandidatesPage() {
             <div className="p-12 text-center text-sm text-muted-foreground font-medium">Select a candidate to view their profile.</div>
           ) : (
             <>
-              <div className="p-5 sm:p-6 border-b border-border/60 flex flex-col sm:flex-row sm:items-start gap-4">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-light text-white text-lg font-black flex items-center justify-center shrink-0">
-                    {initials(selected.name)}
+              <div className="p-5 sm:p-6 border-b border-border/60 space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-light text-white text-lg font-black flex items-center justify-center shrink-0">
+                      {initials(selected.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-lg font-black text-foreground truncate">{selected.name}</div>
+                      <div className="text-sm text-muted-foreground font-medium truncate">{selected.position}</div>
+                      <div className="text-xs text-muted-foreground font-medium mt-1">{formatFreshness(selected)}</div>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-lg font-black text-foreground">{selected.name}</div>
-                    <div className="text-sm text-muted-foreground font-medium">{selected.position}</div>
-                    <div className="text-xs text-muted-foreground font-medium mt-1">{formatFreshness(selected)}</div>
+                  <div className="shrink-0">
+                    {selected.isUnlocked ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 whitespace-nowrap">
+                        {isStaff ? <ShieldCheck className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {isStaff ? "Admin access" : "Full profile unlocked"}
+                      </span>
+                    ) : selected.isResumeUnlocked ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 whitespace-nowrap">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Resume unlocked
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground whitespace-nowrap">
+                        <Lock className="w-3.5 h-3.5" /> Locked
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="flex sm:flex-col items-start sm:items-end gap-2 shrink-0">
-                  {selected.isUnlocked ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
-                      {isStaff ? <ShieldCheck className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      {isStaff ? "Admin access" : "Full profile unlocked"}
-                    </span>
-                  ) : selected.isResumeUnlocked ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Resume unlocked
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground">
-                      <Lock className="w-3.5 h-3.5" /> Locked
-                    </span>
+
+                <div className="flex flex-wrap gap-2">
+                  {selected.isUnlocked && selected.whatsapp && (
+                    <a
+                      href={`https://wa.me/${selected.whatsapp.replace(/[^\d+]/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                    </a>
                   )}
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    {selected.isUnlocked && selected.whatsapp && (
-                      <a
-                        href={`https://wa.me/${selected.whatsapp.replace(/[^\d+]/g, "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                      </a>
-                    )}
-                    {selected.isResumeUnlocked && (
+                  {selected.isResumeUnlocked && (
+                    <button
+                      onClick={() => handleUnlock(selected, "resume", true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> View Resume
+                    </button>
+                  )}
+                  {selected.hasResume && !selected.isResumeUnlocked && (
+                    <button
+                      disabled={unlockingId === selected.userId}
+                      onClick={() => handleUnlock(selected, "resume", true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80 disabled:opacity-60"
+                    >
+                      {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
+                      Unlock Resume &middot; {RESUME_UNLOCK_COST} credit
+                    </button>
+                  )}
+                  {!selected.isUnlocked && (
+                    <button
+                      disabled={unlockingId === selected.userId}
+                      onClick={() => handleUnlock(selected, "profile", false)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-blue text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-60"
+                    >
+                      {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
+                      Unlock Full Profile &middot; {PROFILE_UNLOCK_COST} credit
+                    </button>
+                  )}
+                  {isStaff && selected.account && (
+                    <>
                       <button
-                        onClick={() => handleUnlock(selected, "resume", true)}
+                        onClick={() => setEditingCandidate(fromCandidate(selected))}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80"
                       >
-                        <FileText className="w-3.5 h-3.5" /> View Resume
+                        <Pencil className="w-3.5 h-3.5" /> Edit
                       </button>
-                    )}
-                    {selected.hasResume && !selected.isResumeUnlocked && (
                       <button
-                        disabled={unlockingId === selected.userId}
-                        onClick={() => handleUnlock(selected, "resume", true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80 disabled:opacity-60"
+                        onClick={() => setResettingPasswordFor(fromCandidate(selected))}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-foreground text-xs font-bold hover:bg-secondary/80"
                       >
-                        {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
-                        Unlock Resume &middot; {RESUME_UNLOCK_COST} credit
+                        <KeyRound className="w-3.5 h-3.5" /> Reset Password
                       </button>
-                    )}
-                    {!selected.isUnlocked && (
                       <button
-                        disabled={unlockingId === selected.userId}
-                        onClick={() => handleUnlock(selected, "profile", false)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-blue text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-60"
+                        disabled={blockingId === selected.userId}
+                        onClick={() => handleToggleBlock(fromCandidate(selected)!)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-60 ${
+                          selected.account.isBlocked
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                        }`}
                       >
-                        {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
-                        Unlock Full Profile &middot; {PROFILE_UNLOCK_COST} credit
+                        {blockingId === selected.userId ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : selected.account.isBlocked ? (
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        ) : (
+                          <ShieldOff className="w-3.5 h-3.5" />
+                        )}
+                        {selected.account.isBlocked ? "Unblock" : "Block"}
                       </button>
-                    )}
-                  </div>
+                      <button
+                        onClick={() => setDeleteTarget(fromCandidate(selected))}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
+
+              {isStaff && selected.account && (
+                <div className="p-5 sm:p-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-b border-border/60 bg-secondary/20">
+                  {[
+                    ["Login Email", selected.account.email],
+                    ["Phone", selected.account.phone],
+                    ["Registered", formatDistanceToNow(new Date(selected.account.registeredAt), { addSuffix: true })],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{label}</div>
+                      <div className="text-sm font-semibold text-foreground truncate">{value || "—"}</div>
+                    </div>
+                  ))}
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Verified</div>
+                    <div className={`text-sm font-semibold ${selected.account.isVerified ? "text-emerald-600" : "text-muted-foreground"}`}>
+                      {selected.account.isVerified ? "Yes" : "No"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Account Status</div>
+                    <div className={`text-sm font-semibold ${selected.account.isBlocked ? "text-rose-600" : "text-emerald-600"}`}>
+                      {selected.account.isBlocked ? "Blocked" : "Active"}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 border-b border-border/60">
                 {[
@@ -943,6 +1228,42 @@ export default function SearchCandidatesPage() {
           onClose={() => setViewing(null)}
         />
       )}
+
+      {editingCandidate && (
+        <EditCandidateModal
+          candidate={{
+            id: editingCandidate.userId,
+            full_name: editingCandidate.account.fullName,
+            email: editingCandidate.account.email,
+            phone: editingCandidate.account.phone,
+            jobLocation: editingCandidate.account.jobLocation,
+          }}
+          onClose={() => setEditingCandidate(null)}
+          onSaved={() => {
+            setEditingCandidate(null);
+            loadCandidates();
+          }}
+        />
+      )}
+
+      {resettingPasswordFor && (
+        <ResetPasswordModal
+          targetLabel={resettingPasswordFor.displayName}
+          userId={resettingPasswordFor.userId}
+          onClose={() => setResettingPasswordFor(null)}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Delete Candidate"
+        message={`Delete ${deleteTarget?.displayName ?? "this candidate"}'s account? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isConfirming={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
