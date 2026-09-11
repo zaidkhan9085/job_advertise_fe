@@ -12,7 +12,6 @@ import {
   bulkDeleteCompanies,
   updateCandidateUser,
   setCandidateBlocked,
-  resetCandidatePassword,
   grantCreditsToCompany,
   resolveImageUrl,
   type CompanyAdminListItem,
@@ -23,7 +22,7 @@ import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
-import PasswordInput from "@/components/common/PasswordInput";
+import ResetPasswordModal from "@/components/dashboard/ResetPasswordModal";
 import { isValidEmail } from "@/lib/isValidEmail";
 
 const PAGE_LIMIT = 20;
@@ -133,51 +132,6 @@ function EditOwnerModal({
   );
 }
 
-function PasswordModal({ company, onClose }: { company: CompanyAdminListItem; onClose: () => void }) {
-  const [password, setPassword] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async () => {
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
-    setIsSaving(true);
-    try {
-      await resetCandidatePassword(company.owner.id, password);
-      toast.success("Password updated");
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to update password.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg text-foreground">Change Password</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Set a new password for {company.owner.full_name || company.owner.email} ({company.name}).
-        </p>
-        <PasswordInput value={password} onChange={setPassword} placeholder="New password" variant="compact" />
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-brand-blue/90 transition-colors disabled:opacity-70"
-        >
-          {isSaving ? "Saving..." : "Update Password"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem; onClose: () => void }) {
   const [amount, setAmount] = useState("5");
@@ -606,7 +560,13 @@ export default function AdminEmployersPage() {
         />
       )}
 
-      {passwordCompany && <PasswordModal company={passwordCompany} onClose={() => setPasswordCompany(null)} />}
+      {passwordCompany && (
+        <ResetPasswordModal
+          targetLabel={`${passwordCompany.owner.full_name || passwordCompany.owner.email} (${passwordCompany.name})`}
+          userId={passwordCompany.owner.id}
+          onClose={() => setPasswordCompany(null)}
+        />
+      )}
 
       {creditsCompany && <GrantCreditsModal company={creditsCompany} onClose={() => setCreditsCompany(null)} />}
     </div>

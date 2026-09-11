@@ -34,13 +34,12 @@ interface SidebarLink {
 const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
   admin: [
     { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Search Candidates", href: "/dashboard/search-candidates", icon: Search },
+    { label: "Employers", href: "/dashboard/admin/employers", icon: Building },
     { label: "Pending Jobs", href: "/dashboard/admin/jobs", icon: Briefcase },
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
     { label: "All Applicants", href: "/dashboard/admin/all-applicants", icon: Users },
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
-    { label: "Employers", href: "/dashboard/admin/employers", icon: Building },
-    { label: "Candidates", href: "/dashboard/admin/candidates", icon: Users },
-    { label: "Search Candidates", href: "/dashboard/search-candidates", icon: Search },
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   employer: [
