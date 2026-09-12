@@ -522,8 +522,8 @@ export default function AdminEmployersPage() {
         title="Delete Employer"
         message={
           deleteTarget && deleteTarget._count.jobs > 0
-            ? `Delete "${deleteTarget.name}"? This will also delete ${deleteTarget._count.jobs} job posting(s) and all of its follows, ratings, and reports. This cannot be undone.`
-            : `Delete "${deleteTarget?.name}"? This cannot be undone.`
+            ? `Permanently delete "${deleteTarget.name}" and its owner's account?\n\nThis will also delete ${deleteTarget._count.jobs} job posting(s) and all of its follows, ratings, and reports, plus the employer's login, credit history, and resume unlock history.\n\nThis cannot be undone.`
+            : `Permanently delete "${deleteTarget?.name}" and its owner's account?\n\nThis will also delete the employer's login, credit history, and resume unlock history.\n\nThis cannot be undone.`
         }
         confirmLabel="Delete"
         variant="danger"
@@ -537,10 +537,10 @@ export default function AdminEmployersPage() {
         title="Delete Selected Employers"
         message={
           selection.selectAllMatching
-            ? `Delete all ${selection.count(meta?.total ?? 0)} matching employers? Any of their job postings, follows, ratings, and reports will also be deleted. This cannot be undone.`
-            : `Delete ${selection.count(meta?.total ?? 0)} employer(s)${
+            ? `Permanently delete all ${selection.count(meta?.total ?? 0)} matching employers and their accounts?\n\nThis will also delete their job postings, follows, ratings, reports, credit history, and resume unlock history.\n\nThis cannot be undone.`
+            : `Permanently delete ${selection.count(meta?.total ?? 0)} employer(s) and their accounts${
                 selectedJobCount ? ` and ${selectedJobCount} of their job posting(s)` : ""
-              }? This cannot be undone.`
+              }?\n\nThis will also delete their follows, ratings, reports, credit history, and resume unlock history.\n\nThis cannot be undone.`
         }
         confirmLabel="Delete All"
         variant="danger"

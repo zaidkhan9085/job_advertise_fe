@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ export function ConfirmDialog({
           <button
             onClick={onConfirm}
             disabled={isConfirming}
-            className={`flex-1 py-3 rounded-xl text-white font-bold transition-colors disabled:opacity-70 inline-flex items-center justify-center gap-2 ${
+            className={`flex-1 py-3 rounded-xl text-white font-bold transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2 ${
               variant === "danger" ? "bg-rose-600 hover:bg-rose-700" : "bg-brand-blue hover:bg-brand-blue/90"
             }`}
           >
