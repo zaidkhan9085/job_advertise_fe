@@ -35,6 +35,7 @@ import {
   getMyCredits,
   setCandidateBlocked,
   deleteCandidateUser,
+  bulkDeleteCandidateUsers,
   type ATSCandidate,
   type CreditsSummary,
   type PaginatedMeta,
@@ -308,6 +309,14 @@ export default function SearchCandidatesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Bulk delete -- spans both the roster (current page only, not "every
+  // matching filter" the way the table-based admin pages support, since
+  // that concept doesn't map cleanly onto this master-detail UI) and
+  // Incomplete Signups, since both are ultimately just candidate user ids.
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<number>>(new Set());
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
     return () => clearTimeout(t);
@@ -435,6 +444,33 @@ export default function SearchCandidatesPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete candidate.");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const toggleSelectedForDeletion = (userId: number) => {
+    setSelectedForDeletion((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    try {
+      const result = await bulkDeleteCandidateUsers({ ids: Array.from(selectedForDeletion) });
+      if (result.deleted.length > 0) toast.success(`Deleted ${result.deleted.length} candidate(s)`);
+      if (result.failed.length > 0) {
+        toast.error(`${result.failed.length} couldn't be deleted (${result.failed.map((f) => f.reason).join(", ")})`);
+      }
+      setSelectedForDeletion(new Set());
+      setIsBulkDeleteOpen(false);
+      await loadCandidates();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete candidates.");
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -583,6 +619,26 @@ export default function SearchCandidatesPage() {
         )}
       </div>
 
+      {isStaff && selectedForDeletion.size > 0 && (
+        <div className="flex items-center justify-between gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3">
+          <span className="text-sm font-bold text-rose-700">{selectedForDeletion.size} candidate(s) selected</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedForDeletion(new Set())}
+              className="px-3 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-white/60"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setIsBulkDeleteOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
       {!isStaff && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <StatCard label="Total candidates" value={stats ? stats.totalCandidates.toLocaleString() : "—"} />
@@ -612,10 +668,18 @@ export default function SearchCandidatesPage() {
                 const manageable = fromIncompleteSignup(u);
                 return (
                   <div key={u.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-foreground truncate">{u.fullName || "(no name)"}</div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {u.email} &middot; Registered {formatDistanceToNow(new Date(u.registeredAt), { addSuffix: true })}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedForDeletion.has(u.userId)}
+                        onChange={() => toggleSelectedForDeletion(u.userId)}
+                        className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-foreground truncate">{u.fullName || "(no name)"}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {u.email} &middot; Registered {formatDistanceToNow(new Date(u.registeredAt), { addSuffix: true })}
+                        </div>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 shrink-0">
@@ -850,10 +914,27 @@ export default function SearchCandidatesPage() {
             up — below that, both panels are full-width and one is hidden,
             same collapsing behavior as phone/tablet. */}
         <div className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden ${mobileDetailOpen ? "hidden xl:block" : ""}`}>
-          <div className="px-4 py-3 border-b border-border/60 flex items-baseline justify-between">
-            <h2 className="text-sm font-bold text-foreground">
-              {isLoading ? "Searching…" : `Showing ${candidates.length}`}
-            </h2>
+          <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              {isStaff && candidates.length > 0 && (
+                <input
+                  type="checkbox"
+                  title="Select all on this page"
+                  checked={candidates.every((c) => selectedForDeletion.has(c.userId))}
+                  onChange={(e) => {
+                    setSelectedForDeletion((prev) => {
+                      const next = new Set(prev);
+                      candidates.forEach((c) => (e.target.checked ? next.add(c.userId) : next.delete(c.userId)));
+                      return next;
+                    });
+                  }}
+                  className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
+                />
+              )}
+              <h2 className="text-sm font-bold text-foreground">
+                {isLoading ? "Searching…" : `Showing ${candidates.length}`}
+              </h2>
+            </div>
             <span className="text-xs text-muted-foreground font-medium">{meta ? `of ${meta.total.toLocaleString()}` : ""}</span>
           </div>
 
@@ -866,26 +947,39 @@ export default function SearchCandidatesPage() {
               <div className="p-8 text-center text-sm text-muted-foreground font-medium">No candidates match your search yet.</div>
             ) : (
               candidates.map((c) => (
-                <button
+                <div
                   key={c.userId}
-                  onClick={() => handleSelect(c)}
-                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors ${
+                  className={`flex items-center gap-2 px-2.5 transition-colors ${
                     c.userId === selectedUserId ? "bg-brand-blue/5 border-l-2 border-l-brand-blue" : "border-l-2 border-l-transparent hover:bg-secondary/40"
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-light text-white text-[11px] font-black flex items-center justify-center shrink-0">
-                    {initials(c.name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-foreground truncate">{c.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{c.position}</div>
-                  </div>
-                  {c.isUnlocked ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  ) : (
-                    <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  {isStaff && (
+                    <input
+                      type="checkbox"
+                      checked={selectedForDeletion.has(c.userId)}
+                      onChange={() => toggleSelectedForDeletion(c.userId)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
+                    />
                   )}
-                </button>
+                  <button
+                    onClick={() => handleSelect(c)}
+                    className="flex-1 min-w-0 flex items-center gap-2.5 py-2.5 text-left"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-light text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                      {initials(c.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-foreground truncate">{c.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{c.position}</div>
+                    </div>
+                    {c.isUnlocked ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    )}
+                  </button>
+                </div>
               ))
             )}
           </div>
@@ -1257,12 +1351,24 @@ export default function SearchCandidatesPage() {
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title="Delete Candidate"
-        message={`Delete ${deleteTarget?.displayName ?? "this candidate"}'s account? This cannot be undone.`}
+        message={`Permanently delete ${deleteTarget?.displayName ?? "this candidate"}'s account?\n\nThis will also delete their profile, resume, job applications, saved jobs, company follows and ratings, and every other record tied to this account.\n\nThis cannot be undone.`}
         confirmLabel="Delete"
         variant="danger"
         isConfirming={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        title="Delete Selected Candidates"
+        message={`Permanently delete ${selectedForDeletion.size} candidate account(s)?\n\nThis will also delete their profiles, resumes, job applications, saved jobs, company follows and ratings, and every other record tied to these accounts.\n\nThis cannot be undone.`}
+        confirmLabel="Delete All"
+        variant="danger"
+        isConfirming={isBulkDeleting}
+        requireTypedConfirmation="DELETE"
+        onConfirm={handleBulkDelete}
+        onCancel={() => setIsBulkDeleteOpen(false)}
       />
     </div>
   );

@@ -458,6 +458,16 @@ export function deleteCandidateUser(id: number) {
   });
 }
 
+export function bulkDeleteCandidateUsers(payload: { ids: number[] }) {
+  return apiFetch<{
+    deleted: number[];
+    failed: { id: number; reason: string }[];
+  }>("/api/candidate/admin/users/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function setCandidateBlocked(id: number, isBlocked: boolean) {
   return apiFetch<{ message: string; user: CandidateUserAdmin }>(
     `/api/candidate/admin/users/${id}/block`,
