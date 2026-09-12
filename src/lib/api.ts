@@ -458,7 +458,7 @@ export function deleteCandidateUser(id: number) {
   });
 }
 
-export function bulkDeleteCandidateUsers(payload: { ids: number[] }) {
+export function bulkDeleteCandidateUsers(payload: BulkDeletePayload) {
   return apiFetch<{
     deleted: number[];
     failed: { id: number; reason: string }[];

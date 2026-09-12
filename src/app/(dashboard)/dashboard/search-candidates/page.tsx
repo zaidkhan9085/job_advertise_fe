@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   searchCandidates,
   unlockCandidate,
@@ -309,11 +310,14 @@ export default function SearchCandidatesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Bulk delete -- spans both the roster (current page only, not "every
-  // matching filter" the way the table-based admin pages support, since
-  // that concept doesn't map cleanly onto this master-detail UI) and
-  // Incomplete Signups, since both are ultimately just candidate user ids.
-  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<number>>(new Set());
+  // Bulk delete -- two independent Gmail-style selections (same
+  // useTableSelection hook the table-based admin pages use for "select all
+  // matching filters"): one for the roster, which supports selecting every
+  // candidate matching the current ATS search across every page, and one
+  // for Incomplete Signups, which is always small/unpaginated so a plain
+  // page-scoped "select all" is enough there.
+  const rosterSelection = useTableSelection<number>();
+  const signupSelection = useTableSelection<number>();
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
@@ -377,6 +381,10 @@ export default function SearchCandidatesPage() {
       loadCandidates();
     }
   }, [user, loadCandidates]);
+
+  const rosterSelectedCount = rosterSelection.count(meta?.total ?? 0);
+  const signupSelectedCount = signupSelection.count(incompleteSignups.length);
+  const totalSelectedCount = rosterSelectedCount + signupSelectedCount;
 
   const selected = candidates.find((c) => c.userId === selectedUserId) ?? null;
   // Course/Specialization replaced the old free-text Qualification field
@@ -447,24 +455,25 @@ export default function SearchCandidatesPage() {
     }
   };
 
-  const toggleSelectedForDeletion = (userId: number) => {
-    setSelectedForDeletion((prev) => {
-      const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
-      return next;
-    });
+  const handleClearSelection = () => {
+    rosterSelection.clear();
+    signupSelection.clear();
   };
 
   const handleBulkDelete = async () => {
     setIsBulkDeleting(true);
     try {
-      const result = await bulkDeleteCandidateUsers({ ids: Array.from(selectedForDeletion) });
-      if (result.deleted.length > 0) toast.success(`Deleted ${result.deleted.length} candidate(s)`);
-      if (result.failed.length > 0) {
-        toast.error(`${result.failed.length} couldn't be deleted (${result.failed.map((f) => f.reason).join(", ")})`);
+      const calls = [];
+      if (rosterSelectedCount > 0) calls.push(bulkDeleteCandidateUsers(rosterSelection.toBulkDeletePayload(filters)));
+      if (signupSelectedCount > 0) calls.push(bulkDeleteCandidateUsers({ ids: Array.from(signupSelection.selectedIds) }));
+      const results = await Promise.all(calls);
+      const deleted = results.flatMap((r) => r.deleted);
+      const failed = results.flatMap((r) => r.failed);
+      if (deleted.length > 0) toast.success(`Deleted ${deleted.length} candidate(s)`);
+      if (failed.length > 0) {
+        toast.error(`${failed.length} couldn't be deleted (${failed.map((f) => f.reason).join(", ")})`);
       }
-      setSelectedForDeletion(new Set());
+      handleClearSelection();
       setIsBulkDeleteOpen(false);
       await loadCandidates();
     } catch (err) {
@@ -619,23 +628,41 @@ export default function SearchCandidatesPage() {
         )}
       </div>
 
-      {isStaff && selectedForDeletion.size > 0 && (
-        <div className="flex items-center justify-between gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3">
-          <span className="text-sm font-bold text-rose-700">{selectedForDeletion.size} candidate(s) selected</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSelectedForDeletion(new Set())}
-              className="px-3 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-white/60"
-            >
-              Clear
-            </button>
-            <button
-              onClick={() => setIsBulkDeleteOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700"
-            >
-              <Trash2 className="w-3.5 h-3.5" /> Delete Selected
-            </button>
+      {isStaff && totalSelectedCount > 0 && (
+        <div className="flex flex-col gap-2 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-bold text-rose-700">
+              {rosterSelection.selectAllMatching ? `All ${totalSelectedCount} matching candidate(s) selected` : `${totalSelectedCount} candidate(s) selected`}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleClearSelection}
+                className="px-3 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-white/60"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setIsBulkDeleteOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete Selected
+              </button>
+            </div>
           </div>
+          {/* Gmail-style: checking "select all on this page" when more results
+              exist elsewhere offers to expand the selection to every candidate
+              matching the current search, not just what's visible right now. */}
+          {!rosterSelection.selectAllMatching &&
+            rosterSelection.isPageFullySelected(candidates.map((c) => c.userId)) &&
+            meta &&
+            meta.total > candidates.length && (
+              <div className="text-xs font-bold text-rose-700">
+                All {candidates.length} candidates on this page are selected.{" "}
+                <button onClick={() => rosterSelection.selectAll()} className="underline hover:no-underline">
+                  Select all {meta.total.toLocaleString()} candidates that match your search
+                </button>
+              </div>
+            )}
         </div>
       )}
 
@@ -664,6 +691,18 @@ export default function SearchCandidatesPage() {
           </button>
           {signupsExpanded && (
             <div className="border-t border-border/60 divide-y divide-border/60">
+              {incompleteSignups.length > 0 && (
+                <div className="flex items-center gap-3 px-4 py-2.5 bg-secondary/20">
+                  <input
+                    type="checkbox"
+                    title="Select all"
+                    checked={signupSelection.isPageFullySelected(incompleteSignups.map((u) => u.userId))}
+                    onChange={() => signupSelection.togglePage(incompleteSignups.map((u) => u.userId))}
+                    className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
+                  />
+                  <span className="text-xs font-bold text-muted-foreground">Select all</span>
+                </div>
+              )}
               {incompleteSignups.map((u) => {
                 const manageable = fromIncompleteSignup(u);
                 return (
@@ -671,8 +710,8 @@ export default function SearchCandidatesPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <input
                         type="checkbox"
-                        checked={selectedForDeletion.has(u.userId)}
-                        onChange={() => toggleSelectedForDeletion(u.userId)}
+                        checked={signupSelection.isSelected(u.userId)}
+                        onChange={() => signupSelection.toggleRow(u.userId)}
                         className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
                       />
                       <div className="min-w-0">
@@ -920,14 +959,8 @@ export default function SearchCandidatesPage() {
                 <input
                   type="checkbox"
                   title="Select all on this page"
-                  checked={candidates.every((c) => selectedForDeletion.has(c.userId))}
-                  onChange={(e) => {
-                    setSelectedForDeletion((prev) => {
-                      const next = new Set(prev);
-                      candidates.forEach((c) => (e.target.checked ? next.add(c.userId) : next.delete(c.userId)));
-                      return next;
-                    });
-                  }}
+                  checked={rosterSelection.isPageFullySelected(candidates.map((c) => c.userId))}
+                  onChange={() => rosterSelection.togglePage(candidates.map((c) => c.userId))}
                   className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
                 />
               )}
@@ -956,8 +989,8 @@ export default function SearchCandidatesPage() {
                   {isStaff && (
                     <input
                       type="checkbox"
-                      checked={selectedForDeletion.has(c.userId)}
-                      onChange={() => toggleSelectedForDeletion(c.userId)}
+                      checked={rosterSelection.isSelected(c.userId)}
+                      onChange={() => rosterSelection.toggleRow(c.userId)}
                       onClick={(e) => e.stopPropagation()}
                       className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
                     />
@@ -1362,11 +1395,10 @@ export default function SearchCandidatesPage() {
       <ConfirmDialog
         isOpen={isBulkDeleteOpen}
         title="Delete Selected Candidates"
-        message={`Permanently delete ${selectedForDeletion.size} candidate account(s)?\n\nThis will also delete their profiles, resumes, job applications, saved jobs, company follows and ratings, and every other record tied to these accounts.\n\nThis cannot be undone.`}
+        message={`Permanently delete ${totalSelectedCount} candidate account(s)?\n\nThis will also delete their profiles, resumes, job applications, saved jobs, company follows and ratings, and every other record tied to these accounts.\n\nThis cannot be undone.`}
         confirmLabel="Delete All"
         variant="danger"
         isConfirming={isBulkDeleting}
-        requireTypedConfirmation="DELETE"
         onConfirm={handleBulkDelete}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />

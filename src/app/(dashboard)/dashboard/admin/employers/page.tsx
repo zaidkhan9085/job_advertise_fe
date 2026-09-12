@@ -545,7 +545,6 @@ export default function AdminEmployersPage() {
         confirmLabel="Delete All"
         variant="danger"
         isConfirming={isBulkDeleting}
-        requireTypedConfirmation="DELETE"
         onConfirm={handleBulkDelete}
         onCancel={() => setIsBulkDeleteOpen(false)}
       />
