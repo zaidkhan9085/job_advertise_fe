@@ -651,14 +651,20 @@ export default function SearchCandidatesPage() {
           </div>
           {/* Gmail-style: checking "select all on this page" when more results
               exist elsewhere offers to expand the selection to every candidate
-              matching the current search, not just what's visible right now. */}
+              matching the current search, not just what's visible right now.
+              A real button, not inline text -- easy to miss otherwise. */}
           {!rosterSelection.selectAllMatching &&
             rosterSelection.isPageFullySelected(candidates.map((c) => c.userId)) &&
             meta &&
             meta.total > candidates.length && (
-              <div className="text-xs font-bold text-rose-700">
-                All {candidates.length} candidates on this page are selected.{" "}
-                <button onClick={() => rosterSelection.selectAll()} className="underline hover:no-underline">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-rose-700">
+                  All {candidates.length} candidates on this page are selected.
+                </span>
+                <button
+                  onClick={() => rosterSelection.selectAll()}
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition-colors shadow-sm"
+                >
                   Select all {meta.total.toLocaleString()} candidates that match your search
                 </button>
               </div>
