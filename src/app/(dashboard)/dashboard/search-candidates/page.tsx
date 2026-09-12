@@ -954,15 +954,17 @@ export default function SearchCandidatesPage() {
             same collapsing behavior as phone/tablet. */}
         <div className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden ${mobileDetailOpen ? "hidden xl:block" : ""}`}>
           <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               {isStaff && candidates.length > 0 && (
-                <input
-                  type="checkbox"
-                  title="Select all on this page"
-                  checked={rosterSelection.isPageFullySelected(candidates.map((c) => c.userId))}
-                  onChange={() => rosterSelection.togglePage(candidates.map((c) => c.userId))}
-                  className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
-                />
+                <label className="inline-flex items-center gap-1.5 cursor-pointer shrink-0 bg-secondary/60 hover:bg-secondary rounded-lg pl-2 pr-2.5 py-1.5 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={rosterSelection.isPageFullySelected(candidates.map((c) => c.userId))}
+                    onChange={() => rosterSelection.togglePage(candidates.map((c) => c.userId))}
+                    className="w-4 h-4 rounded border-border/60 accent-brand-blue shrink-0"
+                  />
+                  <span className="text-xs font-bold text-foreground whitespace-nowrap">Select all</span>
+                </label>
               )}
               <h2 className="text-sm font-bold text-foreground">
                 {isLoading ? "Searching…" : `Showing ${candidates.length}`}
