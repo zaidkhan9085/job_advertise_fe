@@ -52,7 +52,7 @@ export default function SalaryGuidePage() {
               ))}
             </div>
             
-            <div className="p-10 rounded-[40px] bg-brand-blue text-white overflow-hidden relative group">
+            <div className="p-10 rounded-[40px] bg-button-gradient text-white overflow-hidden relative group">
                 <DecorativeBlur size="md" className="top-0 right-0 bg-white/10 -translate-y-1/2 translate-x-1/2" />
                 <h3 className="text-2xl font-black mb-4 relative z-10">Premium Market Report</h3>
                 <p className="text-white/70 mb-8 max-w-md relative z-10">
@@ -84,7 +84,7 @@ export default function SalaryGuidePage() {
                 </div>
                 <h4 className="text-lg font-black text-brand-blue mb-2">Ready for a move?</h4>
                 <p className="text-sm text-muted-foreground mb-6 font-medium">Use our data to negotiate your next package with confidence.</p>
-                <Link href="/jobs" className="w-full py-4 bg-brand-blue text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium shadow-lg shadow-brand-blue/20 transition-all">
+                <Link href="/jobs" className="w-full py-4 bg-button-gradient text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium shadow-lg shadow-brand-blue/20 transition-all">
                     Browse Vacancies
                 </Link>
             </div>

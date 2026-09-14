@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
-import { siteConfig } from "@/data/branding";
+import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import MobileNav from "./MobileNav";
@@ -155,11 +155,7 @@ export default function Header() {
         <div className="container-site flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
-              <img
-                src={siteConfig.logo.url}
-                alt={siteConfig.logo.alt}
-                className="h-12 w-auto"
-              />
+              <Logo size="lg" />
             </Link>
 
           <nav className="hidden lg:flex items-center gap-0 xl:gap-0.5">
@@ -173,7 +169,7 @@ export default function Header() {
               <>
                 <Link
                   href="/dashboard"
-                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-button-gradient hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
                 >
                   Dashboard
                 </Link>
@@ -188,7 +184,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/post-job"
-                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-button-gradient hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
               >
                 Post Jobs
               </Link>

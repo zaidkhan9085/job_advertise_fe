@@ -12,7 +12,7 @@ export default function SafetySection() {
           <div className="flex-1">
             <h3 className="text-lg font-bold text-yellow-900 mb-1">Safety Disclaimer — Never Pay for a Job</h3>
             <p className="text-sm text-yellow-800/80 leading-relaxed max-w-3xl">
-              <strong>The Jobs Advertise does not charge candidates any fees for registration, interviews, or hiring.</strong> Beware of fake offers and scammers asking for money in exchange for employment. We strongly advise you to verify the authenticity of all job offers.
+              <strong>thejobs4u does not charge candidates any fees for registration, interviews, or hiring.</strong> Beware of fake offers and scammers asking for money in exchange for employment. We strongly advise you to verify the authenticity of all job offers.
             </p>
           </div>
           <div className="flex-shrink-0">

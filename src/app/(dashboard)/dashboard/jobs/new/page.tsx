@@ -171,7 +171,7 @@ export default function PostJobPage() {
             type="button"
             onClick={() => setListingType("Premium")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${
-              listingType === "Premium" ? "bg-brand-blue text-white shadow-md shadow-brand-blue/20" : "text-muted-foreground hover:text-foreground"
+              listingType === "Premium" ? "bg-button-gradient text-white shadow-md shadow-brand-blue/20" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Zap className={`w-4 h-4 ${listingType === "Premium" ? "text-white" : "text-muted-foreground"}`} />
@@ -351,7 +351,7 @@ export default function PostJobPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto flex-1 py-5 px-8 rounded-2xl bg-brand-blue text-white font-black text-xl shadow-xl shadow-brand-blue/25 hover:bg-brand-blue-medium hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
+            className="w-full sm:w-auto flex-1 py-5 px-8 rounded-2xl bg-button-gradient text-white font-black text-xl shadow-xl shadow-brand-blue/25 hover:bg-brand-blue-medium hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
           >
             {isSubmitting ? (
               <>Submitting...</>

@@ -676,7 +676,7 @@ export default function MyProfilePage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-4 rounded-2xl bg-brand-blue text-white font-black shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium transition-all disabled:opacity-70"
+          className="w-full py-4 rounded-2xl bg-button-gradient text-white font-black shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium transition-all disabled:opacity-70"
         >
           {isSubmitting ? "Saving..." : "Save Profile"}
         </button>
@@ -689,7 +689,7 @@ export default function MyProfilePage() {
         className="flex items-center justify-between bg-white rounded-2xl border border-border/60 shadow-sm p-6 hover:border-brand-blue/40 transition-colors group"
       >
         <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-brand-orange/10 text-brand-orange flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-brand-cyan/10 text-brand-cyan flex items-center justify-center shrink-0">
             <FileText className="w-5 h-5" />
           </div>
           <div>

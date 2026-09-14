@@ -162,7 +162,7 @@ export default function PricingPage() {
                   href="/register?role=recruiter"
                   className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-black text-sm transition-all shadow-md active:scale-[0.98] ${
                     plan.popular 
-                      ? "bg-brand-blue text-white hover:bg-brand-blue-medium shadow-brand-blue/20" 
+                      ? "bg-button-gradient text-white hover:bg-brand-blue-medium shadow-brand-blue/20" 
                       : "bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white"
                   }`}
                 >

@@ -99,7 +99,7 @@ export default function LeadsTable({
           {onAddApplicant && (
             <button
               onClick={onAddApplicant}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-button-gradient text-white text-sm font-bold hover:bg-brand-blue/90"
             >
               <UserPlus className="w-4 h-4" /> Add Applicant
             </button>

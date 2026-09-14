@@ -222,7 +222,7 @@ export default function CompanyProfilePage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-4 rounded-2xl bg-brand-blue text-white font-black shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium transition-all disabled:opacity-70"
+          className="w-full py-4 rounded-2xl bg-button-gradient text-white font-black shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium transition-all disabled:opacity-70"
         >
           {isSubmitting ? "Saving..." : "Save Company Profile"}
         </button>

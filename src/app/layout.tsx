@@ -5,11 +5,11 @@ import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: {
-    default: "The Jobs Advertise – Find Jobs in Gulf, India & Worldwide",
-    template: "%s | The Jobs Advertise",
+    default: "thejobs4u – Find Jobs in Gulf, India & Worldwide",
+    template: "%s | thejobs4u",
   },
   description:
-    "The Jobs Advertise connects qualified professionals with top employers across Oil & Gas, Construction, IT, Healthcare and more. Find jobs in GCC, India, Europe, and beyond.",
+    "thejobs4u connects qualified professionals with top employers across Oil & Gas, Construction, IT, Healthcare and more. Find jobs in GCC, India, Europe, and beyond.",
   keywords: [
     "gulf jobs",
     "oil gas jobs",
@@ -20,10 +20,10 @@ export const metadata: Metadata = {
     "recruitment India",
     "international jobs",
   ],
-  metadataBase: new URL("https://thejobsadvertise.com"),
+  metadataBase: new URL("https://thejobs4u.com"),
   openGraph: {
     type: "website",
-    siteName: "The Jobs Advertise",
+    siteName: "thejobs4u",
     locale: "en_US",
   },
   icons: {

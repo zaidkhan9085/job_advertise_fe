@@ -69,7 +69,7 @@ export default function StoriesPage() {
           <p className="text-muted-foreground font-medium">You don&apos;t have an active story right now.</p>
           <Link
             href="/dashboard/stories/new"
-            className="inline-flex items-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20"
+            className="inline-flex items-center gap-2 bg-button-gradient text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20"
           >
             <Zap className="w-4 h-4" /> Post a Story
           </Link>

@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 
-import { siteConfig } from "@/data/branding";
+import Logo from "@/components/common/Logo";
 import { useSidebar } from "@/context/SidebarContext";
 import { useAuth } from "@/context/AuthContext";
 import type { BackendRole } from "@/lib/api";
@@ -208,12 +208,8 @@ export default function DashboardSidebar() {
         <div className={`h-16 flex items-center border-b border-border/60 shrink-0 transition-all duration-300 ${
           isCollapsed ? "px-0 justify-center" : "px-6"
         }`}>
-          <Link href="/" className="flex items-center gap-2 overflow-hidden" title="Back to the main site">
-            <img
-              src={siteConfig.logo.url}
-              alt={siteConfig.logo.alt}
-              className={`h-10 w-auto transition-all ${isCollapsed ? "min-w-[40px] scale-90" : ""}`}
-            />
+          <Link href="/" className="flex items-center gap-2" title="Back to the main site">
+            <Logo size="md" showText={!isCollapsed} />
           </Link>
         </div>
 
@@ -231,8 +227,8 @@ export default function DashboardSidebar() {
           />
           <div className="fixed inset-y-0 left-0 z-[70] w-full max-w-[300px] bg-white shadow-2xl flex flex-col md:hidden animate-in slide-in-from-left duration-300">
             <div className="h-16 flex items-center justify-between border-b border-border/60 shrink-0 px-4">
-              <Link href="/" onClick={closeMobileSidebar} className="flex items-center gap-2 overflow-hidden" title="Back to the main site">
-                <img src={siteConfig.logo.url} alt={siteConfig.logo.alt} className="h-10 w-auto" />
+              <Link href="/" onClick={closeMobileSidebar} className="flex items-center gap-2" title="Back to the main site">
+                <Logo size="md" />
               </Link>
               <button
                 onClick={closeMobileSidebar}

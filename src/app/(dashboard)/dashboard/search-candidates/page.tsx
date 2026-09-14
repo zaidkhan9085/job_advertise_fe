@@ -172,7 +172,7 @@ function ResumeModal({
                 href={uploadedResumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-button-gradient text-white text-sm font-bold hover:bg-brand-blue/90"
               >
                 <Download className="w-4 h-4" /> Download Resume
               </a>
@@ -180,7 +180,7 @@ function ResumeModal({
             {resume && (
               <button
                 onClick={() => handlePrint()}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-button-gradient text-white text-sm font-bold hover:bg-brand-blue/90"
               >
                 <Printer className="w-4 h-4" /> Print
               </button>
@@ -201,7 +201,7 @@ function ResumeModal({
                 href={uploadedResumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-button-gradient text-white text-sm font-bold hover:bg-brand-blue/90"
               >
                 <Download className="w-4 h-4" /> Download Resume
               </a>
@@ -611,7 +611,7 @@ export default function SearchCandidatesPage() {
         </div>
         {credits && !isStaff && (
           <div className="inline-flex items-center gap-2 bg-white border border-border/60 rounded-xl px-4 py-2.5 shadow-sm shrink-0">
-            <Coins className="w-4 h-4 text-brand-orange" />
+            <Coins className="w-4 h-4 text-brand-cyan" />
             <span className="font-black text-foreground">{credits.creditsRemaining}</span>
             <span className="text-xs text-muted-foreground font-medium">credits remaining</span>
           </div>
@@ -1007,7 +1007,7 @@ export default function SearchCandidatesPage() {
                     onClick={() => handleSelect(c)}
                     className="flex-1 min-w-0 flex items-center gap-2.5 py-2.5 text-left"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-light text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-avatar-gradient text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       {initials(c.name)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1075,7 +1075,7 @@ export default function SearchCandidatesPage() {
               <div className="p-5 sm:p-6 border-b border-border/60 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 min-w-0">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-light text-white text-lg font-black flex items-center justify-center shrink-0">
+                    <div className="w-14 h-14 rounded-full bg-avatar-gradient text-white text-lg font-black flex items-center justify-center shrink-0">
                       {initials(selected.name)}
                     </div>
                     <div className="min-w-0">
@@ -1135,7 +1135,7 @@ export default function SearchCandidatesPage() {
                     <button
                       disabled={unlockingId === selected.userId}
                       onClick={() => handleUnlock(selected, "profile", false)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-blue text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-button-gradient text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-60"
                     >
                       {unlockingId === selected.userId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
                       Unlock Full Profile &middot; {PROFILE_UNLOCK_COST} credit

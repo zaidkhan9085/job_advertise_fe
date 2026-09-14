@@ -54,7 +54,7 @@ export default function SearchSection() {
                 inputClassName="w-full h-11 pl-10 pr-9 border-none outline-none bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground truncate"
               />
             </div>
-            <button type="submit" className="h-11 px-6 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors shrink-0">
+            <button type="submit" className="h-11 px-6 rounded-xl bg-button-gradient text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors shrink-0">
               Search Jobs
             </button>
           </form>

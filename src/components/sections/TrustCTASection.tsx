@@ -47,7 +47,7 @@ export default function TrustCTASection() {
               <div className="mt-auto">
                 <Link
                   href="/post-job"
-                  className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-brand-blue text-white font-black transition-all hover:shadow-2xl hover:shadow-brand-blue/30 hover:translate-x-1 active:scale-95 border border-white/10"
+                  className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-button-gradient text-white font-black transition-all hover:shadow-2xl hover:shadow-brand-blue/30 hover:translate-x-1 active:scale-95 border border-white/10"
                 >
                   Post a Job <ArrowRight className="w-5 h-5" />
                 </Link>
