@@ -165,7 +165,7 @@ export default function ChangePasswordDialog({ onClose }: { onClose: () => void 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 flex items-center justify-center gap-2 bg-button-gradient text-white hover:bg-brand-blue/90 py-3 rounded-xl font-bold transition-colors disabled:opacity-70"
+              className="flex-1 flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue/90 py-3 rounded-xl font-bold transition-colors disabled:opacity-70"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Saving..." : "Change Password"}

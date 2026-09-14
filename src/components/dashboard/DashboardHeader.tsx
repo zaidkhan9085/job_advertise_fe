@@ -35,7 +35,7 @@ export default function DashboardHeader() {
         {user && user.role !== "candidate" && (
           <Link
             href="/dashboard/jobs/new"
-            className="inline-flex items-center gap-1.5 bg-button-gradient text-white hover:bg-brand-blue-medium px-3 sm:px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 bg-brand-blue text-white hover:bg-brand-blue-medium px-3 sm:px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Post Job</span>

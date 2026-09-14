@@ -169,7 +169,7 @@ export default function Header() {
               <>
                 <Link
                   href="/dashboard"
-                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-button-gradient hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
                 >
                   Dashboard
                 </Link>
@@ -184,7 +184,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/post-job"
-                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-button-gradient hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
               >
                 Post Jobs
               </Link>

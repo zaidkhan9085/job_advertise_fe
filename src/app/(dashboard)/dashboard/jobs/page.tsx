@@ -87,7 +87,7 @@ function ManageJobsContent() {
         </div>
         <Link
           href="/dashboard/jobs/new"
-          className="inline-flex items-center justify-center gap-2 bg-button-gradient text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20 whitespace-nowrap active:scale-95"
+          className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20 whitespace-nowrap active:scale-95"
         >
           <Plus className="w-5 h-5" />
           Post New Job
@@ -164,7 +164,7 @@ function ManageJobsContent() {
                       <div className="font-bold text-foreground flex items-center gap-2">
                         {job.title}
                         {job.type === "FEATURED" && (
-                          <span className="text-[9px] font-black bg-button-gradient text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Featured</span>
+                          <span className="text-[9px] font-black bg-brand-blue text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Featured</span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">

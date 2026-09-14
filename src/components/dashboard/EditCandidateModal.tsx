@@ -87,7 +87,7 @@ export default function EditCandidateModal({
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full py-3 rounded-xl bg-button-gradient text-white font-bold hover:bg-brand-blue/90 transition-colors disabled:opacity-70"
+          className="w-full py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-brand-blue/90 transition-colors disabled:opacity-70"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>

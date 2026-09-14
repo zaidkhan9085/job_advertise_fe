@@ -66,7 +66,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="mt-10 flex flex-wrap gap-4">
-                <Link href="/jobs" className="px-8 py-4 bg-button-gradient text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium transition-all shadow-lg shadow-brand-blue/20">
+                <Link href="/jobs" className="px-8 py-4 bg-brand-blue text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium transition-all shadow-lg shadow-brand-blue/20">
                   Explore Careers
                 </Link>
                 <Link href="/contact" className="px-8 py-4 bg-brand-blue/5 text-brand-blue rounded-xl font-black text-sm hover:bg-brand-blue/10 transition-all">

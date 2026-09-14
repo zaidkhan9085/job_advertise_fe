@@ -9,19 +9,19 @@ export default function HomeCTASection() {
       label: "Browse Jobs",
       href: "/jobs",
       icon: Search,
-      className: "bg-button-gradient text-white hover:bg-brand-blue-medium",
+      className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
     },
     {
       label: "Free Recruitment Jobs",
       href: "/jobs?jobtype=Free",
       icon: Briefcase,
-      className: "bg-button-gradient text-white hover:bg-brand-blue-medium",
+      className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
     },
     {
       label: "Shutdown Jobs",
       href: "/jobs?jobtype=Shutdown",
       icon: Briefcase,
-      className: "bg-button-gradient text-white hover:bg-brand-blue-medium",
+      className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
     },
   ];
 

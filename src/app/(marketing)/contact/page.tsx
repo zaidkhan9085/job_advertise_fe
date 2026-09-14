@@ -95,7 +95,7 @@ export default function ContactPage() {
                 <textarea rows={5} placeholder="Tell us how we can help..." className="w-full px-5 py-4 rounded-xl bg-brand-blue-muted/30 border-transparent focus:border-brand-blue/20 focus:bg-white transition-all outline-none font-medium resize-none"></textarea>
               </div>
               <div className="sm:col-span-2 pt-4">
-                <button className="flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-5 bg-button-gradient text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium shadow-lg shadow-brand-blue/20 transition-all uppercase tracking-widest">
+                <button className="flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-5 bg-brand-blue text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium shadow-lg shadow-brand-blue/20 transition-all uppercase tracking-widest">
                   Send Message <Send className="w-4 h-4" />
                 </button>
               </div>
