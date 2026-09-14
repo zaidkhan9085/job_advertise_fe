@@ -52,7 +52,7 @@ export default function PostJobLandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
               href="/register?role=recruiter"
-              className="w-full sm:w-auto px-10 py-5 bg-button-gradient text-white font-black text-lg rounded-2xl hover:bg-brand-blue-medium transition-all shadow-xl shadow-brand-blue/20 active:scale-[0.98]"
+              className="w-full sm:w-auto px-10 py-5 bg-brand-blue text-white font-black text-lg rounded-2xl hover:bg-brand-blue-medium transition-all shadow-xl shadow-brand-blue/20 active:scale-[0.98]"
             >
               Start Free Posting
             </Link>

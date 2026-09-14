@@ -479,7 +479,7 @@ export default function JobDetailPage() {
                     className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
                       company.isFollowing
                         ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
-                        : "bg-button-gradient text-white hover:bg-brand-blue-medium"
+                        : "bg-brand-blue text-white hover:bg-brand-blue-medium"
                     }`}
                   >
                     {company.isFollowing ? "Following" : "Follow"}

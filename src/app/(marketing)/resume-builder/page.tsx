@@ -167,7 +167,7 @@ export default function ResumeBuilderPage() {
               <span className="md:hidden text-xs">Save</span>
             </button>
             
-            <button onClick={handlePrint} className="flex-1 lg:flex-initial px-5 py-2.5 rounded-xl text-sm font-black bg-button-gradient text-white shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0">
+            <button onClick={handlePrint} className="flex-1 lg:flex-initial px-5 py-2.5 rounded-xl text-sm font-black bg-brand-blue text-white shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0">
               <Download className="w-4 h-4" />
               <span className="hidden md:inline">Download</span>
               <span className="md:hidden text-xs">Download</span>
@@ -190,7 +190,7 @@ export default function ResumeBuilderPage() {
                {/* Footer Control Area */}
                <div className="pt-10 border-t border-slate-100 flex items-center justify-between">
                   <div className="group flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
+                    <div className="p-2 rounded-lg bg-brand-blue-light/10 text-brand-blue-light">
                        <Sparkles className="w-4 h-4" />
                     </div>
                     <p className="text-[11px] font-bold text-slate-500 group-hover:text-slate-900 transition-colors uppercase tracking-widest">AI Tools Coming Soon</p>
@@ -221,7 +221,7 @@ export default function ResumeBuilderPage() {
                   className="w-16 flex items-center justify-center cursor-pointer group/zoom"
                   title="Reset Zoom"
                 >
-                   <span className="text-[10px] font-black tracking-widest text-white group-hover/zoom:text-brand-cyan transition-colors">
+                   <span className="text-[10px] font-black tracking-widest text-white group-hover/zoom:text-brand-blue-light transition-colors">
                       {Math.round(zoom * 100)}%
                    </span>
                 </div>
@@ -236,7 +236,7 @@ export default function ResumeBuilderPage() {
              <button 
                 onClick={() => setZoom(prev => prev === 1 ? 0.85 : 1)}
                 title="Fit to Height/Width"
-                className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white/60 hover:text-brand-cyan uppercase transition-all"
+                className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white/60 hover:text-brand-blue-light uppercase transition-all"
              >
                 <Maximize className="w-3.5 h-3.5" />
                 Fit

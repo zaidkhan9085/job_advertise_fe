@@ -159,7 +159,7 @@ export default function RegionsSection() {
         <div className="mt-8 text-center">
           <Link
             href="/jobs"
-            className="group inline-flex items-center gap-2 px-6 py-3 bg-button-gradient text-white rounded-2xl font-black hover:bg-brand-blue-medium transition-all shadow-md hover:shadow-brand-blue/25 hover:-translate-y-0.5"
+            className="group inline-flex items-center gap-2 px-6 py-3 bg-brand-blue text-white rounded-2xl font-black hover:bg-brand-blue-medium transition-all shadow-md hover:shadow-brand-blue/25 hover:-translate-y-0.5"
           >
             Explore All Active Jobs
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

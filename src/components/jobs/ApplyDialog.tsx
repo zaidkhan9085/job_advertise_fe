@@ -300,7 +300,7 @@ export default function ApplyDialog({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 bg-button-gradient text-white hover:bg-brand-blue/90 py-3 rounded-xl font-bold transition-colors disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue/90 py-3 rounded-xl font-bold transition-colors disabled:opacity-60"
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {isSubmitting ? "Submitting..." : mode === "proxy" ? "Add Applicant" : "Submit Application"}

@@ -165,7 +165,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href="/dashboard"
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-button-gradient rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
                 >
                   Dashboard
                 </Link>
@@ -188,7 +188,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href="/post-job"
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-button-gradient rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
                 >
                   Post Job
                 </Link>

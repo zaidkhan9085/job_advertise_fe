@@ -303,7 +303,7 @@ export default function AdminAllJobsPage() {
           </Link>
           <Link
             href="/dashboard/jobs/new"
-            className="inline-flex items-center justify-center gap-2 bg-button-gradient text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20 whitespace-nowrap active:scale-95"
+            className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20 whitespace-nowrap active:scale-95"
           >
             <Plus className="w-5 h-5" />
             Post New Job

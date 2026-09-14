@@ -143,7 +143,7 @@ export default function FeaturedJobsSection() {
         <div className="mt-12 text-center">
           <Link
             href="/jobs"
-            className="inline-flex items-center gap-2 bg-button-gradient text-white hover:bg-brand-blue-dark border-none px-6 py-3 rounded-xl transition-colors font-semibold mx-auto shadow-md"
+            className="inline-flex items-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-dark border-none px-6 py-3 rounded-xl transition-colors font-semibold mx-auto shadow-md"
           >
             Load More Jobs <ArrowRight className="w-4 h-4 ml-1" />
           </Link>
