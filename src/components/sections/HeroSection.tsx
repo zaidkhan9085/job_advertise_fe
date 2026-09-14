@@ -23,7 +23,7 @@ export default function HeroSection() {
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <DecorativeBlur size="xl" className="-top-24 -right-24 bg-[oklch(0.47_0.20_250)]/20" />
-        <DecorativeBlur size="lg" className="bottom-0 -left-24 bg-[oklch(0.68_0.21_45)]/15" />
+        <DecorativeBlur size="lg" className="bottom-0 -left-24 bg-brand-cyan/15" />
         <DecorativeBlur size="3xl" className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/3" />
       </div>
 
@@ -51,7 +51,7 @@ export default function HeroSection() {
 
           {/* Call to Actions */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Link href="/jobs" className="flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] hover:bg-[oklch(0.55_0.22_45)] text-white font-semibold px-6 py-3.5 rounded-xl transition-colors shadow-lg">
+            <Link href="/jobs" className="flex items-center justify-center gap-2 bg-brand-cyan hover:bg-brand-cyan-dark text-white font-semibold px-6 py-3.5 rounded-xl transition-colors shadow-lg">
               <Search className="w-4 h-4 ml-[-4px]" /> Browse Jobs
             </Link>
             <Link href="/resume" className="flex items-center justify-center gap-2 bg-white text-[oklch(0.47_0.20_250)] hover:bg-white/90 font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-lg">

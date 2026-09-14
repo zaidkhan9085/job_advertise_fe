@@ -25,7 +25,7 @@ export default function TopBar() {
             className="flex items-center gap-1.5 hover:text-white transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />
-            support@thejobsadvertise.com
+            support@thejobs4u.com
           </a>
           <a
             href={contactLinks.whatsappGroup}

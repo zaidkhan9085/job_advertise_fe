@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
-import { siteConfig } from "@/data/branding";
+import Logo from "@/components/common/Logo";
 import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -120,11 +120,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-white sticky top-0 z-10">
           <Link href="/" onClick={onClose} className="flex items-center gap-3 active:scale-95 transition-transform shrink-0">
-            <img 
-              src={siteConfig.logo.url} 
-              alt={siteConfig.logo.alt} 
-              className="h-12 w-auto"
-            />
+            <Logo size="lg" />
           </Link>
           <button
             onClick={onClose}
@@ -145,7 +141,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           <div className="m-5 p-6 rounded-3xl bg-brand-blue-muted/30 border border-brand-blue/5">
             <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue/50 mb-5">Support Center</h5>
             <div className="space-y-5">
-              <a href={`mailto:support@thejobsadvertise.com`} className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors">
+              <a href={`mailto:support@thejobs4u.com`} className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors">
                 <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-border/40">
                   <Mail className="w-5 h-5 text-brand-blue" />
                 </div>
@@ -169,7 +165,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href="/dashboard"
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-button-gradient rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
                 >
                   Dashboard
                 </Link>
@@ -192,7 +188,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href="/post-job"
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-button-gradient rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 text-center border border-white/10"
                 >
                   Post Job
                 </Link>

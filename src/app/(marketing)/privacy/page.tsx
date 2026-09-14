@@ -79,8 +79,8 @@ export default function PrivacyPage() {
                <p className="text-muted-foreground font-medium text-sm mb-6">
                  If you have any questions about how your data is handled, please don't hesitate to reach out to our privacy officer.
                </p>
-               <a href="mailto:privacy@thejobsadvertise.com" className="text-brand-blue font-black hover:underline">
-                 privacy@thejobsadvertise.com
+               <a href="mailto:privacy@thejobs4u.com" className="text-brand-blue font-black hover:underline">
+                 privacy@thejobs4u.com
                </a>
             </section>
           </div>

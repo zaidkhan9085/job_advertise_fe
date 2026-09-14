@@ -13,7 +13,7 @@ export const testimonials: Testimonial[] = [
     name: "Rajesh Kumar",
     role: "Senior Process Engineer",
     company: "ADNOC",
-    quote: "I found my current role in UAE within 3 weeks of uploading my resume. The Jobs Advertise has the best collection of Gulf and Middle East engineering jobs I've seen.",
+    quote: "I found my current role in UAE within 3 weeks of uploading my resume. thejobs4u has the best collection of Gulf and Middle East engineering jobs I've seen.",
   },
   {
     id: "2",

@@ -58,7 +58,7 @@ export default function RegisterPage() {
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Create an Account</h1>
           <p className="text-sm text-muted-foreground">
-            Join The Jobs Advertise to find your next opportunity or hire top talent.
+            Join thejobs4u to find your next opportunity or hire top talent.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function RegisterPage() {
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
+            className="w-full flex items-center justify-center gap-2 bg-button-gradient text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
           >
             {isLoading ? "Creating account..." : (
               <>

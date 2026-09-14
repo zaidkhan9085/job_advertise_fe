@@ -24,7 +24,7 @@ export default function AboutPage() {
             Connecting Ambition with <span className="text-brand-blue-light italic">Global Opportunity</span>
           </h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg md:text-xl font-medium leading-relaxed">
-            Gulf Jobs Advertise is the premier bridge between world-class talent and the world's most innovative organizations.
+            thejobs4u is the premier bridge between world-class talent and the world's most innovative organizations.
           </p>
         </div>
       </section>
@@ -59,14 +59,14 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-6 text-muted-foreground font-medium leading-relaxed">
                 <p>
-                  Founded with a vision to streamline international recruitment, Gulf Jobs Advertise has evolved into a global ecosystem where career aspirations meet market demands. We believe that location should never be a barrier to excellence.
+                  Founded with a vision to streamline international recruitment, thejobs4u has evolved into a global ecosystem where career aspirations meet market demands. We believe that location should never be a barrier to excellence.
                 </p>
                 <p>
                   We leverage cutting-edge matching technology and deep regional expertise to ensure that every placement we facilitate is not just a job, but a strategic career move.
                 </p>
               </div>
               <div className="mt-10 flex flex-wrap gap-4">
-                <Link href="/jobs" className="px-8 py-4 bg-brand-blue text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium transition-all shadow-lg shadow-brand-blue/20">
+                <Link href="/jobs" className="px-8 py-4 bg-button-gradient text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium transition-all shadow-lg shadow-brand-blue/20">
                   Explore Careers
                 </Link>
                 <Link href="/contact" className="px-8 py-4 bg-brand-blue/5 text-brand-blue rounded-xl font-black text-sm hover:bg-brand-blue/10 transition-all">

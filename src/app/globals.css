@@ -17,7 +17,9 @@
   --brand-blue-muted:   oklch(0.92 0.02 250);      /* Very Light Blue for backgrounds */
   --brand-gold:         #DAA520;                 /* Golden for Premium */
   --brand-gold-light:   #FFD700;                 /* Bright Gold */
-  --brand-orange:       var(--brand-blue-light);   /* Removed orange, using light blue as accent */
+  --brand-cyan:         oklch(0.71 0.13 215);      /* Cyan #06B6D4 -- thejobs4u's approved secondary/accent color (Direction B: navy + bright cyan, chosen after a teal accent tested muddy/flat across gradient surfaces) */
+  --brand-cyan-light:   oklch(0.86 0.11 215);      /* Light Cyan */
+  --brand-cyan-dark:    oklch(0.56 0.13 215);      /* Dark Cyan */
 
   /* shadcn semantic tokens — mapped to brand */
   --background: oklch(1 0 0);
@@ -41,7 +43,7 @@
   --radius: 0.625rem;
 
   /* Chart */
-  --chart-1: var(--brand-orange);
+  --chart-1: var(--brand-cyan);
   --chart-2: var(--brand-blue);
   --chart-3: oklch(0.55 0.15 300);
   --chart-4: oklch(0.65 0.18 140);
@@ -122,9 +124,9 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   /* brand shortcuts */
-  --color-brand-orange: var(--brand-orange);
-  --color-brand-orange-light: var(--brand-orange-light);
-  --color-brand-orange-dark: var(--brand-orange-dark);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-cyan-light: var(--brand-cyan-light);
+  --color-brand-cyan-dark: var(--brand-cyan-dark);
   --color-brand-blue: var(--brand-blue);
   --color-brand-blue-medium: var(--brand-blue-medium);
   --color-brand-blue-light: var(--brand-blue-light);
@@ -180,17 +182,32 @@
     background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-medium) 50%, var(--brand-blue-light) 100%);
   }
 
+  /* Was navy -> lighter navy (flat, "too much blue" per client feedback) --
+     now ends in the brand-cyan accent instead, approved Direction B. */
   .bg-hero-gradient {
     background: linear-gradient(
       135deg,
       oklch(0.15 0.05 250) 0%,
-      oklch(0.25 0.08 250) 40%,
-      oklch(0.40 0.12 250) 100%
+      oklch(0.25 0.08 250) 42%,
+      var(--brand-cyan) 100%
     );
   }
 
   .bg-premium-gradient {
     background: linear-gradient(135deg, var(--brand-blue) 0%, oklch(0.30 0.10 260) 100%);
+  }
+
+  /* Approved "Option 3" -- for primary action buttons that were plain
+     solid navy (bg-brand-blue text-white) with no cyan at all. */
+  .bg-button-gradient {
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-medium) 35%, var(--brand-cyan) 100%);
+  }
+
+  /* Approved "Option 4" -- for avatar circles that were plain solid navy.
+     Mostly navy with cyan only as an edge accent -- deliberately subtler
+     than the button gradient so avatars don't compete for attention. */
+  .bg-avatar-gradient {
+    background: linear-gradient(120deg, var(--brand-blue) 0%, var(--brand-blue) 62%, var(--brand-cyan) 100%);
   }
 
   /* Card hover */

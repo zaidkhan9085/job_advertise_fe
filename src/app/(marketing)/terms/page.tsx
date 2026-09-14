@@ -16,7 +16,7 @@ export default function TermsPage() {
             Terms of <span className="text-brand-blue-light italic">Service</span>
           </h1>
           <p className="text-white/70 max-w-2xl mx-auto text-lg md:text-xl font-medium leading-relaxed">
-            Please read these terms carefully before using the Gulf Jobs Advertise platform.
+            Please read these terms carefully before using the thejobs4u platform.
           </p>
         </div>
       </section>
@@ -32,7 +32,7 @@ export default function TermsPage() {
           <div className="space-y-12 text-muted-foreground font-medium leading-relaxed">
             <section>
               <h2 className="text-2xl font-black text-brand-blue mb-6">1. Acceptance of Terms</h2>
-              <p>By accessing or using the Gulf Jobs Advertise website and services, you agree to be bound by these Terms of Service. If you do not agree to all of these terms, do not use our services.</p>
+              <p>By accessing or using the thejobs4u website and services, you agree to be bound by these Terms of Service. If you do not agree to all of these terms, do not use our services.</p>
             </section>
 
             <section>
@@ -55,7 +55,7 @@ export default function TermsPage() {
                 <AlertCircle className="w-5 h-5" /> Important Notice
                </h3>
                <p className="text-brand-blue/70 text-sm">
-                 Gulf Jobs Advertise acts as a platform for connection. We do not guarantee employment or the accuracy of job postings by third parties. Users should perform their own due diligence before accepting offers.
+                 thejobs4u acts as a platform for connection. We do not guarantee employment or the accuracy of job postings by third parties. Users should perform their own due diligence before accepting offers.
                </p>
             </section>
           </div>

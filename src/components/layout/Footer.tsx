@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, MessageCircle, Send, Briefcase } from "lucide-react";
 import { socialLinks, contactLinks } from "@/data/socialLinks";
-import { siteConfig } from "@/data/branding";
+import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 
 const footerLinks = [
@@ -59,7 +59,10 @@ export default function Footer() {
   return (
     <footer className="bg-brand-blue text-white overflow-hidden selection:bg-brand-blue-light selection:text-white">
       {/* Specialized Content Section */}
-      <div className="bg-brand-blue-medium py-10 border-b border-white/5">
+      {/* Was flat bg-brand-blue-medium -- now navy -> cyan gradient, same
+          "smart accent on large surfaces" treatment as the hero, so the
+          footer doesn't read as flat/lighter blue right below it. */}
+      <div className="bg-gradient-to-br from-brand-blue to-brand-cyan py-10 border-b border-white/5">
         <div className="container-site flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
           <div className="flex flex-col md:flex-row items-center gap-6 max-w-2xl">
             <div className="w-16 h-16 rounded-3xl bg-brand-blue-light/20 flex items-center justify-center shadow-2xl animate-bounce-slow">
@@ -92,11 +95,11 @@ export default function Footer() {
           {/* Brand & Info */}
           <div className="lg:col-span-4 space-y-8">
             <Link href="/" className="flex items-center gap-3 shrink-0 group">
-              <img 
-                src={siteConfig.logo.url} 
-                alt={siteConfig.logo.alt} 
-                className="h-14 w-auto brightness-0 invert"
-              />
+              {/* brightness-0/invert (the old trick for making the mono-navy
+                  logo read white here) can't be used on this two-tone mark --
+                  it would turn the orange white too. logo-icon-white.png is a
+                  real navy->white recolor that keeps the orange. */}
+              <Logo size="xl" variant="white" />
             </Link>
             <p className="text-white/70 text-[15px] leading-relaxed max-w-sm font-medium">
               The premier platform for international career opportunities. We connect skilled professionals with verified employers across the Gulf, Europe, and Asia.
@@ -136,7 +139,7 @@ export default function Footer() {
               <div className="flex flex-col items-center sm:items-start gap-2">
                 <div className="flex items-center gap-3 text-brand-blue-light group cursor-pointer">
                   <Mail className="w-5 h-5" />
-                  <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">support@thejobsadvertise.com</span>
+                  <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">support@thejobs4u.com</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/40">
                   <MapPin className="w-4 h-4" />
@@ -175,7 +178,7 @@ export default function Footer() {
                 <Link href="/legal/disclaimer" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Safety</Link>
               </div>
               <p className="text-white/20 text-[10px] font-black tracking-[0.2em] uppercase">
-                © {new Date().getFullYear()} GULF JOBS ADVERTISE
+                © {new Date().getFullYear()} THEJOBS4U
               </p>
             </div>
           </div>
