@@ -22,7 +22,7 @@ import {
   Upload,
   FileCheck2,
   ExternalLink,
-  Loader2,
+  Check,
   KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -62,6 +62,11 @@ const GENDER_SELECT_OPTIONS = [
   { value: "Female", label: "Female" },
   { value: "Other", label: "Other" },
 ];
+
+// Cosmetic progress steps shown while a resume is being parsed -- the
+// backend is a bounded but still multi-second AI call with no discrete
+// stages to report, same pattern as the AI poster-scan feature's stepper.
+const PARSING_STEPS = ["Reading your resume", "Extracting your experience", "Matching your skills", "Filling your profile"];
 
 function initials(name: string) {
   return name
@@ -108,6 +113,8 @@ export default function MyProfilePage() {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const [isParsingResume, setIsParsingResume] = useState(false);
+  const [parsingStep, setParsingStep] = useState(0);
+  const [parsingProgress, setParsingProgress] = useState(0);
   const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = useCallback(async () => {
@@ -154,6 +161,28 @@ export default function MyProfilePage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Cosmetic step + linear progress advance while a resume is being parsed
+  // -- see PARSING_STEPS. Not real backend progress (one opaque API call
+  // with no discrete stages), same simulated pattern as the AI poster-scan
+  // feature's stepper.
+  useEffect(() => {
+    if (!isParsingResume) {
+      setParsingStep(0);
+      setParsingProgress(0);
+      return;
+    }
+    const stepInterval = setInterval(() => {
+      setParsingStep((s) => Math.min(s + 1, PARSING_STEPS.length - 1));
+    }, 1300);
+    const progressInterval = setInterval(() => {
+      setParsingProgress((p) => (p >= 92 ? 92 : p + Math.max(1, (92 - p) / 8)));
+    }, 200);
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
+  }, [isParsingResume]);
 
   // Shared with the Overview dashboard's completeness tile -- see
   // src/lib/profileCompleteness.ts.
@@ -434,6 +463,39 @@ export default function MyProfilePage() {
             <span className="text-xs">PDF, DOC, or DOCX &middot; Max 5MB</span>
           </button>
         )}
+
+        {isParsingResume && (
+          <div className="w-full max-w-xs mx-auto pt-1">
+            <div className="flex items-center">
+              {PARSING_STEPS.map((step, i) => (
+                <div key={step} className="flex-1 flex items-center last:flex-none">
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors ${
+                      i < parsingStep
+                        ? "bg-brand-blue text-white"
+                        : i === parsingStep
+                          ? "bg-brand-blue text-white animate-pulse"
+                          : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {i < parsingStep ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                  </div>
+                  {i < PARSING_STEPS.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-1 rounded-full ${i < parsingStep ? "bg-brand-blue" : "bg-border"}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-sm font-bold text-brand-blue text-center mt-2.5">{PARSING_STEPS[parsingStep]}</p>
+            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden mt-3">
+              <div
+                className="h-full bg-brand-blue rounded-full transition-[width] duration-200 ease-linear"
+                style={{ width: `${parsingProgress}%` }}
+              />
+            </div>
+            <p className="text-xs font-semibold text-muted-foreground text-center mt-1">{Math.round(parsingProgress)}%</p>
+          </div>
+        )}
       </div>
 
       {/* Completeness */}
@@ -461,23 +523,20 @@ export default function MyProfilePage() {
       </div>
 
       <div className="relative">
-        {/* Blocks editing every field while a resume is being uploaded or
-            parsed — without this, typing during parsing races with
-            applyParsedData's pre-fill (which now overwrites on every parse,
-            not just empty fields), so a candidate's own in-progress edit
-            could get silently clobbered the moment parsing finishes. */}
-        {(isUploadingResume || isParsingResume) && (
-          <div className="absolute inset-0 z-10 bg-white/70 backdrop-blur-[1px] rounded-2xl flex flex-col items-center justify-center gap-3 py-20">
-            <Loader2 className="w-8 h-8 text-brand-blue animate-spin" />
-            <p className="text-sm font-bold text-foreground">
-              {isUploadingResume ? "Uploading your resume..." : "Reading your resume and filling your profile..."}
-            </p>
-            <p className="text-xs text-muted-foreground">Fields are locked until this finishes.</p>
-          </div>
-        )}
         <form
           onSubmit={handleSubmit}
-          className="space-y-6"
+          // Dims (rather than covers with a blurred overlay) the rest of
+          // the form while a resume is being uploaded or parsed -- the
+          // upload widget's own stepper above already shows what's
+          // happening, so this just needs to visually de-emphasize the
+          // fields, not hide the spinner behind a blur on a long page
+          // (same fix already applied to the AI poster-scan feature).
+          // `inert` still fully blocks editing: without it, typing during
+          // parsing races with applyParsedData's pre-fill (which overwrites
+          // on every parse, not just empty fields), so a candidate's own
+          // in-progress edit could get silently clobbered the moment
+          // parsing finishes.
+          className={`space-y-6 transition-opacity ${isUploadingResume || isParsingResume ? "opacity-40 pointer-events-none" : ""}`}
           aria-busy={isUploadingResume || isParsingResume}
           inert={isUploadingResume || isParsingResume}
         >
