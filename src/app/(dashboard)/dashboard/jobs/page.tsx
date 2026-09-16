@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Trash2, MapPin, Loader2, Users } from "lucide-react";
+import { Plus, Search, Trash2, MapPin, Loader2, Users, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
@@ -112,6 +112,29 @@ function ManageJobsContent() {
           Contact Leads {leads.length > 0 && `(${leads.length})`}
         </button>
       </div>
+
+      {activeTab === "jobs" && !isLoading && jobs.length === 0 && !searchTerm && (
+        <div className="relative overflow-hidden rounded-3xl bg-hero-gradient p-8 text-white">
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full mb-3">
+                <Sparkles className="w-3.5 h-3.5" /> New
+              </span>
+              <h2 className="text-xl font-black mb-1">Post your first job in seconds</h2>
+              <p className="text-white/80 text-sm max-w-md">
+                Already have a job poster or flyer? Upload a photo and our AI will read it and fill in the form for you.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/jobs/new"
+              className="inline-flex items-center justify-center gap-2 bg-white text-brand-blue font-bold px-5 py-3 rounded-xl hover:bg-white/90 transition-colors shadow-sm whitespace-nowrap shrink-0"
+            >
+              <Sparkles className="w-4 h-4" /> Scan a Poster
+            </Link>
+          </div>
+        </div>
+      )}
 
       {activeTab === "leads" ? (
         <LeadsTable leads={leads} isLoading={isLoadingLeads} />

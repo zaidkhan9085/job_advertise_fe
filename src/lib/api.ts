@@ -312,6 +312,58 @@ export function updateJob(id: string, payload: UpdateJobPayload) {
   });
 }
 
+// Structured data extracted from an uploaded job poster/flyer image —
+// returned for the Post Job form to review/pre-fill, never auto-saved by
+// the backend (no Job row is created by this call). A single poster often
+// advertises multiple openings, hence the "jobs" array.
+export interface ParsedJobEntry {
+  category: string | null;
+  // Synthesized ad headline (e.g. "Urgently Required Laundrymen for UAE"),
+  // not literal poster text -- see geminiJobPoster.js's prompt.
+  title: string | null;
+  vacancies: number | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  // Raw salary text (e.g. "Negotiable") when no numeric figure was given.
+  salary_raw: string | null;
+}
+
+export interface ParsedJobPoster {
+  company_name: string | null;
+  project_name: string | null;
+  location: string | null;
+  interview_date: string | null;
+  interview_time: string | null;
+  interview_venue: string | null;
+  jobs: ParsedJobEntry[];
+  benefits: string[];
+  // Job duties/responsibilities and required-documents/eligibility bullets,
+  // merged into one list (see backend/utils/geminiJobPoster.js's prompt).
+  requirements: string[];
+  contact_person: string | null;
+  phone_numbers: string[];
+  email: string | null;
+  address: string | null;
+  // true when Gemini itself was unavailable and this came from the
+  // on-device OCR + regex fallback instead (see
+  // backend/utils/ruleBasedJobPosterParser.js) -- every structured field
+  // above is null/[] by design in that case except phone/email/one best-
+  // effort salary/vacancy guess; raw_text carries the full scanned text
+  // so nothing the recruiter could still use is lost.
+  degraded: boolean;
+  raw_text: string | null;
+}
+
+export function parseJobPoster(poster: File) {
+  const form = new FormData();
+  form.append("poster", poster);
+  return apiFetch<{ message: string; parsed: ParsedJobPoster }>("/api/jobs/parse-poster", {
+    method: "POST",
+    body: form,
+  });
+}
+
 // --- Admin: job moderation ---
 export function getPendingJobs() {
   return apiFetch<
