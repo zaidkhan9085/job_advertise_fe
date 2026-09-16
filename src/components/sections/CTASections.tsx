@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Upload, FileText, ArrowRight } from "lucide-react";
+import { Upload, FileText, ArrowRight, Sparkles } from "lucide-react";
 
 export default function CTASections() {
   return (
@@ -38,10 +38,13 @@ export default function CTASections() {
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
                 <FileText className="w-7 h-7 text-white" />
               </div>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full mb-3">
+                <Sparkles className="w-3.5 h-3.5" /> New: AI Poster Scan
+              </span>
               <h2 className="text-3xl font-bold mb-3">Post Your Jobs</h2>
               <p className="text-white/80 mb-8 max-w-sm text-balance">
-                Reach over 2.4 million qualified candidates locally and globally. 
-                Start hiring the best talent for your organization today.
+                Already have a job poster? Just upload a photo and our AI fills in the details for you.
+                Reach over 2.4 million qualified candidates locally and globally.
               </p>
               <Link 
                 href="/post-job" 

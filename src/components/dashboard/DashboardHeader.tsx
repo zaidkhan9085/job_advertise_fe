@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Plus, User, LogOut } from "lucide-react";
+import { Menu, Plus, User, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 import Logo from "@/components/common/Logo";
@@ -35,10 +35,17 @@ export default function DashboardHeader() {
         {user && user.role !== "candidate" && (
           <Link
             href="/dashboard/jobs/new"
-            className="inline-flex items-center gap-1.5 bg-brand-blue text-white hover:bg-brand-blue-medium px-3 sm:px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="relative inline-flex items-center gap-1.5 bg-brand-blue text-white hover:bg-brand-blue-medium px-3 sm:px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Post Job</span>
+            {/* Flags the new AI poster-scan option to recruiters who haven't
+                noticed it yet -- corner-positioned so it works the same
+                whether the button shows the icon alone (mobile) or the full
+                label (desktop). */}
+            <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-white text-brand-blue text-[9px] font-black leading-none px-1.5 py-0.5 rounded-full shadow-sm ring-1 ring-brand-blue/10">
+              <Sparkles className="w-2.5 h-2.5" /> AI
+            </span>
           </Link>
         )}
 
