@@ -34,7 +34,7 @@ export default function PricingPage() {
 
   const getIcon = (name: string) => {
     if (name.includes("Golden")) return <Star className="w-6 h-6 text-yellow-500" />;
-    if (name.includes("Silver")) return <ShieldCheck className="w-6 h-6 text-[oklch(0.47_0.20_250)]" />;
+    if (name.includes("Silver")) return <ShieldCheck className="w-6 h-6 text-[oklch(0.47_0.20_25)]" />;
     return <Zap className="w-6 h-6 text-emerald-500" />;
   };
 

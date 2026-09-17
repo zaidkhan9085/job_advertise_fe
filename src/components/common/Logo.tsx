@@ -20,16 +20,23 @@ const TEXT_SIZE = {
 
 export interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
-  // "white" is for dark backgrounds (the footer's bg-brand-blue) -- the icon
-  // is a single flat navy color, so a plain CSS filter is enough to make it
-  // read white there, same trick the site always used for its logo.
+  // "white" is for dark backgrounds (the footer's bg-brand-ink) -- the icon
+  // is a single flat color, so a plain CSS filter is enough to make it read
+  // white there, same trick the site always used for its logo.
   variant?: "default" | "white";
   showText?: boolean;
   className?: string;
 }
 
 export default function Logo({ size = "md", variant = "default", showText = true, className = "" }: LogoProps) {
-  const textColorClass = variant === "white" ? "text-white" : "text-brand-blue";
+  // Icon mark stays coral (the brand's action color). The wordmark splits
+  // in two instead of being one flat color: "thejobs" in ink (calm, reads
+  // as the main name) and "4u" in coral (a bright pop on the distinctive
+  // suffix) -- on "white" variant (dark backgrounds) both parts go white
+  // since the ink/coral split has nothing to contrast against there.
+  // Trial per Zaid's request 2026-09-17.
+  const inkClass = variant === "white" ? "text-white" : "text-brand-ink";
+  const coralClass = variant === "white" ? "text-white" : "text-brand-blue";
 
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
@@ -39,8 +46,8 @@ export default function Logo({ size = "md", variant = "default", showText = true
         className={`${ICON_HEIGHT[size]} w-auto shrink-0 ${variant === "white" ? "brightness-0 invert" : ""}`}
       />
       {showText && (
-        <span className={`font-black leading-none whitespace-nowrap ${TEXT_SIZE[size]} ${textColorClass}`}>
-          thejobs4u
+        <span className={`font-display font-black leading-none tracking-tight whitespace-nowrap ${TEXT_SIZE[size]}`}>
+          <span className={inkClass}>thejobs</span><span className={coralClass}>4u</span>
         </span>
       )}
     </span>

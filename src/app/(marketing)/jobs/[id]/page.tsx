@@ -282,7 +282,7 @@ export default function JobDetailPage() {
         />
       )}
 
-      <div className="bg-[oklch(0.12_0.02_260)] text-white pt-8 pb-32">
+      <div className="bg-[oklch(0.12_0.02_40)] text-white pt-8 pb-32">
         <div className="container-site">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
             {/* Reachable from the /jobs listing, the public homepage, the
@@ -349,7 +349,7 @@ export default function JobDetailPage() {
                 { label: "Location", value: job.location || "Not specified", icon: MapPin },
               ].map((stat) => (
                 <div key={stat.label} className="bg-white p-5 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
-                  <stat.icon className="w-6 h-6 text-[oklch(0.47_0.20_250)] mb-3" />
+                  <stat.icon className="w-6 h-6 text-[oklch(0.47_0.20_25)] mb-3" />
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
                   <p className="font-semibold text-sm text-foreground">{stat.value}</p>
                 </div>

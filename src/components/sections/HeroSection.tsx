@@ -22,7 +22,7 @@ export default function HeroSection() {
     <section className="relative overflow-hidden bg-hero-gradient min-h-[640px] flex items-center">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <DecorativeBlur size="xl" className="-top-24 -right-24 bg-[oklch(0.47_0.20_250)]/20" />
+        <DecorativeBlur size="xl" className="-top-24 -right-24 bg-[oklch(0.47_0.20_25)]/20" />
         <DecorativeBlur size="lg" className="bottom-0 -left-24 bg-brand-blue-light/15" />
         <DecorativeBlur size="3xl" className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/3" />
       </div>
@@ -54,7 +54,7 @@ export default function HeroSection() {
             <Link href="/jobs" className="flex items-center justify-center gap-2 bg-brand-blue hover:bg-brand-blue-medium text-white font-semibold px-6 py-3.5 rounded-xl transition-colors shadow-lg">
               <Search className="w-4 h-4 ml-[-4px]" /> Browse Jobs
             </Link>
-            <Link href="/resume" className="flex items-center justify-center gap-2 bg-white text-[oklch(0.47_0.20_250)] hover:bg-white/90 font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-lg">
+            <Link href="/resume" className="flex items-center justify-center gap-2 bg-white text-[oklch(0.47_0.20_25)] hover:bg-white/90 font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-lg">
               Post Resume
             </Link>
             <Link href="/post-job" className="hidden sm:flex items-center justify-center gap-2 bg-white text-brand-blue hover:bg-brand-blue-muted font-black px-6 py-3.5 rounded-xl transition-all shadow-lg active:scale-95 border border-brand-blue/10">
@@ -88,7 +88,7 @@ export default function HeroSection() {
               </select>
               <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-3 pointer-events-none opacity-50" />
             </div>
-            <button className="flex items-center justify-center gap-2 bg-[oklch(0.47_0.20_250)] hover:bg-[oklch(0.35_0.20_250)] text-white font-semibold px-8 py-3 rounded-xl transition-colors text-sm whitespace-nowrap">
+            <button className="flex items-center justify-center gap-2 bg-[oklch(0.47_0.20_25)] hover:bg-[oklch(0.35_0.20_25)] text-white font-semibold px-8 py-3 rounded-xl transition-colors text-sm whitespace-nowrap">
               <Search className="w-4 h-4" />
               Search
             </button>

@@ -220,7 +220,7 @@ export default function SortableSection({ section, onUpdate, onToggle, onDelete,
       ref={setNodeRef} 
       style={style} 
       className={`group/section bg-white rounded-3xl border-2 transition-all duration-500 overflow-hidden ${
-        section.isExpanded ? "border-slate-200 shadow-[0_20px_60px_-15px_rgba(30,58,138,0.05)]" : "border-transparent hover:bg-slate-50"
+        section.isExpanded ? "border-slate-200 shadow-[0_20px_60px_-15px_rgba(200,66,44,0.05)]" : "border-transparent hover:bg-slate-50"
       }`}
     >
       <div className="flex items-center px-4 py-3">

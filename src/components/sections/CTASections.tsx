@@ -22,7 +22,7 @@ export default function CTASections() {
               </p>
               <Link 
                 href="/resume" 
-                className="inline-flex items-center gap-2 bg-white text-[oklch(0.47_0.20_250)] font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-white text-[oklch(0.47_0.20_25)] font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors shadow-sm"
               >
                 Upload Resume <ArrowRight className="w-4 h-4" />
               </Link>

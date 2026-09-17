@@ -57,7 +57,7 @@ const iconMap: Record<string, React.FC<any>> = {
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-blue text-white overflow-hidden selection:bg-brand-blue-light selection:text-white">
+    <footer className="bg-brand-ink text-white overflow-hidden selection:bg-brand-blue-light selection:text-white">
       {/* Specialized Content Section */}
       <div className="bg-brand-blue-medium py-10 border-b border-white/5">
         <div className="container-site flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">

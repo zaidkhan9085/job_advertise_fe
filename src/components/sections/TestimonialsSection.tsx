@@ -4,14 +4,14 @@ import { testimonials, metrics } from "@/data/testimonials";
 export default function TestimonialsSection() {
   return (
     <section className="section-padding bg-background overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-1/3 h-full bg-[oklch(0.47_0.20_250)]/5 -skew-x-12 origin-top-right transform-gpu pointer-events-none" />
+      <div className="absolute top-0 right-0 w-1/3 h-full bg-brand-blue/5 -skew-x-12 origin-top-right transform-gpu pointer-events-none" />
       
       <div className="container-site relative z-10">
         <div className="grid lg:grid-cols-3 gap-12 lg:gap-8 items-center">
           
           {/* Left info & metrics */}
           <div className="lg:pr-8">
-            <div className="text-xs font-semibold text-[oklch(0.47_0.20_250)] uppercase tracking-widest mb-2">Success Stories</div>
+            <div className="text-xs font-semibold text-brand-blue uppercase tracking-widest mb-2">Success Stories</div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-4 leading-tight">Trusted by Thousands Worldwide</h2>
             <p className="text-muted-foreground mb-10 max-w-md">
               Hear from professionals who found their dream roles, and companies that hired their best talent through thejobs4u.
@@ -20,7 +20,7 @@ export default function TestimonialsSection() {
             <div className="grid grid-cols-2 gap-6">
               {metrics.map((m) => (
                 <div key={m.label}>
-                  <div className="text-2xl font-extrabold text-[oklch(0.47_0.20_250)]">{m.value}</div>
+                  <div className="text-2xl font-extrabold text-brand-blue">{m.value}</div>
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">{m.label}</div>
                 </div>
               ))}

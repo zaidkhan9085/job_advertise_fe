@@ -602,7 +602,7 @@ export default function SearchCandidatesPage() {
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-foreground">Search Candidates</h1>
+          <h1 className="font-display text-xl sm:text-2xl font-black text-foreground">Search Candidates</h1>
           <p className="text-muted-foreground mt-1 text-sm font-medium">
             {isStaff
               ? "Admin access — every candidate's contact info and resume is visible directly, no unlock needed."

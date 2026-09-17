@@ -99,7 +99,7 @@ export default function StoriesSection() {
               href={postStoryHref}
               className="flex-shrink-0 w-[132px] h-[188px] sm:w-[140px] sm:h-[196px] rounded-[18px] border-2 border-dashed border-border hover:border-brand-blue/50 flex flex-col items-center justify-center gap-3 group/btn transition-all bg-secondary/20 hover:bg-brand-blue-muted/30"
             >
-              <div className="w-12 h-12 rounded-full bg-brand-blue flex items-center justify-center text-white shadow-xl shadow-blue-500/20 group-hover/btn:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-full bg-brand-blue flex items-center justify-center text-white shadow-xl shadow-[#C8422C]/20 group-hover/btn:scale-110 transition-transform">
                 <Plus className="w-6 h-6" />
               </div>
               <span className="text-[12px] font-black text-foreground/50 group-hover/btn:text-brand-blue tracking-tight">Post Story</span>

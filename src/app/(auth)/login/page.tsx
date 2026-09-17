@@ -86,7 +86,7 @@ function LoginForm() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-foreground">Password</label>
-              <Link href="/forgot-password" className="text-xs font-medium text-[oklch(0.47_0.20_250)] hover:underline">
+              <Link href="/forgot-password" className="text-xs font-medium text-[oklch(0.47_0.20_25)] hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -126,7 +126,7 @@ function LoginForm() {
 
         <div className="mt-6 text-center text-sm">
           <span className="text-muted-foreground">Don&apos;t have an account? </span>
-          <Link href="/register" className="font-semibold text-[oklch(0.47_0.20_250)] hover:underline">
+          <Link href="/register" className="font-semibold text-[oklch(0.47_0.20_25)] hover:underline">
             Register now
           </Link>
         </div>
