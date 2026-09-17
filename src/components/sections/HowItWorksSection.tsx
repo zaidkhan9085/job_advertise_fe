@@ -91,7 +91,7 @@ function StepCard({
 
 export default function HowItWorksSection() {
   return (
-    <section className="section-padding bg-[oklch(0.975_0.005_250)]">
+    <section className="section-padding bg-[oklch(0.975_0.008_40)]">
       <div className="container-site">
         <div className="text-center mb-14">
           <div className="text-xs font-semibold text-[oklch(0.68_0.21_45)] uppercase tracking-widest mb-2">
@@ -106,11 +106,11 @@ export default function HowItWorksSection() {
         <div className="grid md:grid-cols-2 gap-10 lg:gap-20">
           {/* Job Seekers */}
           <div>
-            <div className="inline-flex items-center gap-2 bg-[oklch(0.47_0.20_250)]/10 text-[oklch(0.47_0.20_250)] text-sm font-bold px-4 py-2 rounded-full mb-7">
+            <div className="inline-flex items-center gap-2 bg-[#5A3E5C]/10 text-[#5A3E5C] text-sm font-bold px-4 py-2 rounded-full mb-7">
               For Job Seekers
             </div>
             {seekerSteps.map((s) => (
-              <StepCard key={s.step} {...s} accent="oklch(0.47 0.20 250)" />
+              <StepCard key={s.step} {...s} accent="#5A3E5C" />
             ))}
           </div>
 

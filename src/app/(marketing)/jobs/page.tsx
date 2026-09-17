@@ -422,7 +422,7 @@ function JobCardView({
       <>
         <div
           onClick={goToJob}
-          className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
+          className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(200,66,44,0.04)] hover:shadow-[0_20px_40px_rgba(200,66,44,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
             job.type === "FEATURED"
               ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 hover:bg-amber-50/20"
               : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
@@ -495,7 +495,7 @@ function JobCardView({
     <>
       <div
         onClick={goToJob}
-        className={`group bg-white rounded-2xl border p-4 sm:p-5 shadow-[0_4px_20px_rgb(30,58,138,0.04)] hover:shadow-[0_20px_40px_rgba(30,58,138,0.08)] transition-all duration-300 cursor-pointer ${
+        className={`group bg-white rounded-2xl border p-4 sm:p-5 shadow-[0_4px_20px_rgb(200,66,44,0.04)] hover:shadow-[0_20px_40px_rgba(200,66,44,0.08)] transition-all duration-300 cursor-pointer ${
           job.type === "FEATURED"
             ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 bg-amber-50/10"
             : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"

@@ -68,8 +68,8 @@ export default function RegisterPage() {
             type="button"
             onClick={() => setRole("Candidate")}
             className={`flex-1 flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
-              role === "Candidate" 
-                ? "border-[oklch(0.47_0.20_250)] bg-[oklch(0.47_0.20_250)]/5 text-[oklch(0.47_0.20_250)]" 
+              role === "Candidate"
+                ? "border-brand-blue bg-brand-blue/5 text-brand-blue"
                 : "border-border/60 hover:border-border text-muted-foreground"
             }`}
           >
@@ -172,7 +172,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm">
           <span className="text-muted-foreground">Already have an account? </span>
-          <Link href="/login" className="font-semibold text-[oklch(0.47_0.20_250)] hover:underline">
+          <Link href="/login" className="font-semibold text-[oklch(0.47_0.20_25)] hover:underline">
             Sign in
           </Link>
         </div>

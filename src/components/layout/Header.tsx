@@ -15,7 +15,7 @@ function Submenu({ items, active }: { items: NavDropdownItem[], active: boolean 
   const isLong = items.length > 15;
   
   return (
-    <div className={`absolute top-0 left-full ml-1 bg-white rounded-2xl shadow-[10px_10px_40px_rgba(30,58,138,0.1)] border border-border/40 p-2 z-[60] animate-in fade-in-0 slide-in-from-left-2 duration-200 max-h-[min(80vh,500px)] overflow-y-auto custom-scrollbar ${
+    <div className={`absolute top-0 left-full ml-1 bg-white rounded-2xl shadow-[10px_10px_40px_rgba(200,66,44,0.1)] border border-border/40 p-2 z-[60] animate-in fade-in-0 slide-in-from-left-2 duration-200 max-h-[min(80vh,500px)] overflow-y-auto custom-scrollbar ${
       isLong ? 'w-[480px]' : 'w-64'
     }`}>
       <div className={`${isLong ? 'grid grid-cols-2 gap-x-1' : 'flex flex-col gap-0.5'}`}>
@@ -67,7 +67,7 @@ function DropdownMenu({ items, label }: { items: NavDropdownItem[], label: strin
   
   return (
     <div className="absolute top-full left-0 pt-3 z-50"> {/* Bridge the gap with wrapper padding */}
-      <div className={`bg-white rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.15)] border border-border/40 p-2 animate-in fade-in-0 slide-in-from-top-2 duration-200 ${
+      <div className={`bg-white rounded-2xl shadow-[0_20px_50px_rgba(200,66,44,0.15)] border border-border/40 p-2 animate-in fade-in-0 slide-in-from-top-2 duration-200 ${
         isIndustry ? 'w-[640px]' : 'w-72'
       }`}>
         <div className={`${isIndustry ? 'grid grid-cols-2 gap-x-2' : 'flex flex-col gap-0.5'}`}>
@@ -115,7 +115,7 @@ function NavItemComponent({ item }: { item: NavItem }) {
       <button
         onClick={() => setOpen(!open)}
         className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
-          open ? 'bg-brand-blue text-white shadow-lg shadow-blue-500/20' : 'text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted'
+          open ? 'bg-brand-blue text-white shadow-lg shadow-[#C8422C]/20' : 'text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted'
         }`}
         aria-expanded={open}
       >
@@ -149,7 +149,7 @@ export default function Header() {
     <>
       <header
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          scrolled ? "bg-white/90 backdrop-blur-lg shadow-[0_8px_30px_rgb(30,58,138,0.06)] py-1.5" : "bg-white border-b border-border/40 py-3"
+          scrolled ? "bg-white/90 backdrop-blur-lg shadow-[0_8px_30px_rgb(200,66,44,0.06)] py-1.5" : "bg-white border-b border-border/40 py-3"
         }`}
       >
         <div className="container-site flex items-center justify-between">
@@ -169,7 +169,7 @@ export default function Header() {
               <>
                 <Link
                   href="/dashboard"
-                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                  className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-[#C8422C]/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
                 >
                   Dashboard
                 </Link>
@@ -184,7 +184,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/post-job"
-                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
+                className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-[#C8422C]/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
               >
                 Post Jobs
               </Link>

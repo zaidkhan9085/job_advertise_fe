@@ -32,7 +32,7 @@ export default function PostJobLandingPage() {
     <div className="bg-muted/10 min-h-screen">
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-[oklch(0.12_0.02_260)] text-white pt-24 pb-32 md:pt-32 md:pb-48">
+      <section className="relative overflow-hidden bg-[oklch(0.12_0.02_40)] text-white pt-24 pb-32 md:pt-32 md:pb-48">
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
           <DecorativeBlur size="xl" className="-top-24 -right-24 bg-brand-blue" />
           <DecorativeBlur size="lg" className="bottom-0 -left-24 bg-brand-blue-light" />

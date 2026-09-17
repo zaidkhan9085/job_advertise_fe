@@ -625,7 +625,7 @@ export default function PostJobPage() {
 
           <div className="bg-white rounded-3xl border border-border/60 shadow-sm overflow-hidden p-8 space-y-8">
             <div className="flex items-center gap-3 border-b border-border/40 pb-5">
-              <div className="w-10 h-10 rounded-xl bg-[oklch(0.47_0.20_250)]/10 text-[oklch(0.47_0.20_250)] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[oklch(0.47_0.20_25)]/10 text-[oklch(0.47_0.20_25)] flex items-center justify-center">
                 <FileText className="w-5 h-5" />
               </div>
               <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Job Content</h2>

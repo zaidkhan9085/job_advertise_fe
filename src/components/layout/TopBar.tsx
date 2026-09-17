@@ -16,7 +16,7 @@ const iconMap: Record<string, React.FC<any>> = {
 
 export default function TopBar() {
   return (
-    <div className="hidden md:block bg-[oklch(0.16_0.04_255)] text-white/80 text-sm">
+    <div className="hidden md:block bg-[oklch(0.16_0.04_40)] text-white/80 text-sm">
       <div className="container-site flex items-center justify-between h-9">
         {/* Left: contact info */}
         <div className="flex items-center gap-5">

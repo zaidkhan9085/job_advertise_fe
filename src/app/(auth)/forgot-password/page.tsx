@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
             </p>
             <Link 
               href="/login"
-              className="inline-flex items-center justify-center gap-2 w-full bg-[oklch(0.47_0.20_250)] text-white hover:bg-[oklch(0.35_0.20_250)] py-2.5 rounded-xl font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 w-full bg-[oklch(0.47_0.20_25)] text-white hover:bg-[oklch(0.35_0.20_25)] py-2.5 rounded-xl font-semibold transition-colors"
             >
               Return to login
             </Link>

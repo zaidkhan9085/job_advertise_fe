@@ -32,7 +32,7 @@ export default function PricingSection() {
   };
 
   return (
-    <section className="section-padding bg-[oklch(0.975_0.005_250)]">
+    <section className="section-padding bg-[oklch(0.975_0.005_40)]">
       <div className="container-site">
         <div className="text-center mb-12">
           <div className="text-xs font-bold text-brand-blue uppercase tracking-[0.2em] mb-3">Recruiters</div>
@@ -165,7 +165,7 @@ export default function PricingSection() {
           <p className="text-muted-foreground font-bold text-sm">Need a custom enterprise solution?</p>
           <Link 
             href="/contact" 
-            className="text-[oklch(0.47_0.20_250)] font-black text-sm hover:underline mt-2 inline-flex items-center gap-1"
+            className="text-[oklch(0.47_0.20_25)] font-black text-sm hover:underline mt-2 inline-flex items-center gap-1"
           >
             Contact our Sales Team <ArrowRight className="w-3 h-3" />
           </Link>

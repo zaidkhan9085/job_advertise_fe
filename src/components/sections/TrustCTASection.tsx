@@ -10,7 +10,7 @@ export default function TrustCTASection() {
       <div className="container-site relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Card 1: Candidates */}
-          <div className="group relative overflow-hidden rounded-[40px] p-10 sm:p-14 bg-brand-blue text-white shadow-[0_20px_50px_rgba(30,58,138,0.3)] transition-all duration-500 hover:-translate-y-2">
+          <div className="group relative overflow-hidden rounded-[40px] p-10 sm:p-14 bg-brand-ink text-white shadow-[0_20px_50px_rgba(43,27,24,0.3)] transition-all duration-500 hover:-translate-y-2">
             <div className="relative z-10 flex flex-col h-full">
               <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform duration-500">
                 <FileText className="w-8 h-8" />

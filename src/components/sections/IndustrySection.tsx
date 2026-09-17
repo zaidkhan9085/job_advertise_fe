@@ -97,7 +97,7 @@ export default function IndustrySection() {
   if (!isMounted || cards.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-14 bg-gradient-to-r from-white via-[#f0f7ff] to-white relative overflow-hidden">
+    <section className="py-10 md:py-14 bg-gradient-to-r from-white via-[#fff2ef] to-white relative overflow-hidden">
       <DecorativeBlur size="3xl" blur="strong" className="top-0 left-0 bg-brand-blue/5 -translate-x-1/2 -translate-y-1/2" />
 
       <div className="container-site relative">

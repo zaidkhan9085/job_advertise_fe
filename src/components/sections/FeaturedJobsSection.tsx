@@ -33,7 +33,7 @@ function JobCard({ job }: { job: typeof featuredJobs[0] }) {
               className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm backdrop-blur-md ${
                 badge === 'Premium' ? 'bg-brand-blue/90 text-white' :
                 badge === 'Pro' ? 'bg-black/80 text-brand-blue-light' :
-                badge === 'Popular' ? 'bg-[oklch(0.47_0.20_250)]/90 text-white' :
+                badge === 'Popular' ? 'bg-[oklch(0.47_0.20_25)]/90 text-white' :
                 'bg-emerald-500/90 text-white'
               }`}
             >

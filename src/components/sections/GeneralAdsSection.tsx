@@ -59,7 +59,7 @@ function GeneralAdCard({ job }: { job: JobPost }) {
             <a
               href={`tel:${job.contactPhone}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center py-1.5 rounded-lg bg-blue-50 text-brand-blue hover:bg-blue-100 transition-colors"
+              className="flex items-center justify-center py-1.5 rounded-lg bg-brand-blue-muted text-brand-blue hover:bg-brand-blue-muted/70 transition-colors"
               title="Call"
             >
               <Phone className="w-3.5 h-3.5" />
