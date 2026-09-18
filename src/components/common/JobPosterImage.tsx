@@ -12,12 +12,16 @@ function initials(text: string) {
 // Job posters are dynamic/user-uploaded and served from the backend's own
 // origin — plain <img> avoids configuring next/image remotePatterns for a
 // host that varies per environment (matches the existing pattern used for
-// the logo elsewhere in this app). Always crops to fill a fixed-size box
-// (set via `className`, e.g. an aspect-ratio wrapper) — confirmed as the
-// deliberate choice over letterboxing/natural sizing so every card in a
-// grid lines up at the same height, matching Naukri/Indeed/LinkedIn
-// convention. object-cover centers by default, so the middle of a poster
-// (where the key text usually sits) survives the crop.
+// the logo elsewhere in this app).
+//
+// Uses object-contain, not object-cover -- an AI poster-scan upload is a
+// dense, text-heavy flyer (salary tables, contact details right up to the
+// edges), not a plain company logo, so center-cropping it to fill a fixed
+// box was cutting off real readable content (confirmed directly: role
+// names and figures sliced off on both sides in card thumbnails). Every
+// current call site's wrapping box already has a background color, so the
+// letterboxed space around a non-matching aspect ratio reads as intentional
+// padding rather than an empty gap.
 export default function JobPosterImage({
   image,
   title,
@@ -35,7 +39,7 @@ export default function JobPosterImage({
 
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={src} alt={alt} className={`object-cover ${className}`} />
+      <img src={src} alt={alt} className={`object-contain ${className}`} />
     );
   }
 
