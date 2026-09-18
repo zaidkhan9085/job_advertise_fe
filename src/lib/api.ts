@@ -345,6 +345,8 @@ export interface ParsedJobPoster {
   phone_numbers: string[];
   email: string | null;
   address: string | null;
+  website: string | null;
+  social_links: string[];
   // true when Gemini itself was unavailable and this came from the
   // on-device OCR + regex fallback instead (see
   // backend/utils/ruleBasedJobPosterParser.js) -- every structured field

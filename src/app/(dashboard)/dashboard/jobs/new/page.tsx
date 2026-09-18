@@ -84,12 +84,31 @@ function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
     if (salary) lines.push(`Salary: ${salary} / month`);
   } else if (jobs.length > 1) {
     lines.push("Positions:");
+    // Group roles that share the exact same salary (and vacancy count) --
+    // a dense multi-role poster can list 50+ positions across only a
+    // handful of real salary tiers, so grouping keeps every single role
+    // name visible (nothing hidden behind a "+N more") while staying
+    // compact instead of one bullet line per role.
+    const groups: { label: string; roles: string[] }[] = [];
+    const indexByLabel = new Map<string, number>();
     jobs.forEach((job) => {
-      const bits = [job.category || job.title || "Position"];
+      const role = job.category || job.title || "Position";
+      const bits: string[] = [];
       if (job.vacancies) bits.push(`${job.vacancies} vacancies`);
       const salary = formatSalary(job);
       if (salary) bits.push(`${salary}/month`);
-      lines.push(`- ${bits.join(" — ")}`);
+      const label = bits.join(" — ");
+      let idx = indexByLabel.get(label);
+      if (idx === undefined) {
+        idx = groups.length;
+        indexByLabel.set(label, idx);
+        groups.push({ label, roles: [] });
+      }
+      groups[idx].roles.push(role);
+    });
+    groups.forEach(({ label, roles }) => {
+      const roleText = roles.join(", ");
+      lines.push(label ? `- ${roleText} — ${label}` : `- ${roleText}`);
     });
   }
 
@@ -115,6 +134,15 @@ function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
     if (parsed.contact_person) lines.push(`Contact Person: ${parsed.contact_person}`);
     if (parsed.phone_numbers.length > 0) lines.push(`Phone: ${parsed.phone_numbers.join(", ")}`);
     if (parsed.address) lines.push(`Address: ${parsed.address}`);
+  }
+
+  if (parsed.website || parsed.social_links.length > 0) {
+    lines.push("", "Connect with us:");
+    if (parsed.website) lines.push(`Website: ${parsed.website}`);
+    // Each entry is already "Platform: handle" when the platform could be
+    // confidently guessed (see ruleBasedJobPosterParser.js) -- otherwise
+    // it's just the raw handle text, shown as-is rather than mislabeled.
+    parsed.social_links.forEach((s) => lines.push(s.includes(":") ? s : `Social: ${s}`));
   }
 
   return lines.join("\n").trim();

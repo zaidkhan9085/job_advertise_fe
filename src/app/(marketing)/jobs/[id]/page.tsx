@@ -343,6 +343,24 @@ export default function JobDetailPage() {
       <div className="container-site relative -mt-20 z-10">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="flex-1 w-full min-w-0 space-y-6">
+            {/* The original poster image, shown in full -- unlike the small
+                header badge above (a cropped square identifier next to the
+                title), this is the actual flyer a candidate would want to
+                read in full: salary tables, benefits, contact details.
+                Natural aspect ratio, no fixed height/crop, so nothing is
+                ever cut off; capped to a sensible reading width instead of
+                stretching a portrait flyer across the whole content column. */}
+            {job.image && (
+              <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={resolveImageUrl(job.image)}
+                  alt={`${job.title} at ${job.company} — original poster`}
+                  className="w-full h-auto max-w-md mx-auto rounded-xl"
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               {[
                 { label: "Type", value: job.type, icon: Building },
@@ -358,7 +376,14 @@ export default function JobDetailPage() {
 
             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
               <h3 className="text-lg font-bold text-foreground mb-4">Description</h3>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-line wrap-break-word">{job.description}</p>
+              {/* An AI poster-scan on a dense multi-role listing can produce a
+                  very long description (50+ positions) -- a fixed max-height
+                  with its own scroll keeps the card (and the sticky apply
+                  sidebar next to it) a sane, predictable size instead of the
+                  whole page stretching to match one long paragraph. */}
+              <div className="max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line wrap-break-word">{job.description}</p>
+              </div>
             </div>
 
             {related.length > 0 && (
