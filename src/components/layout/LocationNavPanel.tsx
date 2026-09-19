@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MapPin } from "lucide-react";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
-import { slugify } from "@/lib/utils";
+import { slugify, buildMergedJobsUrl } from "@/lib/utils";
 
 // Replaces "Nearby Jobs" -- that was a hand-maintained tree of India
 // states/Gulf/Asia countries duplicating what a real location search
@@ -13,12 +13,13 @@ import { slugify } from "@/lib/utils";
 // to find a location everywhere on the site.
 export default function LocationNavPanel({ onNavigate }: { onNavigate: () => void }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [value, setValue] = useState<LocationValue | null>(null);
 
   const handleChange = (location: LocationValue | null) => {
     setValue(location);
     if (location) {
-      router.push(`/jobs?location=${slugify(location.name)}`);
+      router.push(buildMergedJobsUrl(searchParams, "location", slugify(location.name)));
       onNavigate();
     }
   };

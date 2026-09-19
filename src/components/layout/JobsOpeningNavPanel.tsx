@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getJobs, getJobLocations, type JobLocation } from "@/lib/api";
-import { slugify } from "@/lib/utils";
+import { slugify, buildMergedJobsUrl } from "@/lib/utils";
 
 interface LocationCount {
   id: string;
@@ -38,6 +39,7 @@ const MAX_SHOWN = 25;
 // it should be on top"), which a static list could never reflect.
 export default function JobsOpeningNavPanel() {
   const [rows, setRows] = useState<LocationCount[] | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     (async () => {
@@ -82,7 +84,7 @@ export default function JobsOpeningNavPanel() {
             {rows.map((row) => (
               <Link
                 key={row.id}
-                href={`/jobs?location=${slugify(row.name)}`}
+                href={buildMergedJobsUrl(searchParams, "location", slugify(row.name))}
                 className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/80 hover:text-brand-blue hover:bg-brand-blue-muted transition-all"
               >
                 <span className="truncate">{row.name}</span>

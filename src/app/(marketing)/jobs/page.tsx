@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
@@ -110,12 +110,23 @@ function JobsListingContent() {
       .catch(() => {});
   }, [user]);
 
-  // One-time hydration from homepage links (?industry=id, ?location=slug) —
-  // waits for industryOptions to load so its chip can actually be shown as
-  // selected. Location has no preloaded list anymore (worldwide search), so
-  // it resolves each slug against the search endpoint directly instead.
+  // Hydrates filters from the URL (?industry=id, ?location=slug,
+  // ?jobtype=name) -- runs on first load AND every time the URL changes
+  // afterward, not just once. It used to stop after the first run, which
+  // meant clicking a header nav filter link (Industry/Location/Jobs
+  // Opening/Short Term) while already on this page updated the URL but
+  // never touched the page's own filter state or results -- the exact
+  // "doesn't work from here" bug. `lastAppliedParams` distinguishes an
+  // external URL change (a real link click) from the URL updates this
+  // page writes to itself in the effect below, so the two don't fight in
+  // a loop. Only sets the dimension actually present in the URL and
+  // leaves every other already-selected filter alone, so a header link
+  // composes with (rather than clobbers) whatever's already applied here.
+  const lastAppliedParams = useRef<string | null>(null);
   useEffect(() => {
-    if (hydrated || industryOptions.length === 0) return;
+    if (industryOptions.length === 0) return;
+    const current = searchParams.toString();
+    if (current === lastAppliedParams.current) return;
 
     const industryIds = new Set(parseCsv(searchParams.get("industry")));
     if (industryIds.size) {
@@ -141,10 +152,12 @@ function JobsListingContent() {
     }
 
     setHydrated(true);
-  }, [hydrated, industryOptions, searchParams]);
+  }, [industryOptions, searchParams]);
 
   // Keeps the URL shareable/bookmarkable as filters change, mirroring the
-  // pattern the page already used for `q`.
+  // pattern the page already used for `q`. Records what it wrote so the
+  // hydration effect above can tell its own URL update apart from a real
+  // navigation (a header link click) and skip re-hydrating from itself.
   useEffect(() => {
     if (!hydrated) return;
     const params = new URLSearchParams();
@@ -153,7 +166,9 @@ function JobsListingContent() {
     if (selectedLocations.length) params.set("location", selectedLocations.map((o) => slugify(o.name)).join(","));
     if (selectedIndustries.length) params.set("industry", selectedIndustries.map((o) => o.value).join(","));
     if (selectedJobTypes.length) params.set("jobtype", selectedJobTypes.map((o) => o.value).join(","));
-    router.replace(`/jobs${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false });
+    const next = params.toString();
+    lastAppliedParams.current = next;
+    router.replace(`/jobs${next ? `?${next}` : ""}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- router/searchParams intentionally excluded to avoid a loop with the hydration effect
   }, [hydrated, searchTerm, timeFilter, selectedLocations, selectedIndustries, selectedJobTypes]);
 

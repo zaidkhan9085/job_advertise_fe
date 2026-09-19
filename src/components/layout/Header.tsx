@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { buildMergedJobsUrl } from "@/lib/utils";
 import MobileNav from "./MobileNav";
 import IndustryNavPanel from "./IndustryNavPanel";
 import LocationNavPanel from "./LocationNavPanel";
@@ -177,6 +179,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuth();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -223,6 +226,17 @@ export default function Header() {
                   <NavPanelTrigger key={item.label} label="Jobs Opening">
                     {() => <JobsOpeningNavPanel />}
                   </NavPanelTrigger>
+                );
+              }
+              if (item.label === "Short Term") {
+                return (
+                  <Link
+                    key={item.label}
+                    href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
+                    className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+                  >
+                    Short Term
+                  </Link>
                 );
               }
               return <NavItemComponent key={item.label} item={item} />;
