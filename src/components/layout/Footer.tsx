@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, MessageCircle, Send, Briefcase } from "lucide-react";
 import { socialLinks, contactLinks } from "@/data/socialLinks";
+import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 
@@ -67,21 +68,21 @@ export default function Footer() {
             </div>
             <div>
               <h4 className="text-xl sm:text-2xl font-black tracking-tight mb-1">Explore Specialized Jobs</h4>
-              <p className="text-white/60 text-sm sm:text-base font-medium">Find verified free recruitment vacancies and high-priority shutdown projects across the globe.</p>
+              <p className="text-white/60 text-sm sm:text-base font-medium">Find verified vacancies and high-priority short-term opportunities across the globe.</p>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-            <Link 
-              href="/jobs?type=free-recruitment"
+            <Link
+              href="/jobs"
               className="w-full sm:w-auto px-8 py-4 bg-white text-brand-blue font-black rounded-2xl transition-all shadow-xl hover:-translate-y-1 active:scale-95 text-center"
             >
-              Free Recruitment Jobs
+              Browse Jobs
             </Link>
-            <Link 
-              href="/jobs?type=shutdown"
+            <Link
+              href={SHORT_TERM_JOBS_HREF}
               className="w-full sm:w-auto px-8 py-4 bg-brand-blue-light text-white font-black rounded-2xl transition-all shadow-xl hover:-translate-y-1 active:scale-95 text-center border border-white/10"
             >
-              Shutdown Jobs
+              Short Term Jobs
             </Link>
           </div>
         </div>

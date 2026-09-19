@@ -183,7 +183,6 @@ export default function PostJobPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [isFreeRecruitment, setIsFreeRecruitment] = useState(false);
 
   const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
 
@@ -232,6 +231,12 @@ export default function PostJobPage() {
       ]);
       setJobTypes(jobTypeData);
       setIndustries(industryData);
+      // Matches the backend's own default (see jobController.js's
+      // createJob) -- pre-selecting it here means the form's visible
+      // state is never out of sync with what actually gets saved when a
+      // recruiter leaves these fields untouched.
+      setJobTypeId((current) => current || jobTypeData.find((t) => t.name === "Long Term")?.id || current);
+      setIndustryId((current) => current || industryData.find((i) => i.name === "Other Industries")?.id || current);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to load the posting form.");
     } finally {
@@ -354,7 +359,6 @@ export default function PostJobPage() {
         contactPhone: contactPhone || undefined,
         contactWhatsapp,
         contactEmail,
-        isFreeRecruitment,
         jobLocationId: jobLocation?.id || undefined,
         location: posterLocationText || undefined,
         jobTypeId: jobTypeId || undefined,
@@ -599,19 +603,6 @@ export default function PostJobPage() {
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Free Recruitment</label>
-              <select
-                value={isFreeRecruitment ? "yes" : "no"}
-                onChange={(e) => setIsFreeRecruitment(e.target.value === "yes")}
-                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
-              >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </select>
-              <p className="text-xs text-muted-foreground">Shown as a badge to candidates if the candidate pays nothing.</p>
             </div>
           </div>
         </div>

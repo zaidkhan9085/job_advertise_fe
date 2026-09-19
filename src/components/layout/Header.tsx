@@ -8,6 +8,50 @@ import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import MobileNav from "./MobileNav";
+import IndustryNavPanel from "./IndustryNavPanel";
+import LocationNavPanel from "./LocationNavPanel";
+import JobsOpeningNavPanel from "./JobsOpeningNavPanel";
+
+// Shared hover/click-outside trigger for a nav item whose panel is a
+// bespoke, live-data component rather than a static NavDropdownItem tree
+// (see IndustryNavPanel/LocationNavPanel/JobsOpeningNavPanel) -- same open
+// behavior as NavItemComponent below, just rendering arbitrary children
+// instead of a fixed link-tree shape.
+function NavPanelTrigger({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="relative pb-2 mb-[-8px]"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
+          open ? "bg-brand-blue text-white shadow-lg shadow-[#C8422C]/20" : "text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted"
+        }`}
+        aria-expanded={open}
+      >
+        {label}
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && children(() => setOpen(false))}
+    </div>
+  );
+}
 
 function Submenu({ items, active }: { items: NavDropdownItem[], active: boolean }) {
   if (!active) return null;
@@ -159,9 +203,30 @@ export default function Header() {
             </Link>
 
           <nav className="hidden lg:flex items-center gap-0 xl:gap-0.5">
-            {visibleNavItems.map((item) => (
-              <NavItemComponent key={item.label} item={item} />
-            ))}
+            {visibleNavItems.map((item) => {
+              if (item.label === "Industry") {
+                return (
+                  <NavPanelTrigger key={item.label} label="Industry">
+                    {() => <IndustryNavPanel />}
+                  </NavPanelTrigger>
+                );
+              }
+              if (item.label === "Location") {
+                return (
+                  <NavPanelTrigger key={item.label} label="Location">
+                    {(close) => <LocationNavPanel onNavigate={close} />}
+                  </NavPanelTrigger>
+                );
+              }
+              if (item.label === "Jobs Opening") {
+                return (
+                  <NavPanelTrigger key={item.label} label="Jobs Opening">
+                    {() => <JobsOpeningNavPanel />}
+                  </NavPanelTrigger>
+                );
+              }
+              return <NavItemComponent key={item.label} item={item} />;
+            })}
           </nav>
 
           <div className="hidden lg:flex items-center gap-2 xl:gap-4">

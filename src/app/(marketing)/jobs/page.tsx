@@ -47,8 +47,7 @@ const TIME_OPTIONS = [
 
 const JOB_TYPE_OPTIONS: ComboOption[] = [
   { value: "Long Term", label: "Long Term" },
-  { value: "Shutdown", label: "Shutdown" },
-  { value: "Free", label: "Free Recruitment" },
+  { value: "Short Term", label: "Short Term" },
 ];
 
 function parseCsv(value: string | null): string[] {
@@ -197,8 +196,7 @@ function JobsListingContent() {
       const matchesJobType =
         selectedTypeNames.size === 0 ||
         (selectedTypeNames.has("Long Term") && job.jobType?.name === "Long Term") ||
-        (selectedTypeNames.has("Shutdown") && job.jobType?.name === "Shutdown") ||
-        (selectedTypeNames.has("Free") && job.isFreeRecruitment);
+        (selectedTypeNames.has("Short Term") && job.jobType?.name === "Short Term");
 
       return matchesSearch && matchesTime && matchesLocation && matchesIndustry && matchesJobType;
     });

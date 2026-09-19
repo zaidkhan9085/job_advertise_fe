@@ -1282,6 +1282,10 @@ export interface JobLocation {
   id: string;
   name: string;
   parentId: string | null;
+  // Already sent by the backend (a plain Prisma `include` returns every
+  // scalar field), just not declared here before -- "REGION" | "COUNTRY" |
+  // "STATE" | "CITY" (this endpoint only ever returns the first three).
+  locationType: string;
   children: JobLocation[];
 }
 
