@@ -313,33 +313,19 @@ export default function AdminEmployersPage() {
   const handleToggleFeatured = async (company: CompanyAdminListItem) => {
     setActioningId(company.id);
     try {
-      const result = await setCompanyFeatured(company.id, { featured: !company.isFeaturedTopHiring });
+      const result = await setCompanyFeatured(company.id, !company.isFeaturedTopHiring);
       toast.success(
         result.isFeaturedTopHiring
           ? `${company.name} added to Top Companies Hiring`
           : `${company.name} removed from Top Companies Hiring`
       );
       setCompanies((prev) =>
-        prev.map((c) =>
-          c.id === company.id
-            ? { ...c, isFeaturedTopHiring: result.isFeaturedTopHiring, featuredOrder: result.featuredOrder }
-            : c
-        )
+        prev.map((c) => (c.id === company.id ? { ...c, isFeaturedTopHiring: result.isFeaturedTopHiring } : c))
       );
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update featured status.");
     } finally {
       setActioningId(null);
-    }
-  };
-
-  const handleFeaturedOrderChange = async (company: CompanyAdminListItem, order: number) => {
-    if (!Number.isInteger(order) || order === company.featuredOrder) return;
-    try {
-      const result = await setCompanyFeatured(company.id, { order });
-      setCompanies((prev) => prev.map((c) => (c.id === company.id ? { ...c, featuredOrder: result.featuredOrder } : c)));
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to update order.");
     }
   };
 
@@ -420,31 +406,20 @@ export default function AdminEmployersPage() {
     {
       key: "featured",
       title: "Top Hiring",
-      minWidth: 150,
+      minWidth: 100,
       render: (_, company) => (
-        <div className="flex items-center gap-2">
-          <button
-            title={company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
-            disabled={actioningId === company.id}
-            onClick={() => handleToggleFeatured(company)}
-            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
-              company.isFeaturedTopHiring
-                ? "text-amber-500 hover:bg-amber-100"
-                : "text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            <Star className={`w-4 h-4 ${company.isFeaturedTopHiring ? "fill-amber-400" : ""}`} />
-          </button>
-          {company.isFeaturedTopHiring && (
-            <input
-              type="number"
-              defaultValue={company.featuredOrder}
-              onBlur={(e) => handleFeaturedOrderChange(company, Number(e.target.value))}
-              title="Display order on homepage (lower shows first)"
-              className="w-14 px-2 py-1.5 rounded-lg bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none text-xs font-bold text-center"
-            />
-          )}
-        </div>
+        <button
+          title={company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
+          disabled={actioningId === company.id}
+          onClick={() => handleToggleFeatured(company)}
+          className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+            company.isFeaturedTopHiring
+              ? "text-amber-500 hover:bg-amber-100"
+              : "text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          <Star className={`w-4 h-4 ${company.isFeaturedTopHiring ? "fill-amber-400" : ""}`} />
+        </button>
       ),
     },
     {

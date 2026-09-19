@@ -5,10 +5,11 @@ import { Building2 } from "lucide-react";
 import { getFeaturedCompanies, resolveImageUrl, type FeaturedCompany, ApiError } from "@/lib/api";
 
 // Purely admin-curated (see dashboard/admin/employers -- the "Top Hiring"
-// star toggle + order field): the backend already hides any featured
-// company the moment it has zero real active jobs, so nothing here needs to
-// double-check that -- an empty list just means no one is currently
-// featured, and the section renders nothing rather than an empty block.
+// star toggle): shows every company an admin has featured regardless of its
+// current job count -- featuring a company is a deliberate, standing
+// choice, so it never silently disappears just because it has no active
+// jobs right now. An empty list just means no one is currently featured,
+// and the section renders nothing rather than an empty block.
 // Cards aren't links yet -- what a click should filter to (exact company vs
 // a name-text search) is still an open decision, deferred on purpose.
 export default function TopCompaniesSection() {
