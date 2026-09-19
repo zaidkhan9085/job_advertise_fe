@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins } from "lucide-react";
+import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,7 @@ import {
   updateCandidateUser,
   setCandidateBlocked,
   grantCreditsToCompany,
+  setCompanyFeatured,
   resolveImageUrl,
   type CompanyAdminListItem,
   type PaginatedMeta,
@@ -28,7 +29,7 @@ import { isValidEmail } from "@/lib/isValidEmail";
 const PAGE_LIMIT = 20;
 
 function toCsv(companies: CompanyAdminListItem[]): string {
-  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Region", "Jobs", "Followers", "Pending Reports", "Blocked", "Created"];
+  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Region", "Jobs", "Followers", "Pending Reports", "Top Hiring", "Blocked", "Created"];
   const rows = companies.map((c) => [
     c.name,
     c.owner.full_name ?? "",
@@ -38,6 +39,7 @@ function toCsv(companies: CompanyAdminListItem[]): string {
     String(c._count.jobs),
     String(c.followerCount),
     String(c.pendingReportCount),
+    c.isFeaturedTopHiring ? "Yes" : "No",
     c.owner.isBlocked ? "Yes" : "No",
     c.createdAt,
   ]);
@@ -308,6 +310,25 @@ export default function AdminEmployersPage() {
     }
   };
 
+  const handleToggleFeatured = async (company: CompanyAdminListItem) => {
+    setActioningId(company.id);
+    try {
+      const result = await setCompanyFeatured(company.id, !company.isFeaturedTopHiring);
+      toast.success(
+        result.isFeaturedTopHiring
+          ? `${company.name} added to Top Companies Hiring`
+          : `${company.name} removed from Top Companies Hiring`
+      );
+      setCompanies((prev) =>
+        prev.map((c) => (c.id === company.id ? { ...c, isFeaturedTopHiring: result.isFeaturedTopHiring } : c))
+      );
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update featured status.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -381,6 +402,25 @@ export default function AdminEmployersPage() {
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
+    },
+    {
+      key: "featured",
+      title: "Top Hiring",
+      minWidth: 100,
+      render: (_, company) => (
+        <button
+          title={company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
+          disabled={actioningId === company.id}
+          onClick={() => handleToggleFeatured(company)}
+          className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+            company.isFeaturedTopHiring
+              ? "text-amber-500 hover:bg-amber-100"
+              : "text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          <Star className={`w-4 h-4 ${company.isFeaturedTopHiring ? "fill-amber-400" : ""}`} />
+        </button>
+      ),
     },
     {
       key: "created",

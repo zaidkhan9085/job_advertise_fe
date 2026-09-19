@@ -824,6 +824,7 @@ export interface Company {
   region: Region | null;
   jobLocationId: string | null;
   jobLocation: JobLocationRef | null;
+  isFeaturedTopHiring: boolean;
   createdAt: string;
 }
 
@@ -1097,6 +1098,30 @@ export function setCompanyBonusFollowers(companyId: string, bonusFollowers: numb
       body: JSON.stringify({ bonusFollowers }),
     },
   );
+}
+
+// Sets whether a company appears in the homepage's "Top Companies Hiring"
+// section.
+export function setCompanyFeatured(companyId: string, featured: boolean) {
+  return apiFetch<{ message: string; isFeaturedTopHiring: boolean }>(
+    `/api/admin/companies/${companyId}/featured`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ featured }),
+    },
+  );
+}
+
+// --- Homepage: Top Companies Hiring ---
+export interface FeaturedCompany {
+  id: string;
+  name: string;
+  logo: string | null;
+  jobCount: number;
+}
+
+export function getFeaturedCompanies() {
+  return apiFetch<FeaturedCompany[]>("/api/companies/featured");
 }
 
 // --- ATS: candidate search ---

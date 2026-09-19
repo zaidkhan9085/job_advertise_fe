@@ -1,6 +1,7 @@
 import StoriesSection from "@/components/sections/StoriesSection";
 import SearchSection from "@/components/sections/SearchSection";
 import HomeCTASection from "@/components/sections/HomeCTASection";
+import TopCompaniesSection from "@/components/sections/TopCompaniesSection";
 import PremiumAdsSection from "@/components/sections/PremiumAdsSection";
 import GeneralAdsSection from "@/components/sections/GeneralAdsSection";
 import IndustrySection from "@/components/sections/IndustrySection";
@@ -15,6 +16,7 @@ export default function Home() {
       <StoriesSection />
       <SearchSection />
       <HomeCTASection />
+      <TopCompaniesSection />
       <PremiumAdsSection />
       <GeneralAdsSection />
       <IndustrySection />
