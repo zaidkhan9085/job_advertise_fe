@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins } from "lucide-react";
+import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,7 @@ import {
   updateCandidateUser,
   setCandidateBlocked,
   grantCreditsToCompany,
+  setCompanyFeatured,
   resolveImageUrl,
   type CompanyAdminListItem,
   type PaginatedMeta,
@@ -28,7 +29,7 @@ import { isValidEmail } from "@/lib/isValidEmail";
 const PAGE_LIMIT = 20;
 
 function toCsv(companies: CompanyAdminListItem[]): string {
-  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Region", "Jobs", "Followers", "Pending Reports", "Blocked", "Created"];
+  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Region", "Jobs", "Followers", "Pending Reports", "Top Hiring", "Blocked", "Created"];
   const rows = companies.map((c) => [
     c.name,
     c.owner.full_name ?? "",
@@ -38,6 +39,7 @@ function toCsv(companies: CompanyAdminListItem[]): string {
     String(c._count.jobs),
     String(c.followerCount),
     String(c.pendingReportCount),
+    c.isFeaturedTopHiring ? "Yes" : "No",
     c.owner.isBlocked ? "Yes" : "No",
     c.createdAt,
   ]);
@@ -308,6 +310,39 @@ export default function AdminEmployersPage() {
     }
   };
 
+  const handleToggleFeatured = async (company: CompanyAdminListItem) => {
+    setActioningId(company.id);
+    try {
+      const result = await setCompanyFeatured(company.id, { featured: !company.isFeaturedTopHiring });
+      toast.success(
+        result.isFeaturedTopHiring
+          ? `${company.name} added to Top Companies Hiring`
+          : `${company.name} removed from Top Companies Hiring`
+      );
+      setCompanies((prev) =>
+        prev.map((c) =>
+          c.id === company.id
+            ? { ...c, isFeaturedTopHiring: result.isFeaturedTopHiring, featuredOrder: result.featuredOrder }
+            : c
+        )
+      );
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update featured status.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleFeaturedOrderChange = async (company: CompanyAdminListItem, order: number) => {
+    if (!Number.isInteger(order) || order === company.featuredOrder) return;
+    try {
+      const result = await setCompanyFeatured(company.id, { order });
+      setCompanies((prev) => prev.map((c) => (c.id === company.id ? { ...c, featuredOrder: result.featuredOrder } : c)));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update order.");
+    }
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -381,6 +416,36 @@ export default function AdminEmployersPage() {
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
+    },
+    {
+      key: "featured",
+      title: "Top Hiring",
+      minWidth: 150,
+      render: (_, company) => (
+        <div className="flex items-center gap-2">
+          <button
+            title={company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
+            disabled={actioningId === company.id}
+            onClick={() => handleToggleFeatured(company)}
+            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+              company.isFeaturedTopHiring
+                ? "text-amber-500 hover:bg-amber-100"
+                : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <Star className={`w-4 h-4 ${company.isFeaturedTopHiring ? "fill-amber-400" : ""}`} />
+          </button>
+          {company.isFeaturedTopHiring && (
+            <input
+              type="number"
+              defaultValue={company.featuredOrder}
+              onBlur={(e) => handleFeaturedOrderChange(company, Number(e.target.value))}
+              title="Display order on homepage (lower shows first)"
+              className="w-14 px-2 py-1.5 rounded-lg bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none text-xs font-bold text-center"
+            />
+          )}
+        </div>
+      ),
     },
     {
       key: "created",
