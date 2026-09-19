@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getIndustries, type Industry } from "@/lib/api";
+import { buildMergedJobsUrl } from "@/lib/utils";
 
 // Fetches the real Industry list once per mount (not on every open — the
 // nav is remounted rarely, and this avoids a network round-trip flashing
@@ -14,6 +16,7 @@ import { getIndustries, type Industry } from "@/lib/api";
 // drift apart again, and links actually work.
 export default function IndustryNavPanel() {
   const [industries, setIndustries] = useState<Industry[] | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     getIndustries()
@@ -35,7 +38,7 @@ export default function IndustryNavPanel() {
             {industries.map((industry) => (
               <Link
                 key={industry.id}
-                href={`/jobs?industry=${industry.id}`}
+                href={buildMergedJobsUrl(searchParams, "industry", industry.id)}
                 title={industry.name}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] leading-tight text-foreground/80 hover:text-brand-blue hover:bg-brand-blue-muted transition-all"
               >
