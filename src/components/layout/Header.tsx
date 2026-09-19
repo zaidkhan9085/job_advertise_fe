@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
@@ -126,6 +126,23 @@ function DropdownMenu({ items, label }: { items: NavDropdownItem[], label: strin
   );
 }
 
+// useSearchParams() forces Next.js to bail out of static prerendering for
+// any page that renders it unless it's isolated behind its own Suspense
+// boundary -- kept as its own tiny component (rather than called directly
+// in Header, which every page renders) so only this one link opts out of
+// static rendering instead of the whole header.
+function ShortTermLink() {
+  const searchParams = useSearchParams();
+  return (
+    <Link
+      href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
+      className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+    >
+      Short Term
+    </Link>
+  );
+}
+
 function NavItemComponent({ item }: { item: NavItem }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -179,7 +196,6 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuth();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -230,13 +246,16 @@ export default function Header() {
               }
               if (item.label === "Short Term") {
                 return (
-                  <Link
+                  <Suspense
                     key={item.label}
-                    href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
-                    className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+                    fallback={
+                      <span className="px-4 py-2 text-[15px] font-bold text-foreground/70">
+                        Short Term
+                      </span>
+                    }
                   >
-                    Short Term
-                  </Link>
+                    <ShortTermLink />
+                  </Suspense>
                 );
               }
               return <NavItemComponent key={item.label} item={item} />;
