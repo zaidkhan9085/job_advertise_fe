@@ -86,16 +86,20 @@ export default function RegionsSection() {
           href: `/jobs?location=${slugify(node.name)}`,
         });
         const byCountDesc = (a: RegionRow, b: RegionRow) => b.jobCount - a.jobCount;
+        // Only locations with at least one live job -- a full list of every
+        // seeded country/state (most with nothing posted yet) buried the
+        // handful that actually matter under dozens of "0 jobs" rows.
+        const hasJobs = (r: RegionRow) => r.jobCount > 0;
 
-        const gulf = (findNode("Gulf")?.children ?? []).map((n) => toRow(n, "🌍")).sort(byCountDesc);
-        const india = (findNode("India (All States)")?.children ?? []).map((n) => toRow(n, "🇮🇳")).sort(byCountDesc);
-        const asia = (findNode("Asia")?.children ?? []).map((n) => toRow(n, "🌏")).sort(byCountDesc);
+        const gulf = (findNode("Gulf")?.children ?? []).map((n) => toRow(n, "🌍")).filter(hasJobs).sort(byCountDesc);
+        const india = (findNode("India (All States)")?.children ?? []).map((n) => toRow(n, "🇮🇳")).filter(hasJobs).sort(byCountDesc);
+        const asia = (findNode("Asia")?.children ?? []).map((n) => toRow(n, "🌏")).filter(hasJobs).sort(byCountDesc);
         const intlLeaves = ["Australia", "Canada", "Europe", "New Zealand"]
           .map(findNode)
           .filter((n): n is JobLocation => !!n)
           .map((n) => toRow(n, "🌍"));
         const russiaChildren = (findNode("Russia & Other Countries")?.children ?? []).map((n) => toRow(n, "🌍"));
-        const international = [...intlLeaves, ...russiaChildren].sort(byCountDesc);
+        const international = [...intlLeaves, ...russiaChildren].filter(hasJobs).sort(byCountDesc);
 
         setTabs([
           { key: "gulf", label: "Gulf", items: gulf },
@@ -148,6 +152,10 @@ export default function RegionsSection() {
               <div key={i} className="h-13 rounded-xl bg-secondary/40 animate-pulse" />
             ))}
           </div>
+        ) : (current?.items ?? []).length === 0 ? (
+          <p className="text-center text-muted-foreground font-medium py-10">
+            No live jobs in this region yet -- check back soon.
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {(current?.items ?? []).map((region) => (

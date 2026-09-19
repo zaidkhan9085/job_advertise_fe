@@ -31,7 +31,6 @@ export default function AdminEditJobPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [isFreeRecruitment, setIsFreeRecruitment] = useState(false);
 
   const [locations, setLocations] = useState<JobLocation[]>([]);
   const [jobLocationId, setJobLocationId] = useState<string | null>(null);
@@ -62,7 +61,6 @@ export default function AdminEditJobPage() {
       setContactPhone(job.contactPhone ?? "");
       setContactWhatsapp(job.contactWhatsapp ?? "");
       setContactEmail(job.contactEmail ?? "");
-      setIsFreeRecruitment(job.isFreeRecruitment);
       setJobLocationId(job.jobLocationId);
       setJobLocationLabel(job.location);
       setJobTypeId(job.jobTypeId ?? "");
@@ -92,7 +90,6 @@ export default function AdminEditJobPage() {
         contactPhone: contactPhone || undefined,
         contactWhatsapp: contactWhatsapp || undefined,
         contactEmail: contactEmail || undefined,
-        isFreeRecruitment,
         jobLocationId: jobLocationId || undefined,
         jobTypeId: jobTypeId || undefined,
         industryId: industryId || undefined,
@@ -194,18 +191,6 @@ export default function AdminEditJobPage() {
             <option value="NORMAL">General</option>
             <option value="FEATURED">Featured</option>
             <option value="STORY">Story</option>
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-foreground/80">Free Recruitment</label>
-          <select
-            value={isFreeRecruitment ? "yes" : "no"}
-            onChange={(e) => setIsFreeRecruitment(e.target.value === "yes")}
-            className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
-          >
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
           </select>
         </div>
 
