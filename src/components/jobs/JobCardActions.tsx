@@ -7,8 +7,9 @@ import { Phone, MessageCircle, CheckCircle2 } from "lucide-react";
 import { recordJobInteraction, type JobPost } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
+import { buildJobWhatsAppUrl } from "@/lib/jobShare";
 
-type ActionJob = Pick<JobPost, "id" | "title" | "contactPhone" | "contactWhatsapp">;
+type ActionJob = Pick<JobPost, "id" | "title" | "company" | "location" | "contactPhone" | "contactWhatsapp">;
 
 // The one action row every job card on the site uses -- Apply, WhatsApp,
 // Call, always in that order and always all three, so a card behaves the
@@ -50,7 +51,7 @@ export default function JobCardActions({
     setIsApplyOpen(true);
   };
 
-  const whatsappHref = job.contactWhatsapp ? `https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}` : null;
+  const whatsappHref = job.contactWhatsapp ? buildJobWhatsAppUrl(job.contactWhatsapp, job) : null;
   const telHref = job.contactPhone ? `tel:${job.contactPhone}` : null;
 
   const isList = layout === "list";

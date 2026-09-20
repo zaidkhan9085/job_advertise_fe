@@ -16,6 +16,7 @@ import CityAutocomplete, { toLocationValue, type LocationValue } from "@/compone
 import SearchableSelect from "@/components/common/SearchableSelect";
 import SimpleSelect from "@/components/common/SimpleSelect";
 import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
+import { SITE_REF } from "@/lib/site";
 
 const COURSE_SELECT_OPTIONS = COURSE_OPTIONS.map((c) => ({ value: c, label: c }));
 const EXPERIENCE_YEAR_SELECT_OPTIONS = Array.from({ length: 41 }, (_, i) => ({
@@ -29,6 +30,7 @@ const labelClass = "block text-xs font-bold text-muted-foreground uppercase trac
 
 function buildWhatsAppMessage(payload: { name?: string; phone?: string }, jobTitle: string, resumeLink?: string) {
   return [
+    `Ref By ${SITE_REF}`,
     `Hi, I've applied for "${jobTitle}".`,
     `Name: ${payload.name}`,
     `Phone: ${payload.phone}`,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: {
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     "recruitment India",
     "international jobs",
   ],
-  metadataBase: new URL("https://thejobs4u.com"),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     type: "website",
     siteName: "thejobs4u",

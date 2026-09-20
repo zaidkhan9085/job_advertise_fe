@@ -30,3 +30,33 @@ export function buildMergedJobsUrl(currentParams: URLSearchParams, paramKey: str
   params.set(paramKey, values.join(","));
   return `/jobs?${params.toString()}`;
 }
+
+// navigator.clipboard only exists in secure contexts (https / localhost) --
+// opening the dev server from a phone over the LAN (http://192.168.x.x) or
+// any non-secure host has no clipboard API at all, and it can also reject
+// when the tab isn't focused. Falls back to the older textarea +
+// execCommand path so "Share -> copy link" still works there.
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fall through to the legacy path
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
