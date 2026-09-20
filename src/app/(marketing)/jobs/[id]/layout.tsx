@@ -18,7 +18,13 @@ const SITE_NAME = "thejobs4u";
 
 async function fetchJob(id: string): Promise<JobPost | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/jobs/${encodeURIComponent(id)}`, { next: { revalidate: 300 } });
+    // Metadata is now resolved before the page is sent to EVERY visitor (see
+    // htmlLimitedBots in next.config.ts), so a slow API must never hold a
+    // page load hostage -- give up after 3s and fall back to generic tags.
+    const res = await fetch(`${API_BASE}/api/jobs/${encodeURIComponent(id)}`, {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3000),
+    });
     if (!res.ok) return null;
     return (await res.json()) as JobPost;
   } catch {
@@ -26,15 +32,30 @@ async function fetchJob(id: string): Promise<JobPost | null> {
   }
 }
 
+const PREVIEW_W = 1200;
+const PREVIEW_H = 630;
+
 // Preview crawlers need an absolute, publicly reachable URL, and
-// WhatsApp/Facebook silently drop preview images over roughly 300 KB -- an
-// original poster can be a multi-MB PNG, and even a 1200px q_auto JPEG of a
-// dense poster measured 328 KB. Cloudinary (where uploads live) resizes and
-// re-encodes via the URL, so cap at 800px wide "eco" JPEG (~150-170 KB for
-// the same posters); the thumbnail is shown small in chat anyway.
-function previewImageUrl(raw: string): string {
+// WhatsApp/Facebook drop preview images over roughly 300 KB (a dense poster
+// measured 328 KB as a plain 1200px JPEG). Cloudinary (where uploads live)
+// re-encodes via the URL, so this produces an exact 1200x630 canvas with the
+// WHOLE poster padded onto it (~60-100 KB). Padding instead of cropping
+// matters: link cards are landscape, and cropping a tall poster to fit showed
+// a random middle slice. The exact size is also declared (og:image:width /
+// height), which lets the app lay the card out before downloading the image.
+// Anything not on Cloudinary (legacy local uploads, the logo fallback) is
+// passed through untouched, with no size hint since we don't know it.
+function previewImage(raw: string): { url: string; width?: number; height?: number } {
   const absolute = /^https?:\/\//.test(raw) ? raw : `${API_BASE}${raw}`;
-  return absolute.replace("/image/upload/", "/image/upload/f_jpg,q_auto:eco,c_limit,w_800/");
+  if (!absolute.includes("/image/upload/")) return { url: absolute };
+  return {
+    url: absolute.replace(
+      "/image/upload/",
+      `/image/upload/f_jpg,q_auto:eco,c_pad,w_${PREVIEW_W},h_${PREVIEW_H},b_rgb:f5efe9/`
+    ),
+    width: PREVIEW_W,
+    height: PREVIEW_H,
+  };
 }
 
 // Deliberately short and fixed-format rather than an excerpt of the job's
@@ -59,7 +80,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const description = buildDescription(job);
   // A text-only listing has no poster -- fall back to the site logo so the
   // preview still carries a thumbnail instead of nothing.
-  const image = job.image ? previewImageUrl(job.image) : "/logo-icon.png";
+  const image = job.image ? previewImage(job.image) : { url: "/logo-icon.png" };
 
   return {
     title: job.title,
@@ -72,13 +93,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       url: `/jobs/${id}`,
       title: job.title,
       description,
-      images: [{ url: image, alt: `${job.title} — ${job.company}` }],
+      images: [{ ...image, secureUrl: image.url, alt: `${job.title} — ${job.company}` }],
     },
     twitter: {
       card: "summary_large_image",
       title: job.title,
       description,
-      images: [image],
+      images: [image.url],
     },
   };
 }
