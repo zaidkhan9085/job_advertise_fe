@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Clock, MessageSquare, Send } from "lucide-react";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
+import { SUPPORT_EMAIL } from "@/data/socialLinks";
 
 export default function ContactPage() {
   return (
@@ -34,7 +35,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <div className="text-xs font-black text-brand-blue/40 uppercase tracking-widest mb-1">Email Us</div>
-                <div className="font-bold text-brand-blue">support@thejobs4u.com</div>
+                <div className="font-bold text-brand-blue">{SUPPORT_EMAIL}</div>
               </div>
             </div>
 

@@ -11,8 +11,12 @@ export const socialLinks = [
   { label: "YouTube", href: "https://www.youtube.com/@thejobsadvertise" },
 ];
 
+// The one address used for every job-support / contact / outgoing-mail
+// reference on the site (the backend mailer sends from it too).
+export const SUPPORT_EMAIL = "support@thejobsadvertise.com";
+
 export const contactLinks = {
-  email: "mailto:support@thejobs4u.com",
+  email: `mailto:${SUPPORT_EMAIL}`,
   whatsappChannel: "https://whatsapp.com/channel/0029VaAXD6dL7UVQmJNt5X0E",
   whatsappGroup: "https://chat.whatsapp.com/HGSAQokMgiqBEZJL5S67LD",
   androidApp: "https://play.google.com/store/apps/details?id=co.median.android.lpmaorp",

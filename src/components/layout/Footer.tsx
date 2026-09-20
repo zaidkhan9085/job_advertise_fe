@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, MessageCircle, Send, Briefcase } from "lucide-react";
-import { socialLinks, contactLinks } from "@/data/socialLinks";
+import { socialLinks, contactLinks, SUPPORT_EMAIL } from "@/data/socialLinks";
 import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
@@ -133,7 +133,7 @@ export default function Footer() {
               <div className="flex flex-col items-center sm:items-start gap-2">
                 <div className="flex items-center gap-3 text-brand-blue-light group cursor-pointer">
                   <Mail className="w-5 h-5" />
-                  <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">support@thejobs4u.com</span>
+                  <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">{SUPPORT_EMAIL}</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/40">
                   <MapPin className="w-4 h-4" />

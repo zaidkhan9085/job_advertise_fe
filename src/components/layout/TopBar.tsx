@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Mail, Facebook, Twitter, Linkedin, Instagram, Youtube, MessageCircle, Smartphone } from "lucide-react";
-import { socialLinks, contactLinks } from "@/data/socialLinks";
+import { socialLinks, contactLinks, SUPPORT_EMAIL } from "@/data/socialLinks";
 import { authNavItems } from "@/data/navigation";
 
 // Map social names to their respective icons
@@ -25,7 +25,7 @@ export default function TopBar() {
             className="flex items-center gap-1.5 hover:text-white transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />
-            support@thejobs4u.com
+            {SUPPORT_EMAIL}
           </a>
           <a
             href={contactLinks.whatsappGroup}

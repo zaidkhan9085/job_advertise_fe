@@ -6,6 +6,7 @@ import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigat
 import Logo from "@/components/common/Logo";
 import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { contactLinks } from "@/data/socialLinks";
 
 function MobileNavSubSection({ item, depth = 0 }: { item: NavDropdownItem, depth?: number }) {
   const [open, setOpen] = useState(false);
@@ -141,7 +142,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           <div className="m-5 p-6 rounded-3xl bg-brand-blue-muted/30 border border-brand-blue/5">
             <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue/50 mb-5">Support Center</h5>
             <div className="space-y-5">
-              <a href={`mailto:support@thejobs4u.com`} className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors">
+              <a href={contactLinks.email} className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors">
                 <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-border/40">
                   <Mail className="w-5 h-5 text-brand-blue" />
                 </div>
