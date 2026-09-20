@@ -37,25 +37,47 @@ const PREVIEW_H = 630;
 
 // Preview crawlers need an absolute, publicly reachable URL, and
 // WhatsApp/Facebook drop preview images over roughly 300 KB (a dense poster
-// measured 328 KB as a plain 1200px JPEG). Cloudinary (where uploads live)
-// re-encodes via the URL, so this produces an exact 1200x630 canvas with the
-// WHOLE poster padded onto it (~60-100 KB). Padding instead of cropping
-// matters: link cards are landscape, and cropping a tall poster to fit showed
-// a random middle slice. The exact size is also declared (og:image:width /
-// height), which lets the app lay the card out before downloading the image.
-// Anything not on Cloudinary (legacy local uploads, the logo fallback) is
-// passed through untouched, with no size hint since we don't know it.
+// measured 328 KB as a plain 1200px JPEG). Link cards are also landscape
+// (1.91:1) while posters are usually portrait/square, so a plain resize
+// either crops away part of the poster or leaves blank bars. Cloudinary
+// (where uploads live) builds the card from the URL alone: an exact
+// 1200x630 canvas filled with a blurred, enlarged copy of the poster, with
+// the WHOLE sharp poster centered on top (~70-80 KB). The exact size is
+// declared (og:image:width / height) so the app can lay the card out before
+// downloading the image. Anything not on Cloudinary (legacy local uploads,
+// the logo fallback) is passed through untouched with no size hint, since
+// its size isn't known.
+const CLOUDINARY_UPLOAD = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)((?:v\d+\/)?)([A-Za-z0-9_\-/]+)(\.[A-Za-z0-9]+)?$/;
+
 function previewImage(raw: string): { url: string; width?: number; height?: number } {
   const absolute = /^https?:\/\//.test(raw) ? raw : `${API_BASE}${raw}`;
-  if (!absolute.includes("/image/upload/")) return { url: absolute };
-  return {
-    url: absolute.replace(
-      "/image/upload/",
-      `/image/upload/f_jpg,q_auto:eco,c_pad,w_${PREVIEW_W},h_${PREVIEW_H},b_rgb:f5efe9/`
-    ),
-    width: PREVIEW_W,
-    height: PREVIEW_H,
-  };
+  const size = { width: PREVIEW_W, height: PREVIEW_H };
+
+  const m = absolute.match(CLOUDINARY_UPLOAD);
+  if (m) {
+    const [, base, version, publicId, ext = ""] = m;
+    // In a layer reference the folder separators become ":".
+    const layerId = publicId.replace(/\//g, ":");
+    return {
+      url:
+        `${base}c_fill,w_${PREVIEW_W},h_${PREVIEW_H},e_blur:1500,q_auto:eco/` +
+        `l_${layerId},c_fit,w_${PREVIEW_W},h_${PREVIEW_H}/fl_layer_apply,g_center/f_jpg/` +
+        `${version}${publicId}${ext}`,
+      ...size,
+    };
+  }
+
+  // Cloudinary URL of an unexpected shape: plain padded canvas, no layers.
+  if (absolute.includes("/image/upload/")) {
+    return {
+      url: absolute.replace(
+        "/image/upload/",
+        `/image/upload/f_jpg,q_auto:eco,c_pad,w_${PREVIEW_W},h_${PREVIEW_H},b_rgb:f5efe9/`
+      ),
+      ...size,
+    };
+  }
+  return { url: absolute };
 }
 
 // Deliberately short and fixed-format rather than an excerpt of the job's
