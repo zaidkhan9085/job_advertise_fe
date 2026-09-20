@@ -27,12 +27,14 @@ async function fetchJob(id: string): Promise<JobPost | null> {
 }
 
 // Preview crawlers need an absolute, publicly reachable URL, and
-// WhatsApp/Facebook silently drop images that are too large -- an original
-// poster can be a multi-MB PNG. Cloudinary (where uploads live) can resize
-// and re-encode on the fly via the URL, so cap it at 1200px wide JPEG.
+// WhatsApp/Facebook silently drop preview images over roughly 300 KB -- an
+// original poster can be a multi-MB PNG, and even a 1200px q_auto JPEG of a
+// dense poster measured 328 KB. Cloudinary (where uploads live) resizes and
+// re-encodes via the URL, so cap at 800px wide "eco" JPEG (~150-170 KB for
+// the same posters); the thumbnail is shown small in chat anyway.
 function previewImageUrl(raw: string): string {
   const absolute = /^https?:\/\//.test(raw) ? raw : `${API_BASE}${raw}`;
-  return absolute.replace("/image/upload/", "/image/upload/f_jpg,q_auto,c_limit,w_1200/");
+  return absolute.replace("/image/upload/", "/image/upload/f_jpg,q_auto:eco,c_limit,w_800/");
 }
 
 // Deliberately short and fixed-format rather than an excerpt of the job's
