@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Phone, ArrowRight, MessageCircle, MapPin } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { getNormalJobs, type JobPost, ApiError } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import { useIsRecent } from "@/hooks/useIsRecent";
+import { useAppliedJobs } from "@/hooks/useAppliedJobs";
+import JobCardActions from "@/components/jobs/JobCardActions";
 
-function GeneralAdCard({ job }: { job: JobPost }) {
+function GeneralAdCard({ job, hasApplied, onApplied }: { job: JobPost; hasApplied: boolean; onApplied: () => void }) {
   const router = useRouter();
   const isNew = useIsRecent(job.createdAt);
 
@@ -38,40 +40,8 @@ function GeneralAdCard({ job }: { job: JobPost }) {
           <span className="text-[11px] font-medium truncate">{job.location}</span>
         </div>
 
-        <div className="mt-auto grid grid-cols-3 gap-1.5">
-          {job.contactWhatsapp ? (
-            <a
-              href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center py-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
-              title="WhatsApp"
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <div className="flex items-center justify-center py-1.5 rounded-lg bg-secondary text-muted-foreground/40">
-              <MessageCircle className="w-3.5 h-3.5" />
-            </div>
-          )}
-          {job.contactPhone ? (
-            <a
-              href={`tel:${job.contactPhone}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center py-1.5 rounded-lg bg-brand-blue-muted text-brand-blue hover:bg-brand-blue-muted/70 transition-colors"
-              title="Call"
-            >
-              <Phone className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <div className="flex items-center justify-center py-1.5 rounded-lg bg-secondary text-muted-foreground/40">
-              <Phone className="w-3.5 h-3.5" />
-            </div>
-          )}
-          <div className="flex items-center justify-center py-1.5 rounded-lg bg-foreground/5 text-foreground" title="Apply">
-            <ArrowRight className="w-3.5 h-3.5" />
-          </div>
+        <div className="mt-auto">
+          <JobCardActions job={job} hasApplied={hasApplied} onApplied={onApplied} />
         </div>
       </div>
     </div>
@@ -80,6 +50,7 @@ function GeneralAdCard({ job }: { job: JobPost }) {
 
 export default function GeneralAdsSection() {
   const [jobs, setJobs] = useState<JobPost[]>([]);
+  const { appliedIds, markApplied } = useAppliedJobs();
 
   const loadJobs = useCallback(async () => {
     try {
@@ -119,7 +90,12 @@ export default function GeneralAdsSection() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {jobs.slice(0, 8).map((job) => (
-            <GeneralAdCard key={job.id} job={job} />
+            <GeneralAdCard
+              key={job.id}
+              job={job}
+              hasApplied={appliedIds.has(job.id)}
+              onApplied={() => markApplied(job.id)}
+            />
           ))}
         </div>
 

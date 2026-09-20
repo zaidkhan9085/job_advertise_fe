@@ -6,23 +6,18 @@ import {
   Search,
   MapPin,
   Briefcase,
-  Phone,
-  ArrowUpRight,
   Building,
   LayoutGrid,
   List as ListIcon,
   RotateCcw,
   ChevronDown,
   Star,
-  CheckCircle2,
 } from "lucide-react";
 import {
   getJobs,
   getJobTypes,
   getIndustries,
   searchJobLocations,
-  recordJobInteraction,
-  getMyApplications,
   type JobPost,
   ApiError,
 } from "@/lib/api";
@@ -31,8 +26,8 @@ import DecorativeBlur from "@/components/common/DecorativeBlur";
 import MultiSelectCombobox, { type ComboOption } from "@/components/common/MultiSelectCombobox";
 import LocationCountFilter, { type LocationValue } from "@/components/common/LocationCountFilter";
 import { useIsRecent } from "@/hooks/useIsRecent";
-import { useAuth } from "@/context/AuthContext";
-import ApplyDialog from "@/components/jobs/ApplyDialog";
+import { useAppliedJobs } from "@/hooks/useAppliedJobs";
+import JobCardActions from "@/components/jobs/JobCardActions";
 import { slugify } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
@@ -57,7 +52,6 @@ function parseCsv(value: string | null): string[] {
 function JobsListingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
   const [timeFilter, setTimeFilter] = useState(searchParams.get("time") || "any");
@@ -68,7 +62,7 @@ function JobsListingContent() {
   const [industryOptions, setIndustryOptions] = useState<ComboOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const { appliedIds, markApplied } = useAppliedJobs();
 
   const [selectedLocations, setSelectedLocations] = useState<LocationValue[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<ComboOption[]>([]);
@@ -92,23 +86,6 @@ function JobsListingContent() {
   useEffect(() => {
     load();
   }, [load]);
-
-  // Which jobs this candidate has already applied to, so cards can show
-  // "Applied" instead of letting them submit a duplicate (backend already
-  // blocks it, but that's a worse UX than never offering it in the first
-  // place). Only candidates apply, so this is skipped for employers/admin.
-  useEffect(() => {
-    if (user?.role !== "candidate") {
-      setAppliedJobIds(new Set());
-      return;
-    }
-    getMyApplications()
-      .then((res) => {
-        const ids = (res.data as { jobId: string }[]).map((a) => a.jobId);
-        setAppliedJobIds(new Set(ids));
-      })
-      .catch(() => {});
-  }, [user]);
 
   // Hydrates filters from the URL (?industry=id, ?location=slug,
   // ?jobtype=name) -- runs on first load AND every time the URL changes
@@ -364,8 +341,8 @@ function JobsListingContent() {
                     key={job.id}
                     job={job}
                     mode={viewMode}
-                    hasApplied={appliedJobIds.has(job.id)}
-                    onApplied={() => setAppliedJobIds((prev) => new Set(prev).add(job.id))}
+                    hasApplied={appliedIds.has(job.id)}
+                    onApplied={() => markApplied(job.id)}
                   />
                 ))}
               </div>
@@ -400,176 +377,92 @@ function JobCardView({
   onApplied: () => void;
 }) {
   const router = useRouter();
-  const { user } = useAuth();
   const isNew = useIsRecent(job.createdAt);
   const goToJob = () => router.push(`/jobs/${job.id}`);
-  const [isApplyOpen, setIsApplyOpen] = useState(false);
-
-  // Two actions only on the card itself (per explicit request): Apply, and
-  // Call for a one-tap direct contact on mobile -- WhatsApp is still
-  // available, just reached through Apply's own post-submit step
-  // (ApplyDialog) rather than a separate always-visible icon here. Once the
-  // candidate has already applied, Apply is replaced with a disabled
-  // "Applied" state -- Call stays exactly as-is either way.
-  const handleApplyClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    if (hasApplied) return;
-    setIsApplyOpen(true);
-  };
-
-  const applyDialog = isApplyOpen && (
-    <ApplyDialog
-      jobId={job.id}
-      jobTitle={job.title}
-      onClose={() => setIsApplyOpen(false)}
-      onSuccess={onApplied}
-    />
-  );
 
   if (mode === "grid") {
     return (
-      <>
-        <div
-          onClick={goToJob}
-          className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(200,66,44,0.04)] hover:shadow-[0_20px_40px_rgba(200,66,44,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
-            job.type === "FEATURED"
-              ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 hover:bg-amber-50/20"
-              : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
-          }`}
-        >
-          <div className="relative aspect-[4/5] w-full overflow-hidden border-b border-brand-blue/10 bg-secondary/20">
-            <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
-            {job.type === "FEATURED" && (
-              <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-1.5 px-3 flex items-center gap-1.5 shadow-md">
-                <Star className="w-3 h-3 fill-white text-white shrink-0" />
-                <span className="text-[10px] font-black text-white uppercase tracking-wider">Featured</span>
-              </div>
-            )}
-            {isNew && (
-              <span className="absolute bottom-2.5 left-2.5 z-10 text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-md bg-emerald-500 text-white shadow-md">
-                New
-              </span>
-            )}
+      <div
+        onClick={goToJob}
+        className={`group bg-white rounded-2xl border shadow-[0_4px_20px_rgb(200,66,44,0.04)] hover:shadow-[0_20px_40px_rgba(200,66,44,0.08)] transition-all duration-300 overflow-hidden h-full flex flex-col cursor-pointer ${
+          job.type === "FEATURED"
+            ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 hover:bg-amber-50/20"
+            : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
+        }`}
+      >
+        <div className="relative aspect-[4/5] w-full overflow-hidden border-b border-brand-blue/10 bg-secondary/20">
+          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
+          {job.type === "FEATURED" && (
+            <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#DAA520] to-[#FFD700] py-1.5 px-3 flex items-center gap-1.5 shadow-md">
+              <Star className="w-3 h-3 fill-white text-white shrink-0" />
+              <span className="text-[10px] font-black text-white uppercase tracking-wider">Featured</span>
+            </div>
+          )}
+          {isNew && (
+            <span className="absolute bottom-2.5 left-2.5 z-10 text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-md bg-emerald-500 text-white shadow-md">
+              New
+            </span>
+          )}
+        </div>
+        <div className="p-3 flex flex-col flex-1">
+          <h3 className="font-extrabold text-[13px] leading-tight group-hover:text-brand-blue transition-colors line-clamp-1 mb-1">
+            {job.title}
+          </h3>
+          <div className="flex items-center gap-1 mb-2 text-[11px] font-medium text-muted-foreground group-hover:text-brand-blue transition-colors">
+            <Building className="w-3 h-3 text-brand-blue/40 shrink-0" />
+            <span className="truncate">{job.company}</span>
+            <span className="text-brand-blue/20 shrink-0">·</span>
+            <MapPin className="w-3 h-3 text-brand-blue/40 shrink-0" />
+            <span className="truncate">{job.location}</span>
           </div>
-          <div className="p-3 flex flex-col flex-1">
-            <h3 className="font-extrabold text-[13px] leading-tight group-hover:text-brand-blue transition-colors line-clamp-1 mb-1">
-              {job.title}
-            </h3>
-            <div className="flex items-center gap-1 mb-2 text-[11px] font-medium text-muted-foreground group-hover:text-brand-blue transition-colors">
-              <Building className="w-3 h-3 text-brand-blue/40 shrink-0" />
-              <span className="truncate">{job.company}</span>
-              <span className="text-brand-blue/20 shrink-0">·</span>
-              <MapPin className="w-3 h-3 text-brand-blue/40 shrink-0" />
-              <span className="truncate">{job.location}</span>
-            </div>
-            <div className="mt-auto pt-2 border-t border-brand-blue/10 flex items-center justify-end gap-1.5">
-              {job.contactPhone && (
-                <a
-                  href={`tel:${job.contactPhone}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    recordJobInteraction(job.id, "CALL");
-                  }}
-                  className="p-1.5 rounded-md bg-secondary text-foreground hover:bg-border/60 transition-colors"
-                  title="Call"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                </a>
-              )}
-              {hasApplied ? (
-                <span
-                  className="p-1.5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center"
-                  title="Applied"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                </span>
-              ) : (
-                <button
-                  onClick={handleApplyClick}
-                  className="p-1.5 rounded-md bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all"
-                  title="Apply"
-                >
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+          <div className="mt-auto pt-2 border-t border-brand-blue/10">
+            <JobCardActions job={job} hasApplied={hasApplied} onApplied={onApplied} />
           </div>
         </div>
-        {applyDialog}
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <div
-        onClick={goToJob}
-        className={`group bg-white rounded-2xl border p-4 sm:p-5 shadow-[0_4px_20px_rgb(200,66,44,0.04)] hover:shadow-[0_20px_40px_rgba(200,66,44,0.08)] transition-all duration-300 cursor-pointer ${
-          job.type === "FEATURED"
-            ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 bg-amber-50/10"
-            : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
-          <div className="relative w-full sm:w-24 h-32 sm:h-24 shrink-0">
-            <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full rounded-xl border border-brand-blue/10" />
-            {isNew && (
-              <span className="absolute bottom-1.5 left-1.5 text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-emerald-500 text-white shadow-md">
-                New
+    <div
+      onClick={goToJob}
+      className={`group bg-white rounded-2xl border p-4 sm:p-5 shadow-[0_4px_20px_rgb(200,66,44,0.04)] hover:shadow-[0_20px_40px_rgba(200,66,44,0.08)] transition-all duration-300 cursor-pointer ${
+        job.type === "FEATURED"
+          ? "border-[#DAA520]/40 hover:border-[#DAA520]/70 bg-amber-50/10"
+          : "border-brand-blue/15 hover:border-brand-blue/40 hover:bg-brand-blue-muted/5"
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div className="relative w-full sm:w-24 h-32 sm:h-24 shrink-0">
+          <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full rounded-xl border border-brand-blue/10" />
+          {isNew && (
+            <span className="absolute bottom-1.5 left-1.5 text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-emerald-500 text-white shadow-md">
+              New
+            </span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4 mb-1">
+            <h3 className="text-lg sm:text-xl font-extrabold text-brand-blue group-hover:text-brand-blue-medium transition-colors line-clamp-1 leading-snug">
+              {job.title}
+            </h3>
+            {job.type === "FEATURED" && (
+              <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r from-[#DAA520] to-[#FFD700] text-white shadow-sm">
+                <Star className="w-3 h-3 fill-white" /> Featured
               </span>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4 mb-1">
-              <h3 className="text-lg sm:text-xl font-extrabold text-brand-blue group-hover:text-brand-blue-medium transition-colors line-clamp-1 leading-snug">
-                {job.title}
-              </h3>
-              {job.type === "FEATURED" && (
-                <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r from-[#DAA520] to-[#FFD700] text-white shadow-sm">
-                  <Star className="w-3 h-3 fill-white" /> Featured
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-sm font-bold text-muted-foreground group-hover:text-brand-blue transition-colors mb-4">
-              <span className="flex items-center gap-1.5"><Building className="w-4 h-4 opacity-50 text-brand-blue" /> {job.company}</span>
-              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 opacity-50 text-brand-blue" /> {job.location}</span>
-              <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-50 text-brand-blue" /> {job.type}</span>
-            </div>
-          </div>
-          <div className="w-full sm:w-auto sm:border-l sm:border-brand-blue/10 sm:pl-6 flex flex-row sm:flex-col gap-2 shrink-0">
-            {job.contactPhone && (
-              <a
-                href={`tel:${job.contactPhone}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  recordJobInteraction(job.id, "CALL");
-                }}
-                className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-foreground hover:bg-border/60 font-bold text-[13px] transition-colors"
-              >
-                <Phone className="w-4 h-4" /> Call
-              </a>
-            )}
-            {hasApplied ? (
-              <span className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-[13px]">
-                <CheckCircle2 className="w-4 h-4" /> Applied
-              </span>
-            ) : (
-              <button
-                onClick={handleApplyClick}
-                className="flex-1 sm:w-32 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white font-bold text-[13px] transition-all"
-              >
-                Apply <ArrowUpRight className="w-4 h-4" />
-              </button>
-            )}
+          <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-sm font-bold text-muted-foreground group-hover:text-brand-blue transition-colors mb-4">
+            <span className="flex items-center gap-1.5"><Building className="w-4 h-4 opacity-50 text-brand-blue" /> {job.company}</span>
+            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 opacity-50 text-brand-blue" /> {job.location}</span>
+            <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 opacity-50 text-brand-blue" /> {job.type}</span>
           </div>
         </div>
+        <div className="w-full sm:w-auto sm:border-l sm:border-brand-blue/10 sm:pl-6 shrink-0">
+          <JobCardActions job={job} hasApplied={hasApplied} onApplied={onApplied} layout="list" />
+        </div>
       </div>
-      {applyDialog}
-    </>
+    </div>
   );
 }
 

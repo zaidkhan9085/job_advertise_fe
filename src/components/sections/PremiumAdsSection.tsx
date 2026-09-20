@@ -3,15 +3,18 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, MessageCircle, Star, Crown, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Crown } from "lucide-react";
 import { getFeaturedJobs, type JobPost, ApiError } from "@/lib/api";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
+import JobCardActions from "@/components/jobs/JobCardActions";
+import { useAppliedJobs } from "@/hooks/useAppliedJobs";
 
 export default function PremiumAdsSection() {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [premiumJobs, setPremiumJobs] = useState<JobPost[]>([]);
+  const { appliedIds, markApplied } = useAppliedJobs();
 
   const loadJobs = useCallback(async () => {
     try {
@@ -127,26 +130,12 @@ export default function PremiumAdsSection() {
                     </h3>
                   </Link>
 
-                  <div className="pt-2 border-t border-brand-blue/10 flex items-center justify-end gap-1.5">
-                    {job.contactWhatsapp && (
-                      <a
-                        href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="WhatsApp"
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 rounded-md bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 transition-colors"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      title="Apply"
-                      className="p-1.5 rounded-md bg-brand-blue/5 text-brand-blue hover:bg-brand-blue hover:text-white transition-all"
-                    >
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                  <div className="pt-2 border-t border-brand-blue/10">
+                    <JobCardActions
+                      job={job}
+                      hasApplied={appliedIds.has(job.id)}
+                      onApplied={() => markApplied(job.id)}
+                    />
                   </div>
                 </div>
               </div>

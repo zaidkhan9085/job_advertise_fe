@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { X, Phone, MessageSquare, ArrowUpRight } from "lucide-react";
 import { resolveImageUrl, type JobPost } from "@/lib/api";
+import { buildJobWhatsAppUrl } from "@/lib/jobShare";
 
 const STORY_DURATION_MS = 5000;
 
@@ -139,7 +140,7 @@ export default function StoryViewer({
             )}
             {story.contactWhatsapp && (
               <a
-                href={`https://wa.me/${story.contactWhatsapp.replace(/[^\d+]/g, "")}`}
+                href={buildJobWhatsAppUrl(story.contactWhatsapp, story)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500 text-white font-bold text-sm py-2.5 rounded-xl"

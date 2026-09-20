@@ -20,7 +20,7 @@ export default function SearchSection() {
       <div className="container-site">
         <div className="max-w-3xl mx-auto">
           <h1 className="font-display text-2xl md:text-3xl font-black text-foreground tracking-tight mb-2">
-            Find verified Gulf &amp; overseas jobs, faster
+            Find Verified India, Gulf &amp; Overseas Jobs Faster
           </h1>
           <p className="text-muted-foreground font-medium mb-5">
             Search live openings from real employers — no agency fees, ever.

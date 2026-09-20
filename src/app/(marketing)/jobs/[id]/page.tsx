@@ -46,6 +46,8 @@ import { useAuth } from "@/context/AuthContext";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
+import { buildJobWhatsAppUrl, buildJobMailtoUrl, buildJobShareText, jobPageUrl } from "@/lib/jobShare";
+import { copyToClipboard } from "@/lib/utils";
 
 function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: string }) {
   return (
@@ -115,6 +117,7 @@ export default function JobDetailPage() {
   const [job, setJob] = useState<JobPost | null>(null);
   const [related, setRelated] = useState<JobPost[]>([]);
   const [company, setCompany] = useState<CompanyDetail | null>(null);
+  const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
@@ -128,10 +131,14 @@ export default function JobDetailPage() {
       setJob(jobData);
       getRelatedJobs(params.id).then(setRelated).catch(() => {});
       if (jobData.companyId) {
-        getCompanyById(jobData.companyId).then((c) => {
-          setCompany(c);
-          setMyRating(c.myRating ?? 0);
-        }).catch(() => {});
+        setIsCompanyLoading(true);
+        getCompanyById(jobData.companyId)
+          .then((c) => {
+            setCompany(c);
+            setMyRating(c.myRating ?? 0);
+          })
+          .catch(() => {})
+          .finally(() => setIsCompanyLoading(false));
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) setNotFound(true);
@@ -162,18 +169,28 @@ export default function JobDetailPage() {
     router.push("/login");
   };
 
+  // The native share sheet (phones) gets the message text AND the link, so
+  // the receiving app shows a readable post rather than a bare URL -- and
+  // WhatsApp still builds its thumbnail card from the link's own tags. Where
+  // there's no share sheet (most desktops) the same message is copied.
   const handleShare = async () => {
-    const url = window.location.href;
+    if (!job) return;
+    const url = jobPageUrl(job.id);
+    const text = buildJobShareText(job);
     if (navigator.share) {
       try {
-        await navigator.share({ title: job?.title, url });
+        await navigator.share({ title: job.title, text, url });
         return;
-      } catch {
-        // user cancelled or share failed — fall through to clipboard
+      } catch (err) {
+        // Closing the share sheet isn't a failure -- don't also copy.
+        if (err instanceof DOMException && err.name === "AbortError") return;
       }
     }
-    await navigator.clipboard.writeText(url);
-    alert("Link copied to clipboard");
+    if (await copyToClipboard(`${text}\n${url}`)) {
+      toast.success("Link copied — paste it in WhatsApp or anywhere to share");
+    } else {
+      toast.error("Couldn't copy the link. Please copy it from the address bar.");
+    }
   };
 
   const handleTrackInteraction = (type: "CALL" | "WHATSAPP") => {
@@ -320,8 +337,24 @@ export default function JobDetailPage() {
 
           <div className="flex flex-col md:flex-row gap-6 justify-between items-start">
             <div className="flex gap-4 sm:gap-6 items-start">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl shrink-0 overflow-hidden border border-white/20 shadow-xl">
-                <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />
+              {/* The employer's own logo, not the poster (the full poster is
+                  shown in its own card below) -- this badge identifies WHO is
+                  hiring. A logo can be any shape, so it's letterboxed
+                  (object-contain) rather than cropped. Jobs posted by staff
+                  have no company profile and show the site's own mark; a
+                  company with no logo uploaded falls back to its initial. */}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl shrink-0 overflow-hidden border border-white/20 shadow-xl flex items-center justify-center">
+                {isCompanyLoading ? (
+                  <div className="w-full h-full bg-secondary animate-pulse" />
+                ) : company?.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={resolveImageUrl(company.logo)} alt={`${company.name} logo`} className="w-full h-full object-contain p-1.5" />
+                ) : !job.companyId ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src="/logo-icon.png" alt="thejobs4u" className="w-full h-full object-contain p-2" />
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-black text-brand-blue">{job.company.slice(0, 1).toUpperCase()}</span>
+                )}
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-2 leading-tight">
@@ -434,7 +467,7 @@ export default function JobDetailPage() {
 
                 {job.contactWhatsapp && (
                   <a
-                    href={`https://wa.me/${job.contactWhatsapp.replace(/[^\d+]/g, "")}`}
+                    href={buildJobWhatsAppUrl(job.contactWhatsapp, job)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => handleTrackInteraction("WHATSAPP")}
@@ -456,7 +489,9 @@ export default function JobDetailPage() {
 
                 {job.contactEmail && (
                   <a
-                    href={`mailto:${job.contactEmail}`}
+                    href={buildJobMailtoUrl(job.contactEmail, job)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-full flex items-center justify-center gap-2 bg-secondary text-foreground hover:bg-border/60 py-3 px-4 rounded-xl font-bold transition-colors"
                   >
                     <Mail className="w-5 h-5" /> Email
