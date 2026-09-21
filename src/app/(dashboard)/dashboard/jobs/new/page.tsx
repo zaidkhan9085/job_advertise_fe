@@ -13,10 +13,6 @@ import {
   ImagePlus,
   Mail,
   MapPin,
-  Sparkles,
-  PenLine,
-  Check,
-  RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -32,83 +28,67 @@ import {
   type Industry,
   type ParsedJobPoster,
   type ParsedJobEntry,
+  type PosterScanMeta,
 } from "@/lib/api";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import PhoneInput from "@/components/common/PhoneInput";
 import SearchableSelect from "@/components/common/SearchableSelect";
 import { validateFileSize } from "@/lib/fileValidation";
 import { useAuth } from "@/context/AuthContext";
+import PosterScanPanel, { SCAN_STEPS, type ScanPhase } from "@/components/jobs/PosterScanPanel";
+import { compressForScan } from "@/lib/compressImage";
+import { DESCRIPTION_MAX_LENGTH } from "@/lib/jobLimits";
 
-// Cosmetic progress steps shown while a poster scan is in flight -- the
-// backend is a single opaque Gemini call (plus retries), it doesn't report
-// discrete stages, so this is a simulated sequence (see the timer effect
-// below) rather than real backend progress. Purely to give the recruiter
-// something concrete to look at instead of an indefinite spinner.
-const PARSING_STEPS = ["Reading your poster", "Extracting job details", "Matching location", "Filling your form"];
-
-// A poster with multiple job categories becomes ONE job listing, not one
-// per category (matching how similar sites present multi-role posters) --
-// so the title has to represent the whole posting, not a single role.
+// The listing headline comes from the scan (about the ROLE, never the agency
+// that posted it -- the backend strips the company name). Only if that's
+// missing do we fall back to the single role's own name.
 function buildTitleFromPoster(parsed: ParsedJobPoster): string {
-  if (parsed.jobs.length === 1) {
-    return (parsed.jobs[0].title || parsed.jobs[0].category || "").trim();
-  }
-  if (parsed.jobs.length > 1) {
-    const where = [parsed.company_name, parsed.location].filter(Boolean).join(" — ");
-    return where ? `Urgently Required — ${where}` : "Urgently Required — Multiple Positions";
-  }
-  return parsed.company_name ? `Job Opening at ${parsed.company_name}` : "";
+  if (parsed.title) return parsed.title.trim();
+  if (parsed.jobs.length === 1) return (parsed.jobs[0].category || "").trim();
+  return "";
 }
 
+// The salary exactly as the poster prints it ("1,800 - 2,300 AED",
+// "Negotiable"); the parsed numbers are only used when there's no printed text.
 function formatSalary(job: ParsedJobEntry): string | null {
+  if (job.salary_raw) return job.salary_raw;
   const currency = job.salary_currency ? `${job.salary_currency} ` : "";
   if (job.salary_min && job.salary_max) return `${currency}${job.salary_min}-${job.salary_max}`;
-  if (job.salary_min) return `${currency}${job.salary_min}+`;
-  return job.salary_raw || null;
+  if (job.salary_min) return `${currency}${job.salary_min}`;
+  return null;
 }
 
 // Turns the poster-wide extracted fields into the free-text Job.description
 // -- there's no structured vacancies/salary/benefits column on Job, so this
 // is the only place that data can live. Every section is optional and
 // omitted when empty; the result stays fully editable afterward, never
-// regenerated on its own. Multiple detected jobs are listed out here (one
-// line each) since they all become a single job posting, not separate ones.
+// regenerated on its own. A multi-role poster becomes ONE listing with one
+// line per role (vacancies and salary on the same line) -- however many
+// there are: the job page scrolls the description, so nothing is grouped,
+// capped or hidden behind a "+N more".
 function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
   const lines: string[] = [];
   const jobs = parsed.jobs;
+
+  // A two-line summary first, so a reader gets the gist before the full list.
+  // (`?.` because the backend deploys separately and may not send it yet.)
+  if (parsed.overview?.length > 0) {
+    lines.push("Overview:", ...parsed.overview, "");
+  }
 
   if (jobs.length === 1) {
     const job = jobs[0];
     if (job.vacancies) lines.push(`Vacancies: ${job.vacancies}`);
     const salary = formatSalary(job);
-    if (salary) lines.push(`Salary: ${salary} / month`);
+    if (salary) lines.push(`Salary: ${salary}${/\d/.test(salary) ? " / month" : ""}`);
   } else if (jobs.length > 1) {
     lines.push("Positions:");
-    // Group roles that share the exact same salary (and vacancy count) --
-    // a dense multi-role poster can list 50+ positions across only a
-    // handful of real salary tiers, so grouping keeps every single role
-    // name visible (nothing hidden behind a "+N more") while staying
-    // compact instead of one bullet line per role.
-    const groups: { label: string; roles: string[] }[] = [];
-    const indexByLabel = new Map<string, number>();
     jobs.forEach((job) => {
-      const role = job.category || job.title || "Position";
-      const bits: string[] = [];
+      const bits = [job.category || job.title || "Position"];
       if (job.vacancies) bits.push(`${job.vacancies} vacancies`);
       const salary = formatSalary(job);
-      if (salary) bits.push(`${salary}/month`);
-      const label = bits.join(" — ");
-      let idx = indexByLabel.get(label);
-      if (idx === undefined) {
-        idx = groups.length;
-        indexByLabel.set(label, idx);
-        groups.push({ label, roles: [] });
-      }
-      groups[idx].roles.push(role);
-    });
-    groups.forEach(({ label, roles }) => {
-      const roleText = roles.join(", ");
-      lines.push(label ? `- ${roleText} — ${label}` : `- ${roleText}`);
+      if (salary) bits.push(/\d/.test(salary) ? `${salary} / month` : salary);
+      lines.push(`• ${bits.join(" — ")}`);
     });
   }
 
@@ -119,8 +99,6 @@ function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
   if (parsed.benefits.length > 0) {
     lines.push("", "Benefits:", ...parsed.benefits.map((b) => `- ${b}`));
   }
-
-  if (parsed.project_name) lines.push("", `Project: ${parsed.project_name}`);
 
   if (parsed.interview_date || parsed.interview_time || parsed.interview_venue) {
     lines.push("", "Interview Details:");
@@ -140,9 +118,15 @@ function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
     lines.push("", "Connect with us:");
     if (parsed.website) lines.push(`Website: ${parsed.website}`);
     // Each entry is already "Platform: handle" when the platform could be
-    // confidently guessed (see ruleBasedJobPosterParser.js) -- otherwise
-    // it's just the raw handle text, shown as-is rather than mislabeled.
+    // confidently guessed -- otherwise it's just the raw handle text, shown
+    // as-is rather than mislabeled.
     parsed.social_links.forEach((s) => lines.push(s.includes(":") ? s : `Social: ${s}`));
+  }
+
+  // A basic (no-AI) read that couldn't pull out any roles: keep the
+  // poster's own text so the recruiter has everything to work from.
+  if (parsed.degraded && jobs.length === 0 && parsed.raw_text) {
+    lines.push("", "Poster text (auto-scanned, please review):", parsed.raw_text);
   }
 
   return lines.join("\n").trim();
@@ -196,15 +180,21 @@ export default function PostJobPage() {
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // AI poster-scan mode: uploading a poster image pre-fills the fields
-  // below for review instead of typing everything manually. Defaults to
-  // manual so an untouched page behaves exactly as before this feature.
-  const [posterMode, setPosterMode] = useState<"manual" | "scan">("manual");
-  const [isParsingPoster, setIsParsingPoster] = useState(false);
+  // Poster scan: the recruiter uploads the image FIRST, then picks "Scan with
+  // AI" or "Fill manually" (and can re-scan / switch any time) -- see
+  // PosterScanPanel. `null` = no poster attached yet.
+  const [scanPhase, setScanPhase] = useState<ScanPhase | null>(null);
+  const isParsingPoster = scanPhase === "scanning";
   const [parsingStep, setParsingStep] = useState(0);
   const [parsingProgress, setParsingProgress] = useState(0);
   const [parsedPoster, setParsedPoster] = useState<ParsedJobPoster | null>(null);
-  const [scanFailed, setScanFailed] = useState(false);
+  const [scanBasic, setScanBasic] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  // The server refused the scan because the recruiter's daily allowance is used
+  // up or an admin paused AI scanning for them -- retrying can't help.
+  const [scanLocked, setScanLocked] = useState(false);
+  // "3 of 10 AI scans left today", from the last successful scan.
+  const [scanQuota, setScanQuota] = useState<PosterScanMeta["quota"]>(null);
   // Raw extracted location text, sent as the free-text `location` fallback
   // alongside jobLocationId -- the backend only uses it when jobLocationId
   // didn't resolve to a match, so an ambiguous/unmatched AI location isn't
@@ -249,15 +239,15 @@ export default function PostJobPage() {
     loadFormData();
   }, [loadFormData, isAuthLoading]);
 
-  // Cosmetic step advance while a scan is in flight -- see PARSING_STEPS.
+  // Cosmetic step advance while a scan is in flight -- see SCAN_STEPS.
   useEffect(() => {
     if (!isParsingPoster) {
       setParsingStep(0);
       return;
     }
     const interval = setInterval(() => {
-      setParsingStep((s) => Math.min(s + 1, PARSING_STEPS.length - 1));
-    }, 1300);
+      setParsingStep((s) => Math.min(s + 1, SCAN_STEPS.length - 1));
+    }, 1700);
     return () => clearInterval(interval);
   }, [isParsingPoster]);
 
@@ -275,63 +265,135 @@ export default function PostJobPage() {
     return () => clearInterval(interval);
   }, [isParsingPoster]);
 
-  const applyParsedPoster = async (parsed: ParsedJobPoster) => {
-    setTitle(buildTitleFromPoster(parsed).slice(0, 100));
-    setDescription(buildDescriptionFromPoster(parsed).slice(0, 2500));
-    if (parsed.phone_numbers[0]) {
-      setContactPhone(parsed.phone_numbers[0]);
-      setContactWhatsapp(parsed.phone_numbers[0]);
+  // What the most recent scan wrote into each field. A field still holding
+  // exactly that text hasn't been touched by the recruiter, so scanning a
+  // DIFFERENT poster may replace it -- while anything they typed or edited is
+  // left alone.
+  const autoFilled = useRef<{
+    title?: string;
+    description?: string;
+    industryId?: string;
+    jobTypeId?: string;
+    phone?: string;
+    whatsapp?: string;
+    email?: string;
+    locationId?: string;
+  }>({});
+
+  // Fills the form from a scan. Only fields that are empty, still hold a
+  // previous scan's own text, or (for industry) still sit on the "Other
+  // Industries" default are filled; pressing Re-scan (overwrite) replaces
+  // everything.
+  const applyParsedPoster = async (parsed: ParsedJobPoster, overwrite: boolean) => {
+    const filled = autoFilled.current;
+    const canFill = (current: string, previous?: string) => overwrite || !current.trim() || current === previous;
+    const otherIndustryId = industries.find((i) => i.name === "Other Industries")?.id;
+
+    const nextTitle = buildTitleFromPoster(parsed).slice(0, 100);
+    if (nextTitle && canFill(title, filled.title)) {
+      setTitle(nextTitle);
+      filled.title = nextTitle;
     }
-    if (parsed.email) setContactEmail(parsed.email);
+
+    const nextDescription = buildDescriptionFromPoster(parsed).slice(0, DESCRIPTION_MAX_LENGTH);
+    if (nextDescription && canFill(description, filled.description)) {
+      setDescription(nextDescription);
+      filled.description = nextDescription;
+    }
+
+    const industryUnset = !industryId || industryId === otherIndustryId || industryId === filled.industryId;
+    if (parsed.industry && (overwrite || industryUnset)) {
+      setIndustryId(parsed.industry.id);
+      filled.industryId = parsed.industry.id;
+    }
+
+    // Short Term only when the poster says shutdown / short-term / similar,
+    // otherwise the Long Term default. Unlike the text fields this ignores
+    // "overwrite": it only ever moves a value that is still the default (or that
+    // a previous scan set), so a Re-scan can't undo a job type the recruiter
+    // chose themselves.
+    const shortTermId = jobTypes.find((t) => t.name === "Short Term")?.id;
+    const longTermId = jobTypes.find((t) => t.name === "Long Term")?.id;
+    const wantedJobTypeId = parsed.job_type === "short" ? shortTermId : longTermId;
+    const jobTypeUnset = !jobTypeId || jobTypeId === longTermId || jobTypeId === filled.jobTypeId;
+    if (wantedJobTypeId && jobTypeUnset) {
+      setJobTypeId(wantedJobTypeId);
+      filled.jobTypeId = wantedJobTypeId;
+    }
+
+    const phone = parsed.phone_numbers[0];
+    if (phone) {
+      if (canFill(contactPhone, filled.phone)) {
+        setContactPhone(phone);
+        filled.phone = phone;
+      }
+      if (canFill(contactWhatsapp, filled.whatsapp)) {
+        setContactWhatsapp(phone);
+        filled.whatsapp = phone;
+      }
+    }
+    if (parsed.email && canFill(contactEmail, filled.email)) {
+      setContactEmail(parsed.email);
+      filled.email = parsed.email;
+    }
+
     setPosterLocationText(parsed.location);
-    if (parsed.location) {
+    if (parsed.location && (overwrite || !jobLocation || jobLocation.id === filled.locationId)) {
       const match = await resolveBestLocationMatch(parsed.location);
-      if (match) setJobLocation(match);
+      if (match) {
+        setJobLocation(match);
+        filled.locationId = match.id;
+      }
     }
   };
 
-  const runScan = async (file: File) => {
+  const runScan = async (file: File, { rescan = false }: { rescan?: boolean } = {}) => {
     // Starting a scan replaces any previous result/error.
     setParsedPoster(null);
-    setScanFailed(false);
-
-    setIsParsingPoster(true);
+    setScanError(null);
+    setScanLocked(false);
+    setScanBasic(false);
+    setScanPhase("scanning");
     try {
-      const result = await parseJobPoster(file);
+      // A shrunken copy is what gets scanned (the original is still what's
+      // posted with the job) -- the OCR service's free plan rejects >1MB.
+      const scanFile = await compressForScan(file);
+      const result = await parseJobPoster(scanFile, { rescan });
       setParsedPoster(result.parsed);
-      await applyParsedPoster(result.parsed);
-      // Same messaging regardless of which path (Gemini or the rule-based
-      // fallback) actually produced the result -- the recruiter reviews
-      // every field before submitting either way, so there's no need to
-      // flag which source read the poster.
-      toast.success(
-        result.parsed.jobs.length > 1
-          ? `Found ${result.parsed.jobs.length} positions on this poster — all included in one listing below.`
-          : "We've read your poster and filled the form — please review before submitting."
-      );
+      await applyParsedPoster(result.parsed, rescan);
+      setScanBasic(result.parsed.degraded);
+      setScanQuota(result.meta?.quota ?? null);
+      setScanPhase("scanned");
+      if (result.parsed.degraded) {
+        toast.warning("AI was busy, so we used a basic scan — please check every field carefully.");
+      } else {
+        toast.success(
+          result.parsed.jobs.length > 1
+            ? `Found ${result.parsed.jobs.length} positions on this poster — all included in one listing below.`
+            : "We've read your poster and filled the form — please review before submitting."
+        );
+      }
     } catch (err) {
-      // Cap what we'll show verbatim -- these fields are meant to hold a
-      // short, deliberately-written status message (see jobController.js's
-      // parseJobPoster), but if anything ever leaks through longer than
-      // that (a raw network/parse error, say), a short generic line reads
-      // better than a wall of text in a toast.
+      // Cap what we'll show verbatim -- these are meant to be short,
+      // deliberately-written messages (see jobController.js's parseJobPoster),
+      // but anything longer (a raw network error, say) reads better as a
+      // generic line than a wall of text.
       const message = err instanceof ApiError ? err.message : "";
-      toast.error(
-        message && message.length <= 120
+      const shown =
+        message && message.length <= 160
           ? message
-          : "This doesn't look like a job poster — try a different image or fill in the form manually."
-      );
-      // The image itself is still perfectly valid and already attached --
-      // no need to make the recruiter re-upload it just to try again (the
-      // failure is almost always a transient AI-provider hiccup, not
-      // anything wrong with the file).
-      setScanFailed(true);
-    } finally {
-      setIsParsingPoster(false);
+          : "This doesn't look like a job poster — try a different image or fill in the form manually.";
+      setScanError(shown);
+      const code = err instanceof ApiError ? (err.body as { code?: string } | undefined)?.code : undefined;
+      setScanLocked(code === "AI_SCAN_LIMIT" || code === "AI_SCAN_PAUSED");
+      toast.error(shown);
+      // The image is still attached and valid -- the panel offers Try again
+      // without re-uploading (failures are usually a transient outage).
+      setScanPhase("failed");
     }
   };
 
-  const handlePosterChange = async (file: File | null) => {
+  const handlePosterChange = (file: File | null) => {
     if (file) {
       const error = validateFileSize(file);
       if (error) {
@@ -341,10 +403,11 @@ export default function PostJobPage() {
     }
     setPoster(file);
     setPosterPreview(file ? URL.createObjectURL(file) : null);
-    setScanFailed(false);
-
-    if (!file || posterMode !== "scan") return;
-    await runScan(file);
+    setParsedPoster(null);
+    setScanError(null);
+    setScanBasic(false);
+    // Nothing is scanned automatically: the panel asks first.
+    setScanPhase(file ? "choose" : null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -430,38 +493,12 @@ export default function PostJobPage() {
             <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Job Basic Details</h2>
           </div>
 
-          {/* Mode toggle + poster upload + scan progress -- always full
-              opacity/visible, even while parsing, so the progress indicator
-              never ends up out of view on a long form. */}
+          {/* Poster upload + scan panel -- always full opacity/visible, even
+              while scanning, so progress never ends up out of view on a long
+              form. The upload comes first; the panel then asks whether to
+              scan it with AI or fill in the form by hand. */}
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="bg-muted/30 p-1 rounded-2xl flex items-center border border-border/40 shadow-inner w-full sm:w-auto sm:min-w-70">
-              <button
-                type="button"
-                disabled={isParsingPoster}
-                onClick={() => setPosterMode("scan")}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm whitespace-nowrap transition-all disabled:opacity-60 ${
-                  posterMode === "scan" ? "bg-brand-blue text-white shadow-md shadow-brand-blue/20" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Sparkles className={`w-4 h-4 shrink-0 ${posterMode === "scan" ? "text-white" : "text-muted-foreground"}`} />
-                Scan with AI
-              </button>
-              <button
-                type="button"
-                disabled={isParsingPoster}
-                onClick={() => setPosterMode("manual")}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm whitespace-nowrap transition-all disabled:opacity-60 ${
-                  posterMode === "manual" ? "bg-white text-brand-blue shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <PenLine className={`w-4 h-4 shrink-0 ${posterMode === "manual" ? "text-brand-blue" : "text-muted-foreground"}`} />
-                Fill Manually
-              </button>
-            </div>
-
-            <label className="text-sm font-bold text-foreground/80">
-              {posterMode === "scan" ? "Upload your job poster photo — we'll read it and fill this form" : "Poster Image (optional)"}
-            </label>
+            <label className="text-sm font-bold text-foreground/80">Poster Image (optional)</label>
             <input
               ref={fileInputRef}
               type="file"
@@ -479,7 +516,6 @@ export default function PostJobPage() {
                   onClick={() => {
                     handlePosterChange(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
-                    setParsedPoster(null);
                   }}
                   className="absolute top-2 right-2 bg-white/90 text-foreground text-xs font-bold px-3 py-1.5 rounded-full border border-border/60 hover:bg-white disabled:opacity-60"
                 >
@@ -489,67 +525,30 @@ export default function PostJobPage() {
             ) : (
               <button
                 type="button"
-                disabled={isParsingPoster}
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full max-w-xs flex flex-col items-center justify-center gap-2 py-8 rounded-2xl bg-secondary/30 border-2 border-dashed transition-all text-muted-foreground hover:text-brand-blue disabled:opacity-60 ${
-                  posterMode === "scan" ? "border-brand-blue/40 hover:border-brand-blue bg-brand-blue/5" : "border-border/60 hover:border-brand-blue hover:bg-brand-blue/5"
-                }`}
+                className="w-full max-w-xs flex flex-col items-center justify-center gap-2 py-8 rounded-2xl bg-secondary/30 border-2 border-dashed border-border/60 hover:border-brand-blue hover:bg-brand-blue/5 transition-all text-muted-foreground hover:text-brand-blue"
               >
-                {posterMode === "scan" ? <Sparkles className="w-6 h-6" /> : <ImagePlus className="w-6 h-6" />}
-                <span className="text-sm font-semibold">
-                  {posterMode === "scan" ? "Upload poster to auto-fill" : "Upload a poster image"}
-                </span>
-                <span className="text-xs">JPG, PNG, WebP</span>
+                <ImagePlus className="w-6 h-6" />
+                <span className="text-sm font-semibold">Upload a poster image</span>
+                <span className="text-xs">JPG, PNG, WebP — you can auto-fill the form from it</span>
               </button>
             )}
 
-            {isParsingPoster && (
-              <div className="w-full max-w-xs pt-1">
-                <div className="flex items-center">
-                  {PARSING_STEPS.map((step, i) => (
-                    <div key={step} className="flex-1 flex items-center last:flex-none">
-                      <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors ${
-                          i < parsingStep
-                            ? "bg-brand-blue text-white"
-                            : i === parsingStep
-                              ? "bg-brand-blue text-white animate-pulse"
-                              : "bg-secondary text-muted-foreground"
-                        }`}
-                      >
-                        {i < parsingStep ? <Check className="w-3.5 h-3.5" /> : i + 1}
-                      </div>
-                      {i < PARSING_STEPS.length - 1 && (
-                        <div className={`flex-1 h-0.5 mx-1 rounded-full ${i < parsingStep ? "bg-brand-blue" : "bg-border"}`} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-sm font-bold text-brand-blue mt-2.5">{PARSING_STEPS[parsingStep]}</p>
-                <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden mt-3">
-                  <div
-                    className="h-full bg-brand-blue rounded-full transition-[width] duration-200 ease-linear"
-                    style={{ width: `${parsingProgress}%` }}
-                  />
-                </div>
-                <p className="text-xs font-semibold text-muted-foreground mt-1">{Math.round(parsingProgress)}%</p>
-              </div>
-            )}
-
-            {!isParsingPoster && parsedPoster && parsedPoster.jobs.length > 1 && (
-              <p className="text-sm font-bold text-brand-blue bg-brand-blue/5 border border-brand-blue/10 rounded-2xl px-4 py-2.5">
-                Found {parsedPoster.jobs.length} positions on this poster — all included in the listing below.
-              </p>
-            )}
-
-            {!isParsingPoster && scanFailed && poster && (
-              <button
-                type="button"
-                onClick={() => runScan(poster)}
-                className="inline-flex items-center gap-2 text-sm font-bold text-brand-blue bg-brand-blue/5 border border-brand-blue/10 rounded-2xl px-4 py-2.5 hover:bg-brand-blue/10 transition-colors"
-              >
-                <RotateCcw className="w-4 h-4" /> Retry scan
-              </button>
+            {poster && scanPhase && (
+              <PosterScanPanel
+                phase={scanPhase}
+                step={parsingStep}
+                progress={parsingProgress}
+                roleCount={parsedPoster?.jobs.length}
+                shortTerm={parsedPoster?.job_type === "short"}
+                basic={scanBasic}
+                quota={scanQuota}
+                locked={scanLocked}
+                errorMessage={scanError}
+                onScan={() => runScan(poster)}
+                onManual={() => setScanPhase("manual")}
+                onRescan={() => runScan(poster, { rescan: true })}
+              />
             )}
           </div>
 
@@ -654,12 +653,12 @@ export default function PostJobPage() {
               <label className="text-sm font-bold text-foreground/80 flex items-center gap-2 ml-1">Job Description (optional)</label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, 2500))}
+                onChange={(e) => setDescription(e.target.value.slice(0, DESCRIPTION_MAX_LENGTH))}
                 rows={8}
                 placeholder="Include job responsibilities, requirements, salary benefits, duty hours, and contract details."
                 className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium resize-none"
               />
-              <div className="text-xs text-muted-foreground text-right">{description.length}/2500</div>
+              <div className="text-xs text-muted-foreground text-right">{description.length}/{DESCRIPTION_MAX_LENGTH}</div>
             </div>
           </div>
 
