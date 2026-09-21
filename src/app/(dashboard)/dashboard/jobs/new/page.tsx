@@ -71,7 +71,8 @@ function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
   const jobs = parsed.jobs;
 
   // A two-line summary first, so a reader gets the gist before the full list.
-  if (parsed.overview.length > 0) {
+  // (`?.` because the backend deploys separately and may not send it yet.)
+  if (parsed.overview?.length > 0) {
     lines.push("Overview:", ...parsed.overview, "");
   }
 
@@ -361,7 +362,7 @@ export default function PostJobPage() {
       setParsedPoster(result.parsed);
       await applyParsedPoster(result.parsed, rescan);
       setScanBasic(result.parsed.degraded);
-      setScanQuota(result.meta.quota ?? null);
+      setScanQuota(result.meta?.quota ?? null);
       setScanPhase("scanned");
       if (result.parsed.degraded) {
         toast.warning("AI was busy, so we used a basic scan — please check every field carefully.");
