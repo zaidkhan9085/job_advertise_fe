@@ -17,6 +17,7 @@ import {
   PlayCircle,
   Flag,
   FileText,
+  ScanText,
   X,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
     { label: "All Applicants", href: "/dashboard/admin/all-applicants", icon: Users },
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
+    { label: "AI Scans", href: "/dashboard/admin/ai-scans", icon: ScanText },
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   employer: [

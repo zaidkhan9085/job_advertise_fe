@@ -59,6 +59,9 @@ interface CommonTableProps<T extends Record<string, any>, TId extends string | n
   pagination?: CommonTablePagination;
   selection?: CommonTableSelection<TId>;
   exportButton?: { label?: string; onClick: () => void; disabled?: boolean };
+  // Tighter cell padding for tables with many columns, so they fit without
+  // horizontal scrolling on a typical laptop screen.
+  dense?: boolean;
 }
 
 // Header/body cell + row renderers reimplement the exact Tailwind classes
@@ -103,6 +106,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
   pagination,
   selection,
   exportButton,
+  dense = false,
 }: CommonTableProps<T, TId>) {
   const rcColumns: ColumnType<T>[] = [];
 
@@ -230,7 +234,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
       )}
 
       <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto ${dense ? "[&_th]:px-4! [&_td]:px-4! [&_td]:py-4!" : ""}`}>
           <Table<T>
             columns={rcColumns}
             data={loading ? [] : data}

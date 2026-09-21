@@ -317,29 +317,42 @@ export function updateJob(id: string, payload: UpdateJobPayload) {
 // the backend (no Job row is created by this call). A single poster often
 // advertises multiple openings, hence the "jobs" array.
 export interface ParsedJobEntry {
+  // The role name as printed on the poster (one entry per advertised role).
   category: string | null;
-  // Synthesized ad headline (e.g. "Urgently Required Laundrymen for UAE"),
-  // not literal poster text -- see geminiJobPoster.js's prompt.
+  // Only set by the plain (no-AI) read, which files the poster's headline here
+  // when it can't find role names; the AI read leaves it null.
   title: string | null;
   vacancies: number | null;
   salary_min: number | null;
   salary_max: number | null;
   salary_currency: string | null;
-  // Raw salary text (e.g. "Negotiable") when no numeric figure was given.
+  // The salary exactly as printed ("1,800 - 2,300 AED", "Negotiable") --
+  // what the form shows; the numeric fields above are parsed from it.
   salary_raw: string | null;
 }
 
 export interface ParsedJobPoster {
+  // Short headline about the ROLE / type of work, never the agency's name.
+  title: string | null;
   company_name: string | null;
-  project_name: string | null;
+  // The work country, or "City, Country" -- matched against the location tree.
   location: string | null;
+  // Best-fitting industry from the live Industry list, or null when nothing
+  // stood out (the form then keeps its "Other Industries" default).
+  industry: { id: string; name: string } | null;
+  // "short" when the poster mentions a shutdown / turnaround / short-term or
+  // similarly time-boxed job, otherwise "long" (the form's default).
+  job_type: "short" | "long";
+  // Up to two short lines saying who is hiring, for what and where (then the
+  // main terms) -- shown at the top of the description.
+  overview: string[];
   interview_date: string | null;
   interview_time: string | null;
   interview_venue: string | null;
   jobs: ParsedJobEntry[];
   benefits: string[];
   // Job duties/responsibilities and required-documents/eligibility bullets,
-  // merged into one list (see backend/utils/geminiJobPoster.js's prompt).
+  // merged into one list.
   requirements: string[];
   contact_person: string | null;
   phone_numbers: string[];
@@ -347,22 +360,105 @@ export interface ParsedJobPoster {
   address: string | null;
   website: string | null;
   social_links: string[];
-  // true when Gemini itself was unavailable and this came from the
-  // on-device OCR + regex fallback instead (see
-  // backend/utils/ruleBasedJobPosterParser.js) -- every structured field
-  // above is null/[] by design in that case except phone/email/one best-
-  // effort salary/vacancy guess; raw_text carries the full scanned text
-  // so nothing the recruiter could still use is lost.
+  // true when the AI step was unavailable and this is the plainer rule-based
+  // read of the poster's text; raw_text then carries that text so nothing
+  // the recruiter could still use is lost.
   degraded: boolean;
   raw_text: string | null;
 }
 
-export function parseJobPoster(poster: File) {
+export interface PosterScanMeta {
+  source: "ai" | "basic";
+  model: string | null;
+  totalMs: number;
+  cached?: boolean;
+  // The recruiter's daily AI-scan allowance after this scan; null for staff.
+  quota: { limit: number; used: number; remaining: number } | null;
+}
+
+// `rescan` skips the server's short-lived "same image" cache, so pressing
+// Re-scan actually runs the AI again instead of replaying the last answer.
+export function parseJobPoster(poster: File, options: { rescan?: boolean } = {}) {
   const form = new FormData();
   form.append("poster", poster);
-  return apiFetch<{ message: string; parsed: ParsedJobPoster }>("/api/jobs/parse-poster", {
-    method: "POST",
-    body: form,
+  return apiFetch<{ message: string; parsed: ParsedJobPoster; meta: PosterScanMeta }>(
+    `/api/jobs/parse-poster${options.rescan ? "?rescan=1" : ""}`,
+    { method: "POST", body: form },
+  );
+}
+
+// --- Admin: AI scan monitor ---
+// One bar per day: scans the AI read, scans that fell back to the basic
+// reader, and scans that failed outright.
+export interface AiScanDay {
+  date: string; // YYYY-MM-DD
+  ai: number;
+  basic: number;
+  failed: number;
+}
+
+export interface AiScanSummary {
+  totalScans: number;
+  scansToday: number;
+  failedToday: number;
+  employersUsingAi: number;
+  totalEmployers: number;
+  pausedEmployers: number;
+  defaultLimit: number;
+  days: number;
+  series: AiScanDay[];
+}
+
+export type AiScanFilter = "all" | "used_today" | "limit_reached" | "never_used" | "paused";
+
+export interface AiScanEmployerRow {
+  employerId: number;
+  name: string;
+  email: string;
+  companyName: string | null;
+  // Admin/sub_admin who scanned: listed for completeness, no limit applies.
+  isStaff: boolean;
+  allTime: number;
+  today: number;
+  failed: number;
+  lastScanAt: string | null;
+  customLimit: number | null;
+  effectiveLimit: number | null;
+  blocked: boolean;
+}
+
+export interface AiScanEmployersResponse extends Paginated<AiScanEmployerRow> {
+  counts: Record<AiScanFilter, number>;
+  defaultLimit: number;
+}
+
+export function getAiScanSummary(days: number) {
+  return apiFetch<AiScanSummary>(`/api/admin/ai-scans/summary${buildQuery({ days })}`);
+}
+
+export function getAiScanEmployers(params: {
+  search?: string;
+  filter?: AiScanFilter;
+  sortBy?: "allTime" | "today" | "lastScan" | "name";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}) {
+  return apiFetch<AiScanEmployersResponse>(`/api/admin/ai-scans/employers${buildQuery(params)}`);
+}
+
+// `limit: null` puts the employer back on the global default.
+export function updateEmployerScanControls(employerId: number, changes: { limit?: number | null; blocked?: boolean }) {
+  return apiFetch<{ employerId: number; customLimit: number | null; effectiveLimit: number; blocked: boolean }>(
+    `/api/admin/ai-scans/employers/${employerId}`,
+    { method: "PATCH", body: JSON.stringify(changes) },
+  );
+}
+
+export function updateAiScanDefaultLimit(defaultLimit: number) {
+  return apiFetch<{ defaultLimit: number }>("/api/admin/ai-scans/settings", {
+    method: "PUT",
+    body: JSON.stringify({ defaultLimit }),
   });
 }
 
