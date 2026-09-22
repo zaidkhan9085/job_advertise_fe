@@ -29,12 +29,6 @@ import {
   getRelatedJobs,
   recordJobInteraction,
   getCompanyById,
-  followCompany,
-  unfollowCompany,
-  rateCompany,
-  unrateCompany,
-  blockCompany,
-  unblockCompany,
   reportContent,
   resolveImageUrl,
   getMyApplications,
@@ -43,6 +37,7 @@ import {
   ApiError,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useCompanyActions } from "@/hooks/useCompanyActions";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
@@ -116,14 +111,18 @@ export default function JobDetailPage() {
 
   const [job, setJob] = useState<JobPost | null>(null);
   const [related, setRelated] = useState<JobPost[]>([]);
-  const [company, setCompany] = useState<CompanyDetail | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyDetail | null>(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [myRating, setMyRating] = useState(0);
+
+  const { company, myRating, toggleFollow, rate, clearRating, toggleBlock } = useCompanyActions(companyData, {
+    requireLogin: () => router.push("/login"),
+  });
+  const reloadCompany = useCallback(() => (company ? getCompanyById(company.id) : Promise.resolve()), [company]);
 
   const load = useCallback(async () => {
     try {
@@ -133,10 +132,7 @@ export default function JobDetailPage() {
       if (jobData.companyId) {
         setIsCompanyLoading(true);
         getCompanyById(jobData.companyId)
-          .then((c) => {
-            setCompany(c);
-            setMyRating(c.myRating ?? 0);
-          })
+          .then(setCompanyData)
           .catch(() => {})
           .finally(() => setIsCompanyLoading(false));
       }
@@ -197,68 +193,10 @@ export default function JobDetailPage() {
     if (job) recordJobInteraction(job.id, type);
   };
 
-  const handleToggleFollow = async () => {
-    if (!user) return requireLogin();
-    if (!company) return;
-    try {
-      if (company.isFollowing) {
-        await unfollowCompany(company.id);
-        setCompany({ ...company, isFollowing: false, followerCount: company.followerCount - 1 });
-      } else {
-        const result = await followCompany(company.id);
-        toast.success(result.message);
-        setCompany({ ...company, isFollowing: true, followerCount: company.followerCount + 1 });
-      }
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to update follow status.");
-    }
-  };
-
-  const handleRate = async (rating: number) => {
-    if (!user) return requireLogin();
-    if (!company) return;
-    setMyRating(rating);
-    try {
-      const result = await rateCompany(company.id, rating);
-      toast.success(result.message);
-      const refreshed = await getCompanyById(company.id);
-      setCompany(refreshed);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to submit rating.");
-    }
-  };
-
-  const handleClearRating = async () => {
-    if (!company) return;
-    setMyRating(0);
-    try {
-      const result = await unrateCompany(company.id);
-      toast.success(result.message);
-      const refreshed = await getCompanyById(company.id);
-      setCompany(refreshed);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to remove rating.");
-    }
-  };
-
-  const handleToggleBlock = async () => {
-    if (!user) return requireLogin();
-    if (!company) return;
-    if (!company.isBlocked && !confirm(`Block ${company.name}? Their jobs won't be shown to you anymore.`)) return;
-    try {
-      if (company.isBlocked) {
-        const result = await unblockCompany(company.id);
-        toast.success(result.message);
-        setCompany({ ...company, isBlocked: false });
-      } else {
-        const result = await blockCompany(company.id);
-        toast.success(result.message);
-        setCompany({ ...company, isBlocked: true });
-      }
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to update block status.");
-    }
-  };
+  const handleToggleFollow = () => toggleFollow(!!user);
+  const handleRate = (rating: number) => rate(!!user, rating, undefined, reloadCompany);
+  const handleClearRating = () => clearRating(reloadCompany);
+  const handleToggleBlock = () => toggleBlock(!!user);
 
   const handleReport = async (reason: string) => {
     if (!job) return;
@@ -286,6 +224,12 @@ export default function JobDetailPage() {
       </div>
     );
   }
+
+  // job.company is a snapshot taken when the job was posted -- prefer the
+  // live Company.name (already loaded once its profile fetches) so a
+  // renamed employer shows their current name here too, not just on their
+  // own public company page.
+  const companyName = company?.name ?? job.company;
 
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
@@ -320,7 +264,9 @@ export default function JobDetailPage() {
               >
                 <Flag className="w-4 h-4" /> Report
               </button>
-              {company && (
+              {/* Never shown to the employer viewing their own job -- blocking
+                  your own company makes no sense. */}
+              {company && !company.isOwner && (
                 <button
                   onClick={handleToggleBlock}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
@@ -353,7 +299,7 @@ export default function JobDetailPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src="/logo-icon.png" alt="thejobs4u" className="w-full h-full object-contain p-2" />
                 ) : (
-                  <span className="text-2xl sm:text-3xl font-black text-brand-blue">{job.company.slice(0, 1).toUpperCase()}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-brand-blue">{companyName.slice(0, 1).toUpperCase()}</span>
                 )}
               </div>
               <div>
@@ -361,7 +307,7 @@ export default function JobDetailPage() {
                   {job.title}
                 </h1>
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 text-sm sm:text-base font-medium text-white/80">
-                  <span className="flex items-center gap-1.5"><Building className="w-5 h-5 opacity-70" /> {job.company}</span>
+                  <span className="flex items-center gap-1.5"><Building className="w-5 h-5 opacity-70" /> {companyName}</span>
                   {job.location && (
                     <span className="flex items-center gap-1.5"><MapPin className="w-5 h-5 opacity-70" /> {job.location}</span>
                   )}
@@ -388,24 +334,15 @@ export default function JobDetailPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolveImageUrl(job.image)}
-                  alt={`${job.title} at ${job.company} — original poster`}
+                  alt={`${job.title} at ${companyName} — original poster`}
                   className="w-full h-auto max-w-md mx-auto rounded-xl"
                 />
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Type", value: job.type, icon: Building },
-                { label: "Location", value: job.location || "Not specified", icon: MapPin },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-white p-5 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
-                  <stat.icon className="w-6 h-6 text-[oklch(0.47_0.20_25)] mb-3" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="font-semibold text-sm text-foreground">{stat.value}</p>
-                </div>
-              ))}
-            </div>
+            {/* Type/Location used to repeat here as a 2-tile stat grid --
+                removed, since both are already shown right under the title
+                above (Building/MapPin icons in the header). */}
 
             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
               <h3 className="text-lg font-bold text-foreground mb-4">Description</h3>
@@ -507,11 +444,11 @@ export default function JobDetailPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={resolveImageUrl(company.logo)} alt={company.name} className="w-full h-full object-cover" />
                   ) : (
-                    job.company.slice(0, 1).toUpperCase()
+                    companyName.slice(0, 1).toUpperCase()
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-foreground text-sm truncate">{job.company}</p>
+                  <p className="font-bold text-foreground text-sm truncate">{companyName}</p>
                   {company?.website ? (
                     <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-blue hover:underline truncate block">
                       {company.website}
@@ -534,21 +471,36 @@ export default function JobDetailPage() {
 
               {company ? (
                 <>
-                  <button
-                    onClick={handleToggleFollow}
-                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
-                      company.isFollowing
-                        ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
-                        : "bg-brand-blue text-white hover:bg-brand-blue-medium"
-                    }`}
+                  <Link
+                    href={`/companies/${company.id}`}
+                    className="flex items-center justify-center gap-1.5 text-xs font-bold text-brand-blue hover:underline"
                   >
-                    {company.isFollowing ? "Following" : "Follow"}
-                  </button>
+                    View full company profile <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
+                  {/* Following/rating your own company makes no sense --
+                      never shown to the employer who owns it. */}
+                  {!company.isOwner && (
+                    <button
+                      onClick={handleToggleFollow}
+                      className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
+                        company.isFollowing
+                          ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
+                          : "bg-brand-blue text-white hover:bg-brand-blue-medium"
+                      }`}
+                    >
+                      {company.isFollowing ? "Following" : "Follow"}
+                    </button>
+                  )}
 
-                  <div className="pt-2 border-t border-border/60">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
-                    <StarRatingInput value={myRating} onChange={handleRate} onClear={handleClearRating} />
-                  </div>
+                  {/* Rating (stars only, no written text) stays available --
+                      only the written-review feature is hidden for now, see
+                      the public company page's own "Rate this company" box. */}
+                  {!company.isOwner && (
+                    <div className="pt-2 border-t border-border/60">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
+                      <StarRatingInput value={myRating} onChange={handleRate} onClear={handleClearRating} />
+                    </div>
+                  )}
                 </>
               ) : (
                 <button disabled title="This job wasn't linked to a company profile" className="w-full py-2.5 rounded-xl bg-secondary text-muted-foreground font-bold text-sm cursor-not-allowed">
