@@ -14,7 +14,11 @@ import {
   Globe,
   Instagram,
   Linkedin,
+  Mail,
   MapPin,
+  MessageCircle,
+  Pencil,
+  Phone,
   ShieldCheck,
   Star,
   Users,
@@ -35,6 +39,8 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useCompanyActions } from "@/hooks/useCompanyActions";
+import { SHOW_COMPANY_REVIEWS } from "@/lib/featureFlags";
+import { buildCompanyWhatsAppUrl, buildCompanyMailtoUrl } from "@/lib/jobShare";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import JobCardActions from "@/components/jobs/JobCardActions";
@@ -108,24 +114,12 @@ export default function CompanyProfilePublicPage() {
   const [reviewsPage, setReviewsPage] = useState(1);
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
 
-  const [reviewDraft, setReviewDraft] = useState("");
-  // A star pick + review text are only sent on "Submit" (not saved per
-  // click), so writing a review reads like one deliberate action -- unlike
-  // the job detail page's compact quick-rate widget, which has no text
-  // field and saves the instant a star is clicked.
-  const [draftRating, setDraftRating] = useState(0);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-
   const { appliedIds, markApplied } = useAppliedJobs();
 
   const { company, myRating, toggleFollow, rate, clearRating, toggleBlock } = useCompanyActions(companyData, {
     requireLogin: () => router.push("/login"),
   });
   const reloadCompany = useCallback(() => getCompanyById(params.id), [params.id]);
-
-  useEffect(() => {
-    setDraftRating(myRating);
-  }, [myRating]);
 
   const loadReviews = useCallback(
     async (page: number) => {
@@ -147,29 +141,13 @@ export default function CompanyProfilePublicPage() {
   useEffect(() => {
     setIsLoading(true);
     getCompanyById(params.id)
-      .then((c) => {
-        setCompanyData(c);
-        setReviewDraft(c.myReview ?? "");
-      })
+      .then(setCompanyData)
       .catch((err) => {
         if (err instanceof ApiError && err.status === 404) setNotFound(true);
       })
       .finally(() => setIsLoading(false));
-    loadReviews(1);
+    if (SHOW_COMPANY_REVIEWS) loadReviews(1);
   }, [params.id, loadReviews]);
-
-  const handleSubmitReview = async () => {
-    if (!draftRating) return;
-    setIsSubmittingReview(true);
-    await rate(!!user, draftRating, reviewDraft.trim() || undefined, reloadCompany);
-    await loadReviews(1);
-    setIsSubmittingReview(false);
-  };
-
-  const handleRemoveReview = async () => {
-    await clearRating(reloadCompany);
-    setReviewDraft("");
-  };
 
   const handleReport = async () => {
     if (!company) return;
@@ -216,13 +194,9 @@ export default function CompanyProfilePublicPage() {
 
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
-      {/* Cover image (or a plain dark fallback matching the job detail page's
-          own header) with the logo overlapping its bottom edge, LinkedIn-style. */}
-      <div
-        className="relative h-40 sm:h-56 bg-[oklch(0.12_0.02_40)] bg-cover bg-center"
-        style={company.coverImage ? { backgroundImage: `url(${resolveImageUrl(company.coverImage)})` } : undefined}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+      {/* Plain dark banner, matching the job detail page's own header, with
+          the logo overlapping its bottom edge, LinkedIn-style. */}
+      <div className="relative h-40 sm:h-56 bg-[oklch(0.12_0.02_40)]">
         <div className="container-site relative h-full flex flex-col justify-between py-4">
           <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white transition-colors w-fit">
             <ArrowLeft className="w-4 h-4" /> Back
@@ -245,28 +219,43 @@ export default function CompanyProfilePublicPage() {
             {company.tagline && <p className="text-sm sm:text-base text-muted-foreground font-medium mt-0.5">{company.tagline}</p>}
           </div>
           <div className="flex items-center gap-2 pb-1 shrink-0">
-            <button
-              onClick={() => toggleFollow(!!user)}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-colors ${
-                company.isFollowing
-                  ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
-                  : "bg-brand-blue text-white hover:bg-brand-blue-medium shadow-sm"
-              }`}
-            >
-              {company.isFollowing ? "Following" : "+ Follow"}
-            </button>
-            <button
-              title={company.isBlocked ? "Unblock" : "Block this employer"}
-              onClick={() => toggleBlock(!!user)}
-              className={`p-2.5 rounded-xl border transition-colors ${
-                company.isBlocked ? "bg-rose-50 border-rose-200 text-rose-600" : "border-border/60 text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              <Ban className="w-4 h-4" />
-            </button>
-            <button title="Report" onClick={handleReport} className="p-2.5 rounded-xl border border-border/60 text-muted-foreground hover:bg-secondary transition-colors">
-              <Flag className="w-4 h-4" />
-            </button>
+            {company.isOwner ? (
+              // This IS the logged-in employer's own company -- following,
+              // rating, blocking or reporting yourself makes no sense, so
+              // the whole action row is replaced with a link back to the
+              // real edit form instead.
+              <Link
+                href="/dashboard/profile"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm bg-brand-blue/10 text-brand-blue hover:bg-brand-blue/20 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" /> This is your company — Edit profile
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => toggleFollow(!!user)}
+                  className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-colors ${
+                    company.isFollowing
+                      ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
+                      : "bg-brand-blue text-white hover:bg-brand-blue-medium shadow-sm"
+                  }`}
+                >
+                  {company.isFollowing ? "Following" : "+ Follow"}
+                </button>
+                <button
+                  title={company.isBlocked ? "Unblock" : "Block this employer"}
+                  onClick={() => toggleBlock(!!user)}
+                  className={`p-2.5 rounded-xl border transition-colors ${
+                    company.isBlocked ? "bg-rose-50 border-rose-200 text-rose-600" : "border-border/60 text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <Ban className="w-4 h-4" />
+                </button>
+                <button title="Report" onClick={handleReport} className="p-2.5 rounded-xl border border-border/60 text-muted-foreground hover:bg-secondary transition-colors">
+                  <Flag className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -304,19 +293,6 @@ export default function CompanyProfilePublicPage() {
               </div>
             )}
 
-            {company.benefits.length > 0 && (
-              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-border/60">
-                <h3 className="text-lg font-bold text-foreground mb-4">Benefits &amp; Perks</h3>
-                <div className="flex flex-wrap gap-2">
-                  {company.benefits.map((b) => (
-                    <span key={b} className="px-3.5 py-2 rounded-xl bg-brand-blue/5 text-brand-blue text-sm font-bold border border-brand-blue/10">
-                      {b}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-border/60">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-foreground">Open Jobs</h3>
@@ -337,41 +313,26 @@ export default function CompanyProfilePublicPage() {
               )}
             </div>
 
+            {/* Star rating stays available to everyone (except the employer
+                who owns this company) -- only the written-review text box
+                and other people's written reviews below are hidden for now,
+                see SHOW_COMPANY_REVIEWS. Saves immediately on click, same as
+                the job detail page's own quick-rate widget, since there's no
+                text to compose first. */}
+            {!company.isOwner && (
+              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-border/60">
+                <h3 className="text-lg font-bold text-foreground mb-3">Rate this company</h3>
+                <StarRatingInput
+                  value={myRating}
+                  onChange={(r) => rate(!!user, r, undefined, reloadCompany)}
+                  onClear={() => clearRating(reloadCompany)}
+                />
+              </div>
+            )}
+
+            {SHOW_COMPANY_REVIEWS && (
             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-border/60">
               <h3 className="text-lg font-bold text-foreground mb-4">Reviews</h3>
-
-              <div className="bg-secondary/30 rounded-xl p-4 mb-5">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                  {myRating ? "Your review" : "Rate this company"}
-                </p>
-                <StarRatingInput
-                  value={draftRating}
-                  onChange={(r) => setDraftRating(r)}
-                  onClear={() => setDraftRating(0)}
-                />
-                <textarea
-                  value={reviewDraft}
-                  onChange={(e) => setReviewDraft(e.target.value)}
-                  rows={2}
-                  maxLength={1000}
-                  placeholder="Share what it's like working with this employer (optional)..."
-                  className="w-full mt-3 px-3.5 py-2.5 rounded-xl bg-white border-2 border-transparent focus:border-brand-blue transition-all outline-none font-medium text-sm resize-none"
-                />
-                <div className="flex items-center gap-3 mt-2">
-                  <button
-                    onClick={handleSubmitReview}
-                    disabled={isSubmittingReview || !draftRating}
-                    className="px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors disabled:opacity-50"
-                  >
-                    {isSubmittingReview ? "Saving..." : myRating ? "Update" : "Submit"}
-                  </button>
-                  {myRating > 0 && (
-                    <button onClick={handleRemoveReview} className="text-sm font-bold text-muted-foreground hover:text-rose-600 transition-colors">
-                      Remove my review
-                    </button>
-                  )}
-                </div>
-              </div>
 
               {isReviewsLoading ? (
                 <div className="h-24 rounded-xl bg-secondary/40 animate-pulse" />
@@ -408,6 +369,7 @@ export default function CompanyProfilePublicPage() {
                 </>
               )}
             </div>
+            )}
           </div>
 
           <aside className="w-full lg:w-80 shrink-0 space-y-6">
@@ -428,7 +390,47 @@ export default function CompanyProfilePublicPage() {
               </div>
             )}
 
-            {!company.website && !company.description && facts.length === 0 && (
+            {(company.phone || company.whatsapp || company.email) && (
+              <div className="bg-white p-6 rounded-2xl border border-border/60 shadow-sm">
+                <h3 className="font-bold text-sm text-foreground uppercase tracking-wide mb-4">Contact</h3>
+                <div className="space-y-3">
+                  {company.phone && (
+                    <a href={`tel:${company.phone}`} className="flex items-center gap-3 text-sm font-semibold text-foreground hover:text-brand-blue transition-colors">
+                      <span className="w-8 h-8 rounded-lg bg-brand-blue/5 text-brand-blue flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4" />
+                      </span>
+                      {company.phone}
+                    </a>
+                  )}
+                  {company.whatsapp && (
+                    <a
+                      href={buildCompanyWhatsAppUrl(company.whatsapp, company.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-sm font-semibold text-foreground hover:text-emerald-600 transition-colors"
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <MessageCircle className="w-4 h-4" />
+                      </span>
+                      {company.whatsapp}
+                    </a>
+                  )}
+                  {company.email && (
+                    <a
+                      href={buildCompanyMailtoUrl(company.email, company.name)}
+                      className="flex items-center gap-3 text-sm font-semibold text-foreground hover:text-brand-blue transition-colors"
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-brand-blue/5 text-brand-blue flex items-center justify-center shrink-0">
+                        <Mail className="w-4 h-4" />
+                      </span>
+                      <span className="truncate">{company.email}</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!company.website && !company.description && !company.phone && !company.whatsapp && !company.email && facts.length === 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
                 <Building className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 font-medium">This employer hasn&apos;t filled in their company profile yet.</p>

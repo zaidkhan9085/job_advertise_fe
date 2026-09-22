@@ -225,6 +225,12 @@ export default function JobDetailPage() {
     );
   }
 
+  // job.company is a snapshot taken when the job was posted -- prefer the
+  // live Company.name (already loaded once its profile fetches) so a
+  // renamed employer shows their current name here too, not just on their
+  // own public company page.
+  const companyName = company?.name ?? job.company;
+
   return (
     <div className="bg-muted/10 min-h-screen pb-20">
       {isReportOpen && <ReportModal onClose={() => setIsReportOpen(false)} onSubmit={handleReport} />}
@@ -258,7 +264,9 @@ export default function JobDetailPage() {
               >
                 <Flag className="w-4 h-4" /> Report
               </button>
-              {company && (
+              {/* Never shown to the employer viewing their own job -- blocking
+                  your own company makes no sense. */}
+              {company && !company.isOwner && (
                 <button
                   onClick={handleToggleBlock}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
@@ -291,7 +299,7 @@ export default function JobDetailPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src="/logo-icon.png" alt="thejobs4u" className="w-full h-full object-contain p-2" />
                 ) : (
-                  <span className="text-2xl sm:text-3xl font-black text-brand-blue">{job.company.slice(0, 1).toUpperCase()}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-brand-blue">{companyName.slice(0, 1).toUpperCase()}</span>
                 )}
               </div>
               <div>
@@ -299,7 +307,7 @@ export default function JobDetailPage() {
                   {job.title}
                 </h1>
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 text-sm sm:text-base font-medium text-white/80">
-                  <span className="flex items-center gap-1.5"><Building className="w-5 h-5 opacity-70" /> {job.company}</span>
+                  <span className="flex items-center gap-1.5"><Building className="w-5 h-5 opacity-70" /> {companyName}</span>
                   {job.location && (
                     <span className="flex items-center gap-1.5"><MapPin className="w-5 h-5 opacity-70" /> {job.location}</span>
                   )}
@@ -326,24 +334,15 @@ export default function JobDetailPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolveImageUrl(job.image)}
-                  alt={`${job.title} at ${job.company} — original poster`}
+                  alt={`${job.title} at ${companyName} — original poster`}
                   className="w-full h-auto max-w-md mx-auto rounded-xl"
                 />
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Type", value: job.type, icon: Building },
-                { label: "Location", value: job.location || "Not specified", icon: MapPin },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-white p-5 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
-                  <stat.icon className="w-6 h-6 text-[oklch(0.47_0.20_25)] mb-3" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="font-semibold text-sm text-foreground">{stat.value}</p>
-                </div>
-              ))}
-            </div>
+            {/* Type/Location used to repeat here as a 2-tile stat grid --
+                removed, since both are already shown right under the title
+                above (Building/MapPin icons in the header). */}
 
             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
               <h3 className="text-lg font-bold text-foreground mb-4">Description</h3>
@@ -445,11 +444,11 @@ export default function JobDetailPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={resolveImageUrl(company.logo)} alt={company.name} className="w-full h-full object-cover" />
                   ) : (
-                    job.company.slice(0, 1).toUpperCase()
+                    companyName.slice(0, 1).toUpperCase()
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-foreground text-sm truncate">{job.company}</p>
+                  <p className="font-bold text-foreground text-sm truncate">{companyName}</p>
                   {company?.website ? (
                     <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-blue hover:underline truncate block">
                       {company.website}
@@ -478,21 +477,30 @@ export default function JobDetailPage() {
                   >
                     View full company profile <ArrowUpRight className="w-3.5 h-3.5" />
                   </Link>
-                  <button
-                    onClick={handleToggleFollow}
-                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
-                      company.isFollowing
-                        ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
-                        : "bg-brand-blue text-white hover:bg-brand-blue-medium"
-                    }`}
-                  >
-                    {company.isFollowing ? "Following" : "Follow"}
-                  </button>
+                  {/* Following/rating your own company makes no sense --
+                      never shown to the employer who owns it. */}
+                  {!company.isOwner && (
+                    <button
+                      onClick={handleToggleFollow}
+                      className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
+                        company.isFollowing
+                          ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/30"
+                          : "bg-brand-blue text-white hover:bg-brand-blue-medium"
+                      }`}
+                    >
+                      {company.isFollowing ? "Following" : "Follow"}
+                    </button>
+                  )}
 
-                  <div className="pt-2 border-t border-border/60">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
-                    <StarRatingInput value={myRating} onChange={handleRate} onClear={handleClearRating} />
-                  </div>
+                  {/* Rating (stars only, no written text) stays available --
+                      only the written-review feature is hidden for now, see
+                      the public company page's own "Rate this company" box. */}
+                  {!company.isOwner && (
+                    <div className="pt-2 border-t border-border/60">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Rate this company</p>
+                      <StarRatingInput value={myRating} onChange={handleRate} onClear={handleClearRating} />
+                    </div>
+                  )}
                 </>
               ) : (
                 <button disabled title="This job wasn't linked to a company profile" className="w-full py-2.5 rounded-xl bg-secondary text-muted-foreground font-bold text-sm cursor-not-allowed">

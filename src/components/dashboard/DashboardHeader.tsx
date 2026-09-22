@@ -1,14 +1,91 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, Plus, User, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 import Logo from "@/components/common/Logo";
+import { getMyCompany, getMyCandidateProfile, getMe, resolveImageUrl } from "@/lib/api";
+
+// Where clicking the avatar goes -- each role's own "edit yourself" page.
+// Admin/sub_admin have no such page yet, so their avatar isn't a link.
+const PROFILE_HREF: Partial<Record<string, string>> = {
+  candidate: "/dashboard/my-profile",
+  employer: "/dashboard/profile",
+};
+
+function initialsOf(name: string | null) {
+  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return null;
+  return parts.length === 1 ? parts[0].slice(0, 2).toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
   const { openMobileSidebar } = useSidebar();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  // `user.fullName` only ever comes from the JWT payload set at login time
+  // (see AuthContext) -- it decodes back to null on every page refresh, since
+  // the token itself never carried a name. Re-fetching it here means the
+  // header (and this new initials fallback) still shows a real name after a
+  // refresh, not just right after signing in.
+  const [fullName, setFullName] = useState<string | null>(null);
+  // An employer identifies by their COMPANY name here, not their own
+  // personal account name (often just a placeholder typed at signup, e.g.
+  // "ggg") -- renaming the company on the profile page should be reflected
+  // here too.
+  const [companyName, setCompanyName] = useState<string | null>(null);
+
+  // The photo lives on a different record per role (a candidate's own
+  // profile picture vs. an employer's company logo) -- the JWT-derived
+  // `user` object carries neither, so this is a small extra fetch, same
+  // pattern the profile pages themselves already use to load their own data.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting when the session changes, not derived state
+    setAvatarUrl(null);
+    setFullName(null);
+    setCompanyName(null);
+    if (!user) return;
+
+    getMe()
+      .then((me) => setFullName(me.full_name))
+      .catch(() => {});
+
+    if (user.role === "candidate") {
+      getMyCandidateProfile()
+        .then((p) => setAvatarUrl(p?.profileImage ? resolveImageUrl(p.profileImage) : null))
+        .catch(() => {});
+    } else if (user.role === "employer") {
+      getMyCompany()
+        .then((c) => {
+          setAvatarUrl(c?.logo ? resolveImageUrl(c.logo) : null);
+          setCompanyName(c?.name ?? null);
+        })
+        .catch(() => {});
+    }
+  }, [user]);
+
+  const displayName = companyName || fullName || user?.fullName || "My Account";
+  const initials = initialsOf(companyName ?? fullName ?? user?.fullName ?? null);
+  const profileHref = user ? PROFILE_HREF[user.role] : undefined;
+
+  const avatar = (
+    <div
+      className={`w-9 h-9 rounded-full bg-secondary border border-border/60 flex items-center justify-center overflow-hidden shrink-0 ${
+        profileHref ? "hover:ring-2 hover:ring-brand-blue/30 transition-all" : ""
+      }`}
+    >
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+      ) : initials ? (
+        <span className="text-xs font-black text-muted-foreground">{initials}</span>
+      ) : (
+        <User className="w-5 h-5 text-muted-foreground" />
+      )}
+    </div>
+  );
 
   return (
     <header className="h-16 bg-white border-b border-border/60 px-4 md:px-8 flex items-center justify-between shrink-0">
@@ -52,13 +129,24 @@ export default function DashboardHeader() {
         <div className="w-px h-6 bg-border/60 hidden sm:block" />
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end text-sm">
-            <span className="font-semibold leading-tight">{user?.fullName || "My Account"}</span>
-            <span className="text-xs text-muted-foreground">{user?.displayRole}</span>
-          </div>
-          <div className="w-9 h-9 rounded-full bg-secondary border border-border/60 flex items-center justify-center overflow-hidden shrink-0">
-            <User className="w-5 h-5 text-muted-foreground" />
-          </div>
+          {profileHref ? (
+            <Link href={profileHref} className="hidden sm:flex flex-col items-end text-sm" title="View your profile">
+              <span className="font-semibold leading-tight">{displayName}</span>
+              <span className="text-xs text-muted-foreground">{user?.displayRole}</span>
+            </Link>
+          ) : (
+            <div className="hidden sm:flex flex-col items-end text-sm">
+              <span className="font-semibold leading-tight">{displayName}</span>
+              <span className="text-xs text-muted-foreground">{user?.displayRole}</span>
+            </div>
+          )}
+          {profileHref ? (
+            <Link href={profileHref} title="View your profile">
+              {avatar}
+            </Link>
+          ) : (
+            avatar
+          )}
           <button
             onClick={logout}
             title="Sign out"

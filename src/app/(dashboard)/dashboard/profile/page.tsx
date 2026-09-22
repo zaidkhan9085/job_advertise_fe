@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Building, ImagePlus, Globe, KeyRound, Users, Star, Sparkles, Info, Link2, ArrowUpRight, ImageIcon } from "lucide-react";
+import { Building, ImagePlus, Globe, KeyRound, Users, Star, Sparkles, Info, Link2, ArrowUpRight, ImageIcon, Phone, Mail } from "lucide-react";
 import {
   getMyCompany,
   updateMyCompany,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/api";
 import CityAutocomplete, { toLocationValue, type LocationValue } from "@/components/common/CityAutocomplete";
 import SearchableSelect from "@/components/common/SearchableSelect";
-import TagListInput from "@/components/dashboard/TagListInput";
+import PhoneInput from "@/components/common/PhoneInput";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 import { validateFileSize } from "@/lib/fileValidation";
 
@@ -76,7 +76,9 @@ export default function CompanyProfilePage() {
   const [companySize, setCompanySize] = useState<CompanySize | "">("");
   const [companyType, setCompanyType] = useState<CompanyType | "">("");
   const [foundedYear, setFoundedYear] = useState("");
-  const [benefits, setBenefits] = useState<string[]>([]);
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -84,9 +86,6 @@ export default function CompanyProfilePage() {
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [industries, setIndustries] = useState<Industry[]>([]);
   const [stats, setStats] = useState<Pick<MyCompany, "followerCount" | "averageRating" | "ratingCount"> | null>(null);
@@ -111,12 +110,13 @@ export default function CompanyProfilePage() {
         setCompanySize(company.companySize ?? "");
         setCompanyType(company.companyType ?? "");
         setFoundedYear(company.foundedYear ? String(company.foundedYear) : "");
-        setBenefits(company.benefits);
+        setPhone(company.phone ?? "");
+        setWhatsapp(company.whatsapp ?? "");
+        setEmail(company.email ?? "");
         setLinkedinUrl(company.linkedinUrl ?? "");
         setFacebookUrl(company.facebookUrl ?? "");
         setInstagramUrl(company.instagramUrl ?? "");
         if (company.logo) setLogoPreview(resolveImageUrl(company.logo));
-        if (company.coverImage) setCoverPreview(resolveImageUrl(company.coverImage));
         setStats({ followerCount: company.followerCount, averageRating: company.averageRating, ratingCount: company.ratingCount });
       } else {
         // No Company row yet (fresh employer) -- prefill the name they
@@ -175,12 +175,13 @@ export default function CompanyProfilePage() {
         companySize: companySize || undefined,
         companyType: companyType || undefined,
         foundedYear: foundedYear ? Number(foundedYear) : undefined,
-        benefits,
+        phone: phone.trim() || undefined,
+        whatsapp: whatsapp.trim() || undefined,
+        email: email.trim() || undefined,
         linkedinUrl: linkedinUrl.trim() || undefined,
         facebookUrl: facebookUrl.trim() || undefined,
         instagramUrl: instagramUrl.trim() || undefined,
         logo: logo ?? undefined,
-        coverImage: coverImage ?? undefined,
       });
       setCompanyId(result.company.id);
       toast.success(result.message);
@@ -255,47 +256,8 @@ export default function CompanyProfilePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <FormSection icon={ImageIcon} title="Branding" subtitle="Your logo, cover photo and one-line pitch.">
-          {/* Cover image behind the overlapping logo, mirroring how they'll
-              actually appear together on the public company page. */}
+        <FormSection icon={ImageIcon} title="Branding" subtitle="Your logo and one-line pitch.">
           <div className="space-y-2">
-            <label className={labelClass}>Cover Image</label>
-            <input
-              ref={coverInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => handleImageChange(e.target.files?.[0] ?? null, setCoverImage, setCoverPreview, coverPreview)}
-            />
-            <div
-              onClick={() => coverInputRef.current?.click()}
-              className="relative h-32 rounded-2xl bg-secondary/30 border-2 border-dashed border-brand-blue/30 hover:border-brand-blue/60 transition-all cursor-pointer overflow-hidden bg-cover bg-center group"
-              style={coverPreview ? { backgroundImage: `url(${coverPreview})` } : undefined}
-            >
-              {!coverPreview && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-muted-foreground group-hover:text-brand-blue transition-colors">
-                  <ImagePlus className="w-6 h-6" />
-                  <span className="text-xs font-bold">Upload a cover photo</span>
-                </div>
-              )}
-              {coverPreview && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                  <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-bold transition-opacity">Change</span>
-                </div>
-              )}
-
-              <div className="absolute -bottom-6 left-6 w-20 h-20 bg-white rounded-2xl border-4 border-white shadow-lg overflow-hidden flex items-center justify-center shrink-0">
-                {logoPreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoPreview} alt="Company logo preview" className="w-full h-full object-contain p-1.5" />
-                ) : (
-                  <Building className="w-7 h-7 text-brand-blue/40" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-6 flex items-center justify-between">
             <label className={labelClass}>Company Logo</label>
             <input
               ref={logoInputRef}
@@ -304,13 +266,28 @@ export default function CompanyProfilePage() {
               className="hidden"
               onChange={(e) => handleImageChange(e.target.files?.[0] ?? null, setLogo, setLogoPreview, logoPreview)}
             />
-            <button
-              type="button"
-              onClick={() => logoInputRef.current?.click()}
-              className="text-xs font-bold text-brand-blue hover:underline"
-            >
-              {logoPreview ? "Change logo" : "Upload logo"}
-            </button>
+            {logoPreview ? (
+              <div className="relative w-24 h-24">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoPreview} alt="Company logo preview" className="w-24 h-24 object-contain p-2 rounded-2xl border border-border/60 bg-white" />
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  className="absolute -bottom-2 -right-2 bg-white text-foreground text-xs font-bold px-2 py-1 rounded-full border border-border/60 hover:bg-secondary"
+                >
+                  Change
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                className="w-24 h-24 flex flex-col items-center justify-center gap-1 rounded-2xl bg-secondary/30 border-2 border-dashed border-brand-blue/40 hover:border-brand-blue hover:bg-brand-blue/5 transition-all text-muted-foreground hover:text-brand-blue"
+              >
+                <ImagePlus className="w-6 h-6" />
+                <span className="text-[10px] font-bold">Upload</span>
+              </button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -425,9 +402,24 @@ export default function CompanyProfilePage() {
             />
           </div>
 
+        </FormSection>
+
+        <FormSection icon={Phone} title="Contact Details" subtitle="Shown to candidates on your public company page.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className={labelClass}>Phone</label>
+              <PhoneInput value={phone} onChange={setPhone} />
+            </div>
+            <div className="space-y-2">
+              <label className={labelClass}>WhatsApp</label>
+              <PhoneInput value={whatsapp} onChange={setWhatsapp} />
+            </div>
+          </div>
           <div className="space-y-2">
-            <label className={labelClass}>Benefits &amp; Perks</label>
-            <TagListInput values={benefits} onChange={setBenefits} placeholder="e.g. Free Visa, Medical Insurance..." />
+            <label className={labelClass}>
+              <Mail className="w-4 h-4" /> Email
+            </label>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="contact@example.com" className={inputClass} />
           </div>
         </FormSection>
 

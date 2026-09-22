@@ -935,7 +935,6 @@ export interface Company {
   name: string;
   description: string | null;
   logo: string | null;
-  coverImage: string | null;
   website: string | null;
   tagline: string | null;
   industryId: string | null;
@@ -943,7 +942,12 @@ export interface Company {
   companySize: CompanySize | null;
   companyType: CompanyType | null;
   foundedYear: number | null;
-  benefits: string[];
+  // The company's own general contact details, shown on the public page --
+  // distinct from a specific job's own contactPhone/contactWhatsapp/
+  // contactEmail, which can differ per posting.
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
   linkedinUrl: string | null;
   facebookUrl: string | null;
   instagramUrl: string | null;
@@ -961,6 +965,9 @@ export interface CompanyDetail extends Company {
   ratingCount: number;
   isFollowing: boolean;
   isBlocked: boolean;
+  // True when the logged-in caller owns this company -- lets the public
+  // page hide follow/rate/block for an employer looking at their own page.
+  isOwner: boolean;
   // The caller's own existing rating/review for this company, if any --
   // lets the star-rating + review UI pre-fill instead of starting blank.
   myRating: number | null;
@@ -1014,27 +1021,24 @@ export interface UpdateCompanyPayload {
   companySize?: CompanySize | "";
   companyType?: CompanyType | "";
   foundedYear?: number | "";
-  benefits?: string[];
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
   linkedinUrl?: string;
   facebookUrl?: string;
   instagramUrl?: string;
   logo?: File;
-  coverImage?: File;
 }
 
 export function updateMyCompany(payload: UpdateCompanyPayload) {
-  const { logo, coverImage, benefits, ...rest } = payload;
+  const { logo, ...rest } = payload;
 
-  if (logo || coverImage) {
+  if (logo) {
     const formData = new FormData();
     Object.entries(rest).forEach(([key, value]) => {
       if (value !== undefined && value !== null) formData.append(key, String(value));
     });
-    // FormData can only carry strings -- the array goes over JSON-encoded
-    // (see backend's parseBenefits, which accepts either shape).
-    if (benefits) formData.append("benefits", JSON.stringify(benefits));
-    if (logo) formData.append("logo", logo);
-    if (coverImage) formData.append("coverImage", coverImage);
+    formData.append("logo", logo);
     return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
       method: "PUT",
       body: formData,
@@ -1043,7 +1047,7 @@ export function updateMyCompany(payload: UpdateCompanyPayload) {
 
   return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
     method: "PUT",
-    body: JSON.stringify({ ...rest, benefits }),
+    body: JSON.stringify(rest),
   });
 }
 

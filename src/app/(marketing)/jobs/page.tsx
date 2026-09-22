@@ -399,7 +399,16 @@ function JobCardView({
             </div>
           )}
           {isNew && (
-            <span className="absolute bottom-2.5 left-2.5 z-10 text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-md bg-emerald-500 text-white shadow-md">
+            // Top corner everywhere else a "New" badge appears (see
+            // GeneralAdsSection) -- this card used to put it at the bottom,
+            // the only inconsistent one. Featured jobs already have a
+            // full-width ribbon along the very top, so New drops just below
+            // it there instead of sitting underneath the ribbon.
+            <span
+              className={`absolute left-2.5 z-10 text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-md bg-emerald-500 text-white shadow-md ${
+                job.type === "FEATURED" ? "top-9" : "top-2.5"
+              }`}
+            >
               New
             </span>
           )}
@@ -436,7 +445,7 @@ function JobCardView({
         <div className="relative w-full sm:w-24 h-32 sm:h-24 shrink-0">
           <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full rounded-xl border border-brand-blue/10" />
           {isNew && (
-            <span className="absolute bottom-1.5 left-1.5 text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-emerald-500 text-white shadow-md">
+            <span className="absolute top-1.5 left-1.5 text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-emerald-500 text-white shadow-md">
               New
             </span>
           )}

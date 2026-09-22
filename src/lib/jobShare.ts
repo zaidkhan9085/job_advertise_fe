@@ -62,6 +62,30 @@ export function buildJobMailtoUrl(email: string, job: ShareJob) {
   return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+// Same "Ref By" convention as the job-specific messages above, but for a
+// company's own general contact details on its public profile page (no
+// specific job to reference).
+export function buildCompanyWhatsAppUrl(number: string, companyName: string) {
+  const digits = number.replace(/[^\d+]/g, "");
+  const text = [`Ref By ${SITE_REF}`, `Hello, I found ${companyName} on thejobs4u and would like to know more about your job openings.`].join(
+    "\n"
+  );
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+export function buildCompanyMailtoUrl(email: string, companyName: string) {
+  const subject = `Enquiry via ${SITE_NAME}`;
+  const body = [
+    `Ref By ${SITE_REF}`,
+    "Hello,",
+    "",
+    `I found ${companyName} on thejobs4u and would like to know more about your job openings.`,
+    "",
+    "Thank you.",
+  ].join("\r\n");
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 // The text that travels WITH a shared job link (native share sheet, or
 // copied to the clipboard) so it reads as a message rather than a bare URL.
 export function buildJobShareText(job: ShareJob) {
