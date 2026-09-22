@@ -656,11 +656,13 @@ export interface CompanyAdminListItem extends Company {
   followerCount: number;
 }
 
-export interface CompanyAdminDetail extends CompanyDetail {
+export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCount"> {
   owner: CompanyAdminOwner;
   // Raw admin-editable component of followerCount -- see companyController.js's
   // setCompanyBonusFollowers. Admin-only; not present on the public CompanyDetail.
   bonusFollowers: number;
+  // Every job this employer has ever posted, any status -- unlike the
+  // public CompanyDetail.jobs, which is only currently-open ones.
   jobs: {
     id: string;
     title: string;
@@ -910,12 +912,41 @@ export interface JobLocationRef {
   stateName: string | null;
 }
 
+// Matches CompanySize/CompanyType in the backend's prisma/schema.prisma --
+// keep both lists in sync with it.
+export type CompanySize = "SIZE_1_10" | "SIZE_11_50" | "SIZE_51_200" | "SIZE_201_500" | "SIZE_500_PLUS";
+export const COMPANY_SIZE_OPTIONS: { value: CompanySize; label: string }[] = [
+  { value: "SIZE_1_10", label: "1-10 employees" },
+  { value: "SIZE_11_50", label: "11-50 employees" },
+  { value: "SIZE_51_200", label: "51-200 employees" },
+  { value: "SIZE_201_500", label: "201-500 employees" },
+  { value: "SIZE_500_PLUS", label: "500+ employees" },
+];
+
+export type CompanyType = "DIRECT_EMPLOYER" | "RECRUITMENT_AGENCY" | "STAFFING_COMPANY";
+export const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = [
+  { value: "DIRECT_EMPLOYER", label: "Direct Employer" },
+  { value: "RECRUITMENT_AGENCY", label: "Recruitment Agency" },
+  { value: "STAFFING_COMPANY", label: "Staffing Company" },
+];
+
 export interface Company {
   id: string;
   name: string;
   description: string | null;
   logo: string | null;
+  coverImage: string | null;
   website: string | null;
+  tagline: string | null;
+  industryId: string | null;
+  industry: { id: string; name: string } | null;
+  companySize: CompanySize | null;
+  companyType: CompanyType | null;
+  foundedYear: number | null;
+  benefits: string[];
+  linkedinUrl: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
   regionId: string | null;
   region: Region | null;
   jobLocationId: string | null;
@@ -930,9 +961,15 @@ export interface CompanyDetail extends Company {
   ratingCount: number;
   isFollowing: boolean;
   isBlocked: boolean;
-  // The caller's own existing rating for this company, if any -- lets the
-  // star-rating UI pre-fill instead of always starting blank.
+  // The caller's own existing rating/review for this company, if any --
+  // lets the star-rating + review UI pre-fill instead of starting blank.
   myRating: number | null;
+  myReview: string | null;
+  // A recent-first page of this company's currently open jobs (capped
+  // server-side), plus the true total so "View all N jobs" can link to the
+  // full /jobs listing pre-filtered once there are more than fit here.
+  jobs: JobPost[];
+  jobCount: number;
 }
 
 export function getRegions() {
@@ -953,37 +990,60 @@ export function getCompanyById(id: string) {
   return apiFetch<CompanyDetail>(`/api/companies/${id}`);
 }
 
-export function updateMyCompany(payload: {
+export interface CompanyReview {
+  id: string;
+  rating: number;
+  review: string;
+  createdAt: string;
+  // Masked server-side ("Rahul K.") -- never the reviewer's full name/email.
+  reviewerName: string;
+}
+
+export function getCompanyRatings(id: string, params?: { page?: number; limit?: number }) {
+  const query = buildQuery({ page: params?.page, limit: params?.limit });
+  return apiFetch<Paginated<CompanyReview>>(`/api/companies/${id}/ratings${query}`);
+}
+
+export interface UpdateCompanyPayload {
   name: string;
   description?: string;
   jobLocationId: string;
   website?: string;
+  tagline?: string;
+  industryId?: string;
+  companySize?: CompanySize | "";
+  companyType?: CompanyType | "";
+  foundedYear?: number | "";
+  benefits?: string[];
+  linkedinUrl?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
   logo?: File;
-}) {
-  if (payload.logo) {
+  coverImage?: File;
+}
+
+export function updateMyCompany(payload: UpdateCompanyPayload) {
+  const { logo, coverImage, benefits, ...rest } = payload;
+
+  if (logo || coverImage) {
     const formData = new FormData();
-    formData.append("name", payload.name);
-    if (payload.description)
-      formData.append("description", payload.description);
-    formData.append("jobLocationId", payload.jobLocationId);
-    if (payload.website) formData.append("website", payload.website);
-    formData.append("logo", payload.logo);
-    return apiFetch<{ message: string; company: Company }>(
-      "/api/companies/me",
-      {
-        method: "PUT",
-        body: formData,
-      },
-    );
+    Object.entries(rest).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) formData.append(key, String(value));
+    });
+    // FormData can only carry strings -- the array goes over JSON-encoded
+    // (see backend's parseBenefits, which accepts either shape).
+    if (benefits) formData.append("benefits", JSON.stringify(benefits));
+    if (logo) formData.append("logo", logo);
+    if (coverImage) formData.append("coverImage", coverImage);
+    return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
+      method: "PUT",
+      body: formData,
+    });
   }
+
   return apiFetch<{ message: string; company: Company }>("/api/companies/me", {
     method: "PUT",
-    body: JSON.stringify({
-      name: payload.name,
-      description: payload.description,
-      jobLocationId: payload.jobLocationId,
-      website: payload.website,
-    }),
+    body: JSON.stringify({ ...rest, benefits }),
   });
 }
 

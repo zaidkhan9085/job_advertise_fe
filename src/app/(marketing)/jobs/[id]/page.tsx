@@ -29,12 +29,6 @@ import {
   getRelatedJobs,
   recordJobInteraction,
   getCompanyById,
-  followCompany,
-  unfollowCompany,
-  rateCompany,
-  unrateCompany,
-  blockCompany,
-  unblockCompany,
   reportContent,
   resolveImageUrl,
   getMyApplications,
@@ -43,6 +37,7 @@ import {
   ApiError,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useCompanyActions } from "@/hooks/useCompanyActions";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
@@ -116,14 +111,18 @@ export default function JobDetailPage() {
 
   const [job, setJob] = useState<JobPost | null>(null);
   const [related, setRelated] = useState<JobPost[]>([]);
-  const [company, setCompany] = useState<CompanyDetail | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyDetail | null>(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [myRating, setMyRating] = useState(0);
+
+  const { company, myRating, toggleFollow, rate, clearRating, toggleBlock } = useCompanyActions(companyData, {
+    requireLogin: () => router.push("/login"),
+  });
+  const reloadCompany = useCallback(() => (company ? getCompanyById(company.id) : Promise.resolve()), [company]);
 
   const load = useCallback(async () => {
     try {
@@ -133,10 +132,7 @@ export default function JobDetailPage() {
       if (jobData.companyId) {
         setIsCompanyLoading(true);
         getCompanyById(jobData.companyId)
-          .then((c) => {
-            setCompany(c);
-            setMyRating(c.myRating ?? 0);
-          })
+          .then(setCompanyData)
           .catch(() => {})
           .finally(() => setIsCompanyLoading(false));
       }
@@ -197,68 +193,10 @@ export default function JobDetailPage() {
     if (job) recordJobInteraction(job.id, type);
   };
 
-  const handleToggleFollow = async () => {
-    if (!user) return requireLogin();
-    if (!company) return;
-    try {
-      if (company.isFollowing) {
-        await unfollowCompany(company.id);
-        setCompany({ ...company, isFollowing: false, followerCount: company.followerCount - 1 });
-      } else {
-        const result = await followCompany(company.id);
-        toast.success(result.message);
-        setCompany({ ...company, isFollowing: true, followerCount: company.followerCount + 1 });
-      }
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to update follow status.");
-    }
-  };
-
-  const handleRate = async (rating: number) => {
-    if (!user) return requireLogin();
-    if (!company) return;
-    setMyRating(rating);
-    try {
-      const result = await rateCompany(company.id, rating);
-      toast.success(result.message);
-      const refreshed = await getCompanyById(company.id);
-      setCompany(refreshed);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to submit rating.");
-    }
-  };
-
-  const handleClearRating = async () => {
-    if (!company) return;
-    setMyRating(0);
-    try {
-      const result = await unrateCompany(company.id);
-      toast.success(result.message);
-      const refreshed = await getCompanyById(company.id);
-      setCompany(refreshed);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to remove rating.");
-    }
-  };
-
-  const handleToggleBlock = async () => {
-    if (!user) return requireLogin();
-    if (!company) return;
-    if (!company.isBlocked && !confirm(`Block ${company.name}? Their jobs won't be shown to you anymore.`)) return;
-    try {
-      if (company.isBlocked) {
-        const result = await unblockCompany(company.id);
-        toast.success(result.message);
-        setCompany({ ...company, isBlocked: false });
-      } else {
-        const result = await blockCompany(company.id);
-        toast.success(result.message);
-        setCompany({ ...company, isBlocked: true });
-      }
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to update block status.");
-    }
-  };
+  const handleToggleFollow = () => toggleFollow(!!user);
+  const handleRate = (rating: number) => rate(!!user, rating, undefined, reloadCompany);
+  const handleClearRating = () => clearRating(reloadCompany);
+  const handleToggleBlock = () => toggleBlock(!!user);
 
   const handleReport = async (reason: string) => {
     if (!job) return;
@@ -534,6 +472,12 @@ export default function JobDetailPage() {
 
               {company ? (
                 <>
+                  <Link
+                    href={`/companies/${company.id}`}
+                    className="flex items-center justify-center gap-1.5 text-xs font-bold text-brand-blue hover:underline"
+                  >
+                    View full company profile <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
                   <button
                     onClick={handleToggleFollow}
                     className={`w-full py-2.5 rounded-xl font-bold text-sm transition-colors ${
