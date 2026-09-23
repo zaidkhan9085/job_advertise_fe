@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Briefcase,
   Users,
@@ -10,6 +11,7 @@ import {
   Search,
   FileText,
   MessageSquare,
+  MessageSquareQuote,
   Star,
   FileCheck2,
   Flag,
@@ -25,12 +27,16 @@ import {
   getJobLeads,
   getMyResume,
   getMyCandidateProfile,
+  getMyTestimonial,
+  submitMyTestimonial,
   getReports,
   ApiError,
   type AdminStats,
   type JobPost,
+  type Testimonial,
 } from "@/lib/api";
 import StatCard from "@/components/dashboard/StatCard";
+import StarRatingInput from "@/components/common/StarRatingInput";
 import { computeProfileCompleteness } from "@/lib/profileCompleteness";
 
 function OverviewHeader({
@@ -229,6 +235,123 @@ function RecruiterOverview() {
   );
 }
 
+// Lets a candidate submit (or later edit) a testimonial about the platform
+// itself -- distinct from rating a specific employer's company page. Goes
+// live immediately once submitted; only an admin marking it "Featured"
+// makes it show up on the public homepage.
+function TestimonialCard() {
+  const [testimonial, setTestimonial] = useState<Testimonial | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [quote, setQuote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    getMyTestimonial()
+      .then((res) => {
+        if (res.testimonial) {
+          setTestimonial(res.testimonial);
+          setRating(res.testimonial.rating);
+          setQuote(res.testimonial.quote);
+        }
+      })
+      .catch(() => {
+        // Non-critical widget -- a failed load just leaves the empty form
+        // in place rather than blocking the rest of the dashboard.
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rating || !quote.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await submitMyTestimonial(rating, quote.trim());
+      setTestimonial(res.testimonial);
+      setIsEditing(false);
+      toast.success("Thanks for sharing your experience!");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to submit your testimonial.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) return null;
+
+  const showForm = !testimonial || isEditing;
+
+  return (
+    <div className="bg-white rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <MessageSquareQuote className="w-5 h-5 text-brand-blue" />
+        <h2 className="font-bold text-foreground">Share Your Experience</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        Tell other job seekers what using thejobs4u has been like. Testimonials our team features appear on the homepage.
+      </p>
+
+      {showForm ? (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <StarRatingInput value={rating} onChange={setRating} />
+          <textarea
+            value={quote}
+            onChange={(e) => setQuote(e.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="Share a few words about your experience..."
+            className="w-full px-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm resize-none"
+            required
+          />
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting || !rating || !quote.trim()}
+              className="px-5 py-2 rounded-xl bg-brand-blue text-white text-sm font-semibold hover:bg-brand-blue-medium transition-colors disabled:opacity-60"
+            >
+              {isSubmitting ? "Saving..." : testimonial ? "Save Changes" : "Submit Testimonial"}
+            </button>
+            {testimonial && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setRating(testimonial.rating);
+                  setQuote(testimonial.quote);
+                }}
+                className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      ) : (
+        <div>
+          <div className="flex items-center gap-1 mb-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Star
+                key={n}
+                className={`w-4 h-4 ${n <= testimonial.rating ? "fill-amber-400 text-amber-400" : "text-border"}`}
+              />
+            ))}
+          </div>
+          <p className="text-sm text-foreground/80 italic mb-3">&quot;{testimonial.quote}&quot;</p>
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="text-sm font-semibold text-brand-blue hover:underline"
+          >
+            Edit your testimonial
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CandidateOverview() {
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [completeness, setCompleteness] = useState<number | null>(null);
@@ -290,6 +413,8 @@ function CandidateOverview() {
           href="/resume-builder"
         />
       </div>
+
+      <TestimonialCard />
     </div>
   );
 }
