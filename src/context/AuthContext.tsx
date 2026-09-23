@@ -28,7 +28,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
-  register: (payload: RegisterPayload) => Promise<{ message: string; userId: number }>;
+  register: (payload: RegisterPayload) => Promise<{ message: string; userId: number; requiresVerification: boolean }>;
   logout: () => void;
 }
 
