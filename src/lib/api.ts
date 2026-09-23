@@ -138,7 +138,7 @@ export interface RegisterPayload {
 }
 
 export function registerRequest(payload: RegisterPayload) {
-  return apiFetch<{ message: string; userId: number }>("/api/auth/register", {
+  return apiFetch<{ message: string; userId: number; requiresVerification: boolean }>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({ ...payload, role: toBackendRole(payload.role) }),
   });
@@ -152,6 +152,21 @@ export function loginRequest(email: string, password: string) {
   }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+  });
+}
+
+// The link at /verify-email/[token] calls this itself on load.
+export function verifyEmailRequest(token: string) {
+  return apiFetch<{ message: string }>(`/api/auth/verify/${token}`);
+}
+
+// Recruiter-only (see backend) -- always resolves with the same generic
+// message regardless of whether the account exists or needed it, so this
+// can't be used to check who's registered.
+export function resendVerificationRequest(email: string) {
+  return apiFetch<{ message: string }>("/api/auth/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
   });
 }
 

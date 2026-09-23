@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, User, Briefcase, Building, CheckCircle2 } from "lucide-react";
+import { Mail, User, Briefcase, Building, CheckCircle2, MailCheck, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { ApiError } from "@/lib/api";
+import { ApiError, resendVerificationRequest } from "@/lib/api";
 import PhoneInput from "@/components/common/PhoneInput";
 import PasswordInput from "@/components/common/PasswordInput";
 
@@ -18,6 +19,11 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set once a recruiter's account is created and needs email verification --
+  // swaps the form out for a confirmation screen instead of silently
+  // redirecting to /login, so it's clear registration isn't done yet.
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const { user, isLoading: authLoading, register } = useAuth();
   const router = useRouter();
 
@@ -33,14 +39,23 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await register({
+      const result = await register({
         full_name: role === "Recruiter" ? companyName : fullName,
         email,
         password,
         role,
         phone,
       });
-      router.push("/login");
+      // Recruiters need to click the emailed verification link before they
+      // can sign in -- show a confirmation screen in place of the form
+      // rather than redirecting straight to /login, so it's clear the
+      // account isn't usable yet. Candidates need no verification, so they
+      // go straight to /login as before.
+      if (result.requiresVerification) {
+        setRegisteredEmail(email);
+      } else {
+        router.push("/login");
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -48,8 +63,54 @@ export default function RegisterPage() {
     }
   };
 
+  const handleResend = async () => {
+    if (!registeredEmail) return;
+    setIsResending(true);
+    try {
+      const result = await resendVerificationRequest(registeredEmail);
+      toast.success(result.message);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to resend the verification email.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   if (authLoading || user) {
     return null;
+  }
+
+  if (registeredEmail) {
+    return (
+      <div className="bg-white rounded-2xl shadow-[var(--shadow-card)] border border-border/60 overflow-hidden">
+        <div className="p-8 text-center">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MailCheck className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Check your email</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            We&apos;ve sent a verification link to <strong className="text-foreground">{registeredEmail}</strong>.
+            Click it to activate your account &mdash; you&apos;ll need to verify before you can sign in.
+          </p>
+
+          <Link
+            href={`/login?verify=${encodeURIComponent(registeredEmail)}`}
+            className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors mb-3"
+          >
+            Continue to Sign In <ArrowRight className="w-4 h-4" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={isResending}
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+          >
+            {isResending ? "Resending..." : "Didn't get it? Resend the email"}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
