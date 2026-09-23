@@ -1548,4 +1548,85 @@ export function getSkillSuggestions() {
   return apiFetch<SkillSuggestion[]>("/api/ats/skills");
 }
 
+// --- Homepage platform stats (real counts, not marketing copy) ---
+export interface PlatformStats {
+  activeJobs: number;
+  candidates: number;
+  hiringCompanies: number;
+}
+
+export function getPlatformStats() {
+  return apiFetch<PlatformStats>("/api/jobs/stats/platform");
+}
+
+// --- Testimonials ---
+// A candidate's testimonial about the platform itself -- distinct from
+// CompanyRating (rateCompany/unrateCompany above), which rates a specific
+// employer. One per candidate; submitting again edits it in place.
+export interface Testimonial {
+  id: string;
+  rating: number;
+  quote: string;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user?: { id: number; full_name: string | null; email?: string };
+}
+
+export function getMyTestimonial() {
+  return apiFetch<{ testimonial: Testimonial | null }>("/api/testimonials/me");
+}
+
+export function submitMyTestimonial(rating: number, quote: string) {
+  return apiFetch<{ message: string; testimonial: Testimonial }>(
+    "/api/testimonials/me",
+    {
+      method: "POST",
+      body: JSON.stringify({ rating, quote }),
+    },
+  );
+}
+
+export function getFeaturedTestimonials() {
+  return apiFetch<{ testimonials: Testimonial[] }>("/api/testimonials/featured");
+}
+
+export function getAllTestimonialsAdmin(filters?: AdminListParams) {
+  const query = buildQuery({
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+  });
+  return apiFetch<Paginated<Testimonial>>(`/api/admin/testimonials${query}`);
+}
+
+export function updateTestimonialAdmin(id: string, rating: number, quote: string) {
+  return apiFetch<{ message: string; testimonial: Testimonial }>(
+    `/api/admin/testimonials/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ rating, quote }),
+    },
+  );
+}
+
+export function setTestimonialFeatured(id: string, featured: boolean) {
+  return apiFetch<{ message: string; isFeatured: boolean }>(
+    `/api/admin/testimonials/${id}/featured`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ featured }),
+    },
+  );
+}
+
+export function deleteTestimonialAdmin(id: string) {
+  return apiFetch<{ message: string }>(`/api/admin/testimonials/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export { apiFetch, API_URL };
