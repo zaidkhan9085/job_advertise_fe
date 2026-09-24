@@ -1,19 +1,64 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Clock, ImagePlus, Phone, MessageSquare, Zap } from "lucide-react";
-import { createJob, ApiError, type StoryTag } from "@/lib/api";
+import { ArrowLeft, Clock, ImagePlus, Phone, MessageSquare, Zap, Crown, Loader2 } from "lucide-react";
+import { createJob, getMyBilling, ApiError, type StoryTag } from "@/lib/api";
 import PhoneInput from "@/components/common/PhoneInput";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import { validateFileSize } from "@/lib/fileValidation";
 
 const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
 
+// Checked once on mount rather than only at submit -- letting a Free-plan
+// employer fill in a title, upload an image, and pick contact numbers just
+// to get blocked at the very end (the old behavior) wastes their time for
+// no reason; the plan gate is knowable up front.
+function useStoriesAllowed() {
+  const [status, setStatus] = useState<"checking" | "blocked" | "allowed">("checking");
+
+  useEffect(() => {
+    getMyBilling()
+      .then((billing) => setStatus(billing.plan.storiesAllowed ? "allowed" : "blocked"))
+      .catch(() => setStatus("allowed")); // fail open -- a billing-check hiccup shouldn't block a Pro employer who's actually entitled; the real createJob call still enforces this server-side regardless.
+  }, []);
+
+  return status;
+}
+
+function StoriesBlockedNotice() {
+  return (
+    <div className="max-w-xl mx-auto animate-in fade-in duration-500">
+      <Link href="/dashboard/stories" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-brand-blue transition-colors w-fit mb-6">
+        <ArrowLeft className="w-4 h-4" /> Back
+      </Link>
+      <div className="bg-white rounded-3xl border border-border/60 shadow-sm p-8 text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+          <Crown className="w-8 h-8" />
+        </div>
+        <div>
+          <h1 className="text-xl font-black text-foreground">Stories are a Pro feature</h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Your current plan doesn&apos;t include Stories. Upgrade to Pro to post one — it also raises your
+            featured and general job posting limits.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/billing"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-blue text-white font-black hover:bg-brand-blue-medium transition-colors"
+        >
+          <Crown className="w-4 h-4" /> Upgrade to Pro
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function PostStoryPage() {
   const router = useRouter();
+  const storiesAllowed = useStoriesAllowed();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState<LocationValue | null>(null);
@@ -64,10 +109,28 @@ export default function PostStoryPage() {
       toast.success(result.message);
       router.push("/dashboard/stories");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      const code = err instanceof ApiError ? (err.body as { code?: string } | undefined)?.code : undefined;
+      if (code === "PLAN_LIMIT_REACHED") {
+        toast.error(message, { action: { label: "Upgrade to Pro", onClick: () => router.push("/dashboard/billing") } });
+      } else {
+        toast.error(message);
+      }
       setIsSubmitting(false);
     }
   };
+
+  if (storiesAllowed === "checking") {
+    return (
+      <div className="max-w-xl mx-auto py-20 flex justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (storiesAllowed === "blocked") {
+    return <StoriesBlockedNotice />;
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">

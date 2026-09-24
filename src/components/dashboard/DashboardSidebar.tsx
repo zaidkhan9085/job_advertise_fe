@@ -19,6 +19,7 @@ import {
   FileText,
   ScanText,
   MessageSquareQuote,
+  CreditCard,
   X,
 } from "lucide-react";
 
@@ -44,6 +45,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
     { label: "AI Scans", href: "/dashboard/admin/ai-scans", icon: ScanText },
     { label: "Testimonials", href: "/dashboard/admin/testimonials", icon: MessageSquareQuote },
+    { label: "Subscriptions", href: "/dashboard/admin/subscriptions", icon: CreditCard },
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   employer: [
@@ -53,6 +55,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Stories", href: "/dashboard/stories", icon: PlayCircle },
     { label: "Contact Leads", href: "/dashboard/jobs?tab=leads", icon: Users },
     { label: "Company Profile", href: "/dashboard/profile", icon: Building },
+    { label: "Plans & Billing", href: "/dashboard/billing", icon: CreditCard },
   ],
   // sub_admin has no dedicated nav yet — it's promoted from Employer and
   // gains moderation permissions, not a distinct dashboard (see [[api.ts]]).
@@ -65,6 +68,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "All Applicants", href: "/dashboard/admin/all-applicants", icon: Users },
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
     { label: "Testimonials", href: "/dashboard/admin/testimonials", icon: MessageSquareQuote },
+    { label: "Subscriptions", href: "/dashboard/admin/subscriptions", icon: CreditCard },
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   candidate: [

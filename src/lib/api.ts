@@ -1629,4 +1629,236 @@ export function deleteTestimonialAdmin(id: string) {
   });
 }
 
+// --- Billing: plans, credits, subscriptions ---
+// FREE never has an EmployerSubscription row -- "no active row" simply
+// means Free, whose numbers come live from the PlanTemplate below. A PRO
+// row is a frozen snapshot taken at purchase/gift time; editing PlanTemplate
+// never changes what an existing subscriber already has.
+export type PlanType = "FREE" | "PRO";
+
+export interface PlanTemplate {
+  id: string;
+  planType: PlanType;
+  price: number;
+  featuredLimit: number;
+  generalLimit: number;
+  storiesAllowed: boolean;
+  includedCredits: number;
+  updatedAt: string;
+}
+
+export interface CreditPackage {
+  id: string;
+  credits: number;
+  price: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface EffectivePlan {
+  planType: PlanType;
+  subscriptionId: string | null;
+  featuredLimit: number;
+  generalLimit: number;
+  storiesAllowed: boolean;
+  includedCredits: number;
+  periodStart: string;
+  periodEnd: string;
+  expiresAt: string | null;
+}
+
+export interface EmployerSubscription {
+  id: string;
+  employerId: number;
+  planType: PlanType;
+  status: "ACTIVE" | "EXPIRED" | "CANCELLED";
+  price: number;
+  featuredLimit: number;
+  generalLimit: number;
+  storiesAllowed: boolean;
+  includedCredits: number;
+  startedAt: string;
+  expiresAt: string;
+  isGifted: boolean;
+  giftedByAdminId: number | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface BillingPayment {
+  id: string;
+  userId: number;
+  kind: "PLAN" | "CREDIT_PACK";
+  amount: number;
+  status: "PENDING" | "PAID" | "FAILED";
+  subscriptionId: string | null;
+  subscription: EmployerSubscription | null;
+  creditPackageId: string | null;
+  creditPackage: CreditPackage | null;
+  creditsGranted: number | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+export interface MyBilling {
+  plan: EffectivePlan;
+  usage: {
+    featured: { used: number; limit: number };
+    general: { used: number; limit: number };
+    story: { used: number; allowed: boolean };
+  };
+  credits: { total: number; used: number; remaining: number };
+  payments: BillingPayment[];
+}
+
+export function getPlanTemplates() {
+  return apiFetch<PlanTemplate[]>("/api/billing/plan-templates");
+}
+
+export function getCreditPackages() {
+  return apiFetch<CreditPackage[]>("/api/billing/credit-packages");
+}
+
+export function getMyBilling() {
+  return apiFetch<MyBilling>("/api/billing/me");
+}
+
+// Real Razorpay flow: create an order first (no entitlement granted yet),
+// open Razorpay's own checkout against it client-side, then call
+// verifyRazorpayPayment with what Razorpay's callback hands back. The
+// backend recomputes the signature itself -- nothing is ever granted on
+// the strength of the client alone reporting success.
+export interface RazorpayOrder {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+}
+
+export function createProPlanOrder() {
+  return apiFetch<RazorpayOrder>("/api/billing/plan/pro/order", { method: "POST" });
+}
+
+export function createCreditPackOrder(creditPackageId: string) {
+  return apiFetch<RazorpayOrder>(`/api/billing/credits/${creditPackageId}/order`, { method: "POST" });
+}
+
+export interface RazorpayVerifyPayload {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export function verifyRazorpayPayment(payload: RazorpayVerifyPayload) {
+  return apiFetch<{ message: string; subscription?: EmployerSubscription }>("/api/billing/verify", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// --- Billing: admin ---
+export function updatePlanTemplateAdmin(planType: PlanType, data: Partial<Omit<PlanTemplate, "id" | "planType" | "updatedAt">>) {
+  return apiFetch<PlanTemplate>(`/api/admin/billing/plan-templates/${planType}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function getAllCreditPackagesAdmin() {
+  return apiFetch<CreditPackage[]>("/api/admin/billing/credit-packages");
+}
+
+export function createCreditPackageAdmin(credits: number, price: number) {
+  return apiFetch<CreditPackage>("/api/admin/billing/credit-packages", {
+    method: "POST",
+    body: JSON.stringify({ credits, price }),
+  });
+}
+
+export function updateCreditPackageAdmin(id: string, data: Partial<Pick<CreditPackage, "credits" | "price" | "isActive">>) {
+  return apiFetch<CreditPackage>(`/api/admin/billing/credit-packages/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteCreditPackageAdmin(id: string) {
+  return apiFetch<{ message: string }>(`/api/admin/billing/credit-packages/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export interface UnlockCosts {
+  resumeCost: number;
+  profileCost: number;
+}
+
+export function getUnlockCostsAdmin() {
+  return apiFetch<UnlockCosts>("/api/admin/billing/unlock-costs");
+}
+
+export function updateUnlockCostsAdmin(data: Partial<UnlockCosts>) {
+  return apiFetch<UnlockCosts>("/api/admin/billing/unlock-costs", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export interface AdminSubscriptionRow {
+  employer: { id: number; full_name: string | null; email: string; created_at: string };
+  plan: EffectivePlan;
+  usage: { featuredUsed: number; generalUsed: number; storyUsed: number };
+  creditsRemaining: number;
+  latestPayment: BillingPayment | null;
+}
+
+export function getAllSubscriptionsAdmin(filters?: AdminListParams) {
+  const query = buildQuery({
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+  });
+  return apiFetch<Paginated<AdminSubscriptionRow>>(`/api/admin/billing/subscriptions${query}`);
+}
+
+// Full history including PENDING/FAILED attempts (clearly tagged by
+// status) -- unlike the subscriptions list's "latest PAID payment" summary,
+// this is for actually reviewing everything an employer has tried, useful
+// for support/troubleshooting.
+export function getEmployerPaymentHistoryAdmin(employerId: number) {
+  return apiFetch<BillingPayment[]>(`/api/admin/billing/subscriptions/${employerId}/payments`);
+}
+
+export interface AdjustSubscriptionPayload {
+  featuredLimit?: number;
+  generalLimit?: number;
+  storiesAllowed?: boolean;
+  extraCredits?: number;
+  durationDays?: number;
+  note?: string;
+}
+
+export function adjustEmployerSubscriptionAdmin(employerId: number, data: AdjustSubscriptionPayload) {
+  return apiFetch<{ message: string; subscription: EmployerSubscription }>(
+    `/api/admin/billing/subscriptions/${employerId}/adjust`,
+    { method: "PATCH", body: JSON.stringify(data) },
+  );
+}
+
+export interface GiftSubscriptionPayload {
+  featuredLimit?: number;
+  generalLimit?: number;
+  storiesAllowed?: boolean;
+  includedCredits?: number;
+  durationDays?: number;
+  note?: string;
+}
+
+export function giftSubscriptionAdmin(employerId: number, data: GiftSubscriptionPayload) {
+  return apiFetch<{ message: string; subscription: EmployerSubscription }>(
+    `/api/admin/billing/subscriptions/${employerId}/gift`,
+    { method: "POST", body: JSON.stringify(data) },
+  );
+}
+
 export { apiFetch, API_URL };
