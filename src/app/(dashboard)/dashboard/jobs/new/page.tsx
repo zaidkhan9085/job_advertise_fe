@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   Briefcase,
@@ -23,12 +24,14 @@ import {
   getIndustries,
   parseJobPoster,
   searchJobLocations,
+  getMyBilling,
   ApiError,
   type JobType,
   type Industry,
   type ParsedJobPoster,
   type ParsedJobEntry,
   type PosterScanMeta,
+  type MyBilling,
 } from "@/lib/api";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import PhoneInput from "@/components/common/PhoneInput";
@@ -200,8 +203,16 @@ export default function PostJobPage() {
   // didn't resolve to a match, so an ambiguous/unmatched AI location isn't
   // silently lost even though the CityAutocomplete stays empty.
   const [posterLocationText, setPosterLocationText] = useState<string | null>(null);
+  // Plan usage for the small "X left this period" summary below the
+  // General/Featured toggle -- staff never fetch this, they have no plan.
+  const [billing, setBilling] = useState<MyBilling | null>(null);
 
   const isStaff = user?.role === "admin" || user?.role === "sub_admin";
+
+  useEffect(() => {
+    if (isAuthLoading || isStaff) return;
+    getMyBilling().then(setBilling).catch(() => {});
+  }, [isAuthLoading, isStaff]);
 
   const loadFormData = useCallback(async () => {
     setIsCheckingCompany(true);
@@ -432,7 +443,13 @@ export default function PostJobPage() {
       toast.success(result.message);
       router.push("/dashboard/jobs");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      const code = err instanceof ApiError ? (err.body as { code?: string } | undefined)?.code : undefined;
+      if (code === "PLAN_LIMIT_REACHED") {
+        toast.error(message, { action: { label: "Upgrade to Pro", onClick: () => router.push("/dashboard/billing") } });
+      } else {
+        toast.error(message);
+      }
       setIsSubmitting(false);
     }
   };
@@ -483,6 +500,25 @@ export default function PostJobPage() {
           </button>
         </div>
       </div>
+
+      {billing && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 -mt-4 text-xs font-bold">
+          <span className={billing.usage.featured.used >= billing.usage.featured.limit ? "text-rose-600" : "text-muted-foreground"}>
+            {Math.max(0, billing.usage.featured.limit - billing.usage.featured.used)} Featured left
+          </span>
+          <span className="text-border">&middot;</span>
+          <span className={billing.usage.general.used >= billing.usage.general.limit ? "text-rose-600" : "text-muted-foreground"}>
+            {Math.max(0, billing.usage.general.limit - billing.usage.general.used)} General left
+          </span>
+          <span className="text-border">&middot;</span>
+          <span className="text-muted-foreground">Resets {format(new Date(billing.plan.periodEnd), "d MMM")}</span>
+          {billing.plan.planType === "FREE" && (
+            <Link href="/dashboard/billing" className="text-brand-blue hover:underline">
+              Upgrade to Pro &rarr;
+            </Link>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-white rounded-3xl border border-border/60 shadow-sm overflow-hidden p-8 space-y-8">
