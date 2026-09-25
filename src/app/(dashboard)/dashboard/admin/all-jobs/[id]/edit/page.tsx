@@ -16,9 +16,12 @@ import {
   type JobLocation,
   type JobType,
   type Industry,
+  type StoryTag,
 } from "@/lib/api";
 import LocationPicker from "@/components/dashboard/LocationPicker";
 import SearchableSelect from "@/components/common/SearchableSelect";
+
+const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
 
 export default function AdminEditJobPage() {
   const params = useParams<{ id: string }>();
@@ -31,6 +34,12 @@ export default function AdminEditJobPage() {
   // What the job actually started as, for typeOptions below -- stays fixed
   // for the whole edit session even after the admin changes the dropdown.
   const [originalType, setOriginalType] = useState<JobPostType>("NORMAL");
+  // Story's own free-text tag (Long Term/Short Term/Urgent/Contract) --
+  // separate from the regular JobType lookup below, which Stories don't use.
+  // Needed so converting General -> Story here actually gets a real tag
+  // instead of carrying over whatever JobType the General post happened to
+  // have.
+  const [storyTag, setStoryTag] = useState<StoryTag>("Long Term");
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -69,6 +78,9 @@ export default function AdminEditJobPage() {
       setJobLocationLabel(job.location);
       setJobTypeId(job.jobTypeId ?? "");
       setIndustryId(job.industryId ?? "");
+      if (job.type === "STORY" && job.tag && (STORY_TAGS as string[]).includes(job.tag)) {
+        setStoryTag(job.tag as StoryTag);
+      }
       setLocations(locationData);
       setJobTypes(jobTypeData);
       setIndustries(industryData);
@@ -91,6 +103,7 @@ export default function AdminEditJobPage() {
         title,
         description,
         type,
+        tag: type === "STORY" ? storyTag : undefined,
         contactPhone: contactPhone || undefined,
         contactWhatsapp: contactWhatsapp || undefined,
         contactEmail: contactEmail || undefined,
@@ -170,19 +183,35 @@ export default function AdminEditJobPage() {
               placeholder="Search and select an industry..."
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-foreground/80">Job Type</label>
-            <select
-              value={jobTypeId}
-              onChange={(e) => setJobTypeId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
-            >
-              <option value="">Not specified</option>
-              {jobTypes.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+          {type === "STORY" ? (
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80">Story Tag</label>
+              <select
+                value={storyTag}
+                onChange={(e) => setStoryTag(e.target.value as StoryTag)}
+                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
+              >
+                {STORY_TAGS.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">Shown as a tag on the story card -- Stories don&apos;t use the regular Job Type lookup.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground/80">Job Type</label>
+              <select
+                value={jobTypeId}
+                onChange={(e) => setJobTypeId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
+              >
+                <option value="">Not specified</option>
+                {jobTypes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
