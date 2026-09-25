@@ -28,6 +28,9 @@ export default function AdminEditJobPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<JobPostType>("NORMAL");
+  // What the job actually started as, for typeOptions below -- stays fixed
+  // for the whole edit session even after the admin changes the dropdown.
+  const [originalType, setOriginalType] = useState<JobPostType>("NORMAL");
   const [contactPhone, setContactPhone] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -58,6 +61,7 @@ export default function AdminEditJobPage() {
       setTitle(job.title);
       setDescription(job.description);
       setType(job.type);
+      setOriginalType(job.type);
       setContactPhone(job.contactPhone ?? "");
       setContactWhatsapp(job.contactWhatsapp ?? "");
       setContactEmail(job.contactEmail ?? "");
@@ -188,9 +192,25 @@ export default function AdminEditJobPage() {
             onChange={(e) => setType(e.target.value as JobPostType)}
             className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
           >
-            <option value="NORMAL">General</option>
-            <option value="FEATURED">Featured</option>
-            <option value="STORY">Story</option>
+            {/* Featured <-> General convert freely either way. Story only
+                converts from General (a Story's 24h-expiry/tag semantics
+                don't map cleanly onto a paid Featured slot), and an
+                existing Story can't be converted away from here either --
+                it should run its normal 24h course or be deleted. */}
+            {originalType === "STORY" ? (
+              <option value="STORY">Story</option>
+            ) : originalType === "FEATURED" ? (
+              <>
+                <option value="FEATURED">Featured</option>
+                <option value="NORMAL">General</option>
+              </>
+            ) : (
+              <>
+                <option value="NORMAL">General</option>
+                <option value="FEATURED">Featured</option>
+                <option value="STORY">Story</option>
+              </>
+            )}
           </select>
         </div>
 
