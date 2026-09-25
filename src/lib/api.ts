@@ -327,6 +327,14 @@ export function updateJob(id: string, payload: UpdateJobPayload) {
   });
 }
 
+// Clones a General post into a brand new Story -- the original is never
+// touched, it stays exactly where it was in General. Admin/sub_admin only.
+export function promoteJobToStory(id: string) {
+  return apiFetch<{ message: string; story: JobPost }>(`/api/jobs/${id}/promote-to-story`, {
+    method: "POST",
+  });
+}
+
 // Structured data extracted from an uploaded job poster/flyer image —
 // returned for the Post Job form to review/pre-fill, never auto-saved by
 // the backend (no Job row is created by this call). A single poster often
