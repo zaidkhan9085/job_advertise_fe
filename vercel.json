@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://api.thejobs4u.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://api.thejobs4u.com/uploads/:path*"
     }
   ]
 }
