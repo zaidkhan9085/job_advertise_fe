@@ -676,6 +676,10 @@ export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCou
   // Raw admin-editable component of followerCount -- see companyController.js's
   // setCompanyBonusFollowers. Admin-only; not present on the public CompanyDetail.
   bonusFollowers: number;
+  // Sticks once an admin trusts this employer (see jobController.js's
+  // updateJobStatus "trustEmployer" flag) -- new posts skip manual review.
+  // revokeCompanyAutoApprove below is the only way to turn it back off.
+  autoApprove: boolean;
   // Every job this employer has ever posted, any status -- unlike the
   // public CompanyDetail.jobs, which is only currently-open ones.
   jobs: {
@@ -1262,6 +1266,13 @@ export function grantCreditsToCompany(
       method: "POST",
       body: JSON.stringify({ amount, note }),
     },
+  );
+}
+
+export function revokeCompanyAutoApprove(companyId: string) {
+  return apiFetch<{ message: string; jobsSetPending: number }>(
+    `/api/admin/companies/${companyId}/revoke-auto-approve`,
+    { method: "PATCH" },
   );
 }
 

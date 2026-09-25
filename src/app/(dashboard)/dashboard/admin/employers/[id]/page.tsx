@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { Building, Globe, Star, Users, Briefcase, Flag, ArrowLeft, Pencil, Check, X, ArrowUpRight, Calendar, ShieldCheck, Phone, Mail, MessageCircle } from "lucide-react";
+import { Building, Globe, Star, Users, Briefcase, Flag, ArrowLeft, Pencil, Check, X, ArrowUpRight, Calendar, ShieldCheck, ShieldOff, Phone, Mail, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,7 @@ import {
   rateCompany,
   unrateCompany,
   setCompanyBonusFollowers,
+  revokeCompanyAutoApprove,
   resolveImageUrl,
   COMPANY_SIZE_OPTIONS,
   COMPANY_TYPE_OPTIONS,
@@ -23,6 +24,7 @@ import {
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import StarRatingInput from "@/components/common/StarRatingInput";
+import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 
 const JOB_STATUS_STYLES: Record<JobPostStatus, string> = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -51,6 +53,8 @@ export default function AdminEmployerDetailPage() {
   const [isEditingBonus, setIsEditingBonus] = useState(false);
   const [bonusInput, setBonusInput] = useState("0");
   const [isBonusSaving, setIsBonusSaving] = useState(false);
+  const [isRevokeConfirmOpen, setIsRevokeConfirmOpen] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   // `silent` skips the full-page loading state -- used when refreshing
   // after an in-place action (rating, clearing a rating, saving bonus
@@ -124,6 +128,24 @@ export default function AdminEmployerDetailPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to update bonus followers.");
     } finally {
       setIsBonusSaving(false);
+    }
+  };
+
+  const handleRevokeAutoApprove = async () => {
+    setIsRevoking(true);
+    try {
+      const result = await revokeCompanyAutoApprove(params.id);
+      toast.success(
+        result.jobsSetPending > 0
+          ? `Auto-approval revoked — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
+          : "Auto-approval revoked."
+      );
+      setIsRevokeConfirmOpen(false);
+      await loadCompany({ silent: true });
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to revoke auto-approval.");
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -315,7 +337,34 @@ export default function AdminEmployerDetailPage() {
             </button>
           )}
         </div>
+        <div className="sm:border-l sm:border-border/60 sm:pl-6">
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Auto-approval</div>
+          {company.autoApprove ? (
+            <button
+              onClick={() => setIsRevokeConfirmOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:text-rose-600 transition-colors"
+              title="This employer's jobs skip manual review — click to revoke"
+            >
+              <ShieldCheck className="w-4 h-4" /> Trusted (auto-approved)
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+              <ShieldOff className="w-4 h-4" /> Not auto-approved
+            </span>
+          )}
+        </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={isRevokeConfirmOpen}
+        title="Revoke auto-approval?"
+        message="Future job posts from this employer will need manual review again, and every job of theirs that's currently Approved will be set back to Pending for you to re-review."
+        confirmLabel="Revoke"
+        variant="danger"
+        isConfirming={isRevoking}
+        onConfirm={handleRevokeAutoApprove}
+        onCancel={() => setIsRevokeConfirmOpen(false)}
+      />
 
       <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-border/60 font-black text-foreground text-sm uppercase tracking-wide">
