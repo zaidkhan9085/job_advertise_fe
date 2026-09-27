@@ -1,35 +1,38 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Facebook, Linkedin, Instagram, Youtube, Mail, MapPin, ArrowRight, Briefcase } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
-import { SUPPORT_EMAIL } from "@/data/socialLinks";
+import { socialLinks as staticSocialLinks, contactLinks, SUPPORT_EMAIL } from "@/data/socialLinks";
 import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
-import { API_URL, type SocialLinks } from "@/lib/api";
+import { getSocialLinks, type SocialLinks } from "@/lib/api";
 import Logo from "@/components/common/Logo";
 
-const DEFAULT_SOCIAL_LINKS: SocialLinks = {
-  facebook: "",
-  instagram: "",
-  linkedin: "",
-  youtube: "",
-  whatsappChannel: "",
-  whatsappGroup: "",
+// A client-side fetch (same pattern every other dynamic value on this site
+// already uses, e.g. the /pricing page) rather than fetching inside the
+// Server Component -- Footer sits in the shared marketing layout, so a
+// server-side fetch runs during Vercel's static build for every single
+// marketing page. That's exactly what broke a deploy: when the build
+// couldn't reach the API quickly enough, each page's generation hung until
+// Vercel's 60s-per-page timeout, and the whole build failed. A client fetch
+// can never block a build, at the cost of a one-time flash from these
+// static fallbacks (the same values src/data/socialLinks.ts already ships)
+// to the admin-configured ones once they load.
+//
+// IMPORTANT: this file was previously reverted back to an async Server
+// Component with a build-time fetch (see git history), which silently broke
+// every single deploy since -- there is no local build failure to catch
+// this, because the fetch only hangs specifically inside Vercel's build
+// sandbox. Do not change this back without solving that constraint first.
+const INITIAL_SOCIAL_LINKS: SocialLinks = {
+  facebook: staticSocialLinks.find((s) => s.label === "Facebook")?.href ?? "",
+  instagram: staticSocialLinks.find((s) => s.label === "Instagram")?.href ?? "",
+  linkedin: staticSocialLinks.find((s) => s.label === "LinkedIn")?.href ?? "",
+  youtube: staticSocialLinks.find((s) => s.label === "YouTube")?.href ?? "",
+  whatsappChannel: contactLinks.whatsappChannel,
+  whatsappGroup: contactLinks.whatsappGroup,
 };
-
-// Bypasses the shared apiFetch() on purpose: this runs in a Server
-// Component on every marketing page, and Next caches a plain fetch() made
-// during rendering indefinitely by default (like a build-time snapshot) --
-// fine for most API calls, but it would freeze the admin's social links at
-// whatever they were the last time the site was built, defeating "admin can
-// change these any time." `next: { revalidate: 60 }` instead refetches at
-// most once a minute, so an edit in Settings shows up shortly without
-// needing a full redeploy.
-async function fetchSocialLinks(): Promise<SocialLinks> {
-  const res = await fetch(`${API_URL}/api/settings/social-links`, {
-    next: { revalidate: 60 },
-  });
-  if (!res.ok) throw new Error("Failed to load social links");
-  return res.json();
-}
 
 // Every href below is a real, working route -- the previous version linked
 // to dashboard-only pages (Employer Dashboard, Search CV) that redirected a
@@ -92,12 +95,15 @@ function buildSocialIcons(links: SocialLinks) {
   ].filter((s) => s.href);
 }
 
-// A server component so every page gets the current admin-set links without
-// a client-side fetch flash -- getSocialLinks() is a public endpoint and
-// falls back to sensible defaults server-side if the API is ever briefly
-// unreachable, so the footer never breaks rendering over this.
-export default async function Footer() {
-  const socialLinks = await fetchSocialLinks().catch(() => DEFAULT_SOCIAL_LINKS);
+export default function Footer() {
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>(INITIAL_SOCIAL_LINKS);
+
+  useEffect(() => {
+    getSocialLinks()
+      .then(setSocialLinks)
+      .catch(() => {}); // keep the static fallback if the API call fails
+  }, []);
+
   const socialIcons = buildSocialIcons(socialLinks);
 
   return (
