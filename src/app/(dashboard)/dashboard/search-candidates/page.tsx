@@ -645,23 +645,23 @@ export default function SearchCandidatesPage() {
           </div>
         )}
         {isStaff && (
-          <button
-            onClick={handleExport}
-            disabled={isExporting || candidates.length === 0}
-            className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors disabled:opacity-60 shrink-0"
-          >
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Export CSV
-          </button>
-        )}
-        {isStaff && (
-          <button
-            onClick={() => setIsImportOpen(true)}
-            className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors shrink-0"
-          >
-            <Upload className="w-4 h-4" />
-            Import Candidates
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleExport}
+              disabled={isExporting || candidates.length === 0}
+              className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors disabled:opacity-60 shrink-0"
+            >
+              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              Export CSV
+            </button>
+            <button
+              onClick={() => setIsImportOpen(true)}
+              className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors shrink-0"
+            >
+              <Upload className="w-4 h-4" />
+              Import Candidates
+            </button>
+          </div>
         )}
       </div>
 
