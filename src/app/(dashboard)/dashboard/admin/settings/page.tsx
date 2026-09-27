@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { KeyRound, ShieldCheck, Crown, Coins, Save, Loader2, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { KeyRound, ShieldCheck, Crown, Coins, Save, Loader2, Plus, Trash2, Eye, EyeOff, Share2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
@@ -15,10 +15,13 @@ import {
   deleteCreditPackageAdmin,
   getUnlockCostsAdmin,
   updateUnlockCostsAdmin,
+  getSocialLinks,
+  updateSocialLinksAdmin,
   ApiError,
   type PlanTemplate,
   type PlanType,
   type CreditPackage,
+  type SocialLinks,
 } from "@/lib/api";
 
 const inputClass =
@@ -381,6 +384,81 @@ function PlansAndCreditsSection() {
   );
 }
 
+const SOCIAL_LINK_FIELDS: { key: keyof SocialLinks; label: string; placeholder: string }[] = [
+  { key: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+  { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+  { key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/company/..." },
+  { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/@..." },
+  { key: "whatsappChannel", label: "WhatsApp Channel", placeholder: "https://whatsapp.com/channel/..." },
+  { key: "whatsappGroup", label: "WhatsApp Group", placeholder: "https://chat.whatsapp.com/..." },
+];
+
+function SocialLinksSection() {
+  const [links, setLinks] = useState<SocialLinks | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    getSocialLinks()
+      .then(setLinks)
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    if (!links) return;
+    setIsSaving(true);
+    try {
+      const updated = await updateSocialLinksAdmin(links);
+      setLinks(updated);
+      toast.success("Social links updated. The footer picks these up within a minute.");
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update social links.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading || !links) return null;
+
+  return (
+    <div className="bg-white rounded-3xl border border-border/60 shadow-sm p-8 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-brand-blue/10 text-brand-blue flex items-center justify-center shrink-0">
+          <Share2 className="w-6 h-6" />
+        </div>
+        <div>
+          <div className="font-black text-foreground">Social Media Links</div>
+          <div className="text-xs text-muted-foreground">Shown in the footer&apos;s social icons — changes here need no code deploy.</div>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        {SOCIAL_LINK_FIELDS.map(({ key, label, placeholder }) => (
+          <div key={key}>
+            <label className={labelClass}>{label}</label>
+            <input
+              value={links[key]}
+              onChange={(e) => setLinks({ ...links, [key]: e.target.value })}
+              placeholder={placeholder}
+              className={inputClass}
+            />
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors disabled:opacity-60"
+      >
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        Save Social Links
+      </button>
+    </div>
+  );
+}
+
 export default function AdminSettingsPage() {
   const { user } = useAuth();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
@@ -415,6 +493,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {user?.role === "admin" && <PlansAndCreditsSection />}
+      {user?.role === "admin" && <SocialLinksSection />}
     </div>
   );
 }

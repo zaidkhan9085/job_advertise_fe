@@ -13,15 +13,15 @@ import SafetySection from "@/components/sections/SafetySection";
 export default function Home() {
   return (
     <>
-      <StoriesSection />
       <SearchSection />
+      <StoriesSection />
       <HomeCTASection />
-      <TopCompaniesSection />
       <PremiumAdsSection />
       <GeneralAdsSection />
       <IndustrySection />
       <RegionsSection />
       <TestimonialsSection />
+      <TopCompaniesSection />
       <SafetySection />
     </>
   );
