@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, ExternalLink, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star } from "lucide-react";
+import { Building, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +14,7 @@ import {
   setCandidateBlocked,
   grantCreditsToCompany,
   setCompanyFeatured,
+  revokeCompanyAutoApprove,
   resolveImageUrl,
   type CompanyAdminListItem,
   type PaginatedMeta,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
+import RowActionsMenu from "@/components/dashboard/RowActionsMenu";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import ResetPasswordModal from "@/components/dashboard/ResetPasswordModal";
@@ -198,6 +200,7 @@ function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem
 
 export default function AdminEmployersPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [companies, setCompanies] = useState<CompanyAdminListItem[]>([]);
   const [meta, setMeta] = useState<PaginatedMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -214,6 +217,7 @@ export default function AdminEmployersPage() {
   const [editingCompany, setEditingCompany] = useState<CompanyAdminListItem | null>(null);
   const [passwordCompany, setPasswordCompany] = useState<CompanyAdminListItem | null>(null);
   const [creditsCompany, setCreditsCompany] = useState<CompanyAdminListItem | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<CompanyAdminListItem | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const selection = useTableSelection<string>();
@@ -329,6 +333,25 @@ export default function AdminEmployersPage() {
     }
   };
 
+  const handleRevokeAutoApprove = async () => {
+    if (!revokeTarget) return;
+    setActioningId(revokeTarget.id);
+    try {
+      const result = await revokeCompanyAutoApprove(revokeTarget.id);
+      toast.success(
+        result.jobsSetPending > 0
+          ? `Auto-approval revoked — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
+          : "Auto-approval revoked."
+      );
+      setCompanies((prev) => prev.map((c) => (c.id === revokeTarget.id ? { ...c, autoApprove: false } : c)));
+      setRevokeTarget(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to revoke auto-approval.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -411,7 +434,10 @@ export default function AdminEmployersPage() {
         <button
           title={company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
           disabled={actioningId === company.id}
-          onClick={() => handleToggleFeatured(company)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggleFeatured(company);
+          }}
           className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
             company.isFeaturedTopHiring
               ? "text-amber-500 hover:bg-amber-100"
@@ -451,57 +477,16 @@ export default function AdminEmployersPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      minWidth: 250,
+      minWidth: 120,
       render: (_, company) => (
-        <div className="flex items-center justify-end gap-1">
-          <Link
-            href={`/dashboard/admin/employers/${company.id}`}
-            title="View Employer"
-            className="inline-flex p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </Link>
+        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             title="Edit"
             disabled={actioningId === company.id}
             onClick={() => setEditingCompany(company)}
             className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
           >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            title="Change Password"
-            disabled={actioningId === company.id}
-            onClick={() => setPasswordCompany(company)}
-            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
-          >
-            <Lock className="w-4 h-4" />
-          </button>
-          <button
-            title={company.owner.isBlocked ? "Unblock" : "Block"}
-            disabled={actioningId === company.id}
-            onClick={() => handleToggleBlock(company)}
-            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
-              company.owner.isBlocked
-                ? "text-emerald-600 hover:bg-emerald-100"
-                : "text-muted-foreground hover:bg-amber-100 hover:text-amber-700"
-            }`}
-          >
-            {actioningId === company.id ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : company.owner.isBlocked ? (
-              <ShieldCheck className="w-4 h-4" />
-            ) : (
-              <ShieldOff className="w-4 h-4" />
-            )}
-          </button>
-          <button
-            title="Grant Credits"
-            disabled={actioningId === company.id}
-            onClick={() => setCreditsCompany(company)}
-            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
-          >
-            <Coins className="w-4 h-4" />
+            {actioningId === company.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
           </button>
           <button
             title="Delete Employer"
@@ -511,6 +496,35 @@ export default function AdminEmployersPage() {
           >
             <Trash2 className="w-4 h-4" />
           </button>
+          <RowActionsMenu
+            items={[
+              {
+                label: "Change Password",
+                icon: <Lock className="w-4 h-4" />,
+                onClick: () => setPasswordCompany(company),
+              },
+              {
+                label: company.owner.isBlocked ? "Unblock Employer" : "Block Employer",
+                icon: company.owner.isBlocked ? <ShieldCheck className="w-4 h-4" /> : <ShieldOff className="w-4 h-4" />,
+                onClick: () => handleToggleBlock(company),
+              },
+              {
+                label: "Grant Credits",
+                icon: <Coins className="w-4 h-4" />,
+                onClick: () => setCreditsCompany(company),
+              },
+              ...(company.autoApprove
+                ? [
+                    {
+                      label: "Revoke Auto-Approval",
+                      icon: <ShieldOff className="w-4 h-4" />,
+                      onClick: () => setRevokeTarget(company),
+                      danger: true,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
       ),
     },
@@ -533,6 +547,7 @@ export default function AdminEmployersPage() {
         rowKey={(c) => c.id}
         loading={isLoading}
         emptyMessage="No employers found."
+        onRowClick={(company) => router.push(`/dashboard/admin/employers/${company.id}`)}
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by company or owner..." }}
         resetFilters={{ onReset: () => setSearchInput(""), hasActiveFilters: !!searchInput }}
         exportButton={{ onClick: handleExport, disabled: isExporting || companies.length === 0 }}
@@ -587,6 +602,17 @@ export default function AdminEmployersPage() {
         isConfirming={isBulkDeleting}
         onConfirm={handleBulkDelete}
         onCancel={() => setIsBulkDeleteOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!revokeTarget}
+        title="Revoke auto-approval?"
+        message="Future job posts from this employer will need manual review again, and every job of theirs that's currently Approved will be set back to Pending for you to re-review."
+        confirmLabel="Revoke"
+        variant="danger"
+        isConfirming={actioningId === revokeTarget?.id}
+        onConfirm={handleRevokeAutoApprove}
+        onCancel={() => setRevokeTarget(null)}
       />
 
       {editingCompany && (

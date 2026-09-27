@@ -1,10 +1,42 @@
 import Link from "next/link";
-import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight, MessageCircle, Send, Briefcase } from "lucide-react";
-import { socialLinks, contactLinks, SUPPORT_EMAIL } from "@/data/socialLinks";
+import { Facebook, Linkedin, Instagram, Youtube, Mail, MapPin, ArrowRight, Briefcase } from "lucide-react";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import { SUPPORT_EMAIL } from "@/data/socialLinks";
 import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
+import { API_URL, type SocialLinks } from "@/lib/api";
 import Logo from "@/components/common/Logo";
-import { Globe } from "lucide-react";
 
+const DEFAULT_SOCIAL_LINKS: SocialLinks = {
+  facebook: "",
+  instagram: "",
+  linkedin: "",
+  youtube: "",
+  whatsappChannel: "",
+  whatsappGroup: "",
+};
+
+// Bypasses the shared apiFetch() on purpose: this runs in a Server
+// Component on every marketing page, and Next caches a plain fetch() made
+// during rendering indefinitely by default (like a build-time snapshot) --
+// fine for most API calls, but it would freeze the admin's social links at
+// whatever they were the last time the site was built, defeating "admin can
+// change these any time." `next: { revalidate: 60 }` instead refetches at
+// most once a minute, so an edit in Settings shows up shortly without
+// needing a full redeploy.
+async function fetchSocialLinks(): Promise<SocialLinks> {
+  const res = await fetch(`${API_URL}/api/settings/social-links`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) throw new Error("Failed to load social links");
+  return res.json();
+}
+
+// Every href below is a real, working route -- the previous version linked
+// to dashboard-only pages (Employer Dashboard, Search CV) that redirected a
+// signed-out visitor somewhere confusing, and several pages that never
+// existed at all (Job Alerts, Mobile App, Legal Notice, Disclaimer, FAQ).
+// Legal & Trust's Refund/Disclaimer/Legal Notice pages are new; see their
+// own files under src/app/(marketing)/.
 const footerLinks = [
   {
     title: "Quick Links",
@@ -12,51 +44,62 @@ const footerLinks = [
       { label: "About Us", href: "/about" },
       { label: "Contact Us", href: "/contact" },
       { label: "Latest Jobs", href: "/jobs" },
-      { label: "Nearby Jobs", href: "/jobs?type=nearby" },
-      { label: "Job Alerts", href: "/dashboard/alerts" },
-    ]
+      { label: "Post a Job", href: "/post-job" },
+    ],
   },
   {
-    title: "Employers",
+    title: "For Employers",
     links: [
       { label: "Post a Job", href: "/post-job" },
-      { label: "Search CV", href: "/dashboard/candidates" },
-      { label: "Employer Dashboard", href: "/dashboard" },
       { label: "Pricing Plans", href: "/pricing" },
       { label: "Recruitment Solutions", href: "/solutions" },
-    ]
+    ],
   },
   {
     title: "For Candidates",
     links: [
       { label: "Post Resume", href: "/resume" },
+      { label: "Resume Builder", href: "/resume-builder" },
       { label: "Career Guide", href: "/blog" },
       { label: "Salary Guide", href: "/salary-guide" },
-      { label: "Mobile App", href: "/app" },
       { label: "Success Stories", href: "/case-studies" },
-    ]
+    ],
   },
   {
-    title: "Legal & Support",
+    title: "Legal & Trust",
     links: [
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms & Conditions", href: "/terms" },
-      { label: "Legal Notice", href: "/legal/notice" },
-      { label: "Disclaimer", href: "/legal/disclaimer" },
-      { label: "FAQ / Help", href: "/help" },
-    ]
-  }
+      { label: "Refund Policy", href: "/refund" },
+      { label: "Disclaimer", href: "/disclaimer" },
+      { label: "Legal Notice", href: "/legal-notice" },
+    ],
+  },
 ];
 
-const iconMap: Record<string, React.FC<any>> = {
-  Facebook,
-  Twitter,
-  LinkedIn: Linkedin,
-  Instagram,
-  YouTube: Youtube,
-};
+// Brand-colored circular buttons per platform, same treatment the sister
+// site's footer uses -- built from the admin-configurable links (see
+// utils/socialLinks.js on the backend) rather than a hardcoded list, so an
+// admin can change any of these any time without a code change.
+function buildSocialIcons(links: SocialLinks) {
+  return [
+    { label: "Facebook", href: links.facebook, Icon: Facebook, bg: "bg-[#1877F2]", shadow: "shadow-[#1877F2]/30" },
+    { label: "Instagram", href: links.instagram, Icon: Instagram, bg: "bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]", shadow: "shadow-[#ee2a7b]/30" },
+    { label: "LinkedIn", href: links.linkedin, Icon: Linkedin, bg: "bg-[#0A66C2]", shadow: "shadow-[#0A66C2]/30" },
+    { label: "YouTube", href: links.youtube, Icon: Youtube, bg: "bg-[#FF0000]", shadow: "shadow-[#FF0000]/30" },
+    { label: "WhatsApp Channel", href: links.whatsappChannel, Icon: WhatsAppIcon, bg: "bg-[#25D366]", shadow: "shadow-[#25D366]/30" },
+    { label: "WhatsApp Group", href: links.whatsappGroup, Icon: WhatsAppIcon, bg: "bg-[#20BE5A]", shadow: "shadow-[#20BE5A]/30" },
+  ].filter((s) => s.href);
+}
 
-export default function Footer() {
+// A server component so every page gets the current admin-set links without
+// a client-side fetch flash -- getSocialLinks() is a public endpoint and
+// falls back to sensible defaults server-side if the API is ever briefly
+// unreachable, so the footer never breaks rendering over this.
+export default async function Footer() {
+  const socialLinks = await fetchSocialLinks().catch(() => DEFAULT_SOCIAL_LINKS);
+  const socialIcons = buildSocialIcons(socialLinks);
+
   return (
     <footer className="bg-brand-ink text-white overflow-hidden selection:bg-brand-blue-light selection:text-white">
       {/* Specialized Content Section */}
@@ -108,8 +151,8 @@ export default function Footer() {
                 <ul className="space-y-4">
                   {section.links.map((link) => (
                     <li key={link.label}>
-                      <Link 
-                        href={link.href} 
+                      <Link
+                        href={link.href}
                         className="text-white/60 hover:text-white text-[14px] font-bold transition-all flex items-center gap-2 group"
                       >
                         <ArrowRight className="w-0 h-3 opacity-0 group-hover:w-3 group-hover:opacity-100 transition-all text-brand-blue-light" />
@@ -131,37 +174,35 @@ export default function Footer() {
             {/* Contact & Location Info */}
             <div className="flex flex-col sm:flex-row items-center gap-10">
               <div className="flex flex-col items-center sm:items-start gap-2">
-                <div className="flex items-center gap-3 text-brand-blue-light group cursor-pointer">
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center gap-3 text-brand-blue-light group cursor-pointer">
                   <Mail className="w-5 h-5" />
                   <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">{SUPPORT_EMAIL}</span>
-                </div>
+                </a>
                 <div className="flex items-center gap-3 text-white/40">
                   <MapPin className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-widest">Mumbai — Global Recruitment HQ</span>
                 </div>
               </div>
 
-              <div className="hidden sm:block w-px h-12 bg-white/5" />
-
-              {/* Social Links */}
-              <div className="flex gap-4">
-                {socialLinks.map(({ label, href }) => {
-                  const Icon = iconMap[label];
-                  if (!Icon) return null;
-                  return (
-                    <a
-                      key={label}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-brand-blue-light hover:text-brand-blue text-white/80 flex items-center justify-center transition-all hover:-translate-y-2 border border-white/5 shadow-inner group"
-                      title={label}
-                    >
-                      <Icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    </a>
-                  );
-                })}
-              </div>
+              {socialIcons.length > 0 && (
+                <>
+                  <div className="hidden sm:block w-px h-12 bg-white/5" />
+                  <div className="flex flex-wrap gap-3">
+                    {socialIcons.map(({ label, href, Icon, bg, shadow }) => (
+                      <a
+                        key={label}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`w-11 h-11 rounded-full flex items-center justify-center text-white transition-all hover:scale-110 hover:-translate-y-1 shadow-lg ${bg} ${shadow} group`}
+                        title={label}
+                      >
+                        <Icon className="w-5 h-5 transition-transform group-hover:scale-110" />
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Copyright & Legal */}
@@ -169,7 +210,8 @@ export default function Footer() {
               <div className="flex items-center gap-6">
                 <Link href="/privacy" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Privacy</Link>
                 <Link href="/terms" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Terms</Link>
-                <Link href="/legal/disclaimer" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Safety</Link>
+                <Link href="/refund" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Refund</Link>
+                <Link href="/disclaimer" className="text-white/30 hover:text-brand-blue-light text-[10px] font-black uppercase tracking-widest transition-colors">Disclaimer</Link>
               </div>
               <p className="text-white/20 text-[10px] font-black tracking-[0.2em] uppercase">
                 © {new Date().getFullYear()} THEJOBS4U

@@ -62,6 +62,11 @@ interface CommonTableProps<T extends Record<string, any>, TId extends string | n
   // Tighter cell padding for tables with many columns, so they fit without
   // horizontal scrolling on a typical laptop screen.
   dense?: boolean;
+  // Makes the whole row clickable (e.g. "go to this record's detail page"),
+  // in addition to whatever's in the Actions column. Cells that need their
+  // own click behavior (buttons, the row-actions menu) must stop propagation
+  // themselves, same as the selection checkbox column already does.
+  onRowClick?: (record: T) => void;
 }
 
 // Header/body cell + row renderers reimplement the exact Tailwind classes
@@ -107,6 +112,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
   selection,
   exportButton,
   dense = false,
+  onRowClick,
 }: CommonTableProps<T, TId>) {
   const rcColumns: ColumnType<T>[] = [];
 
@@ -130,6 +136,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
             type="checkbox"
             checked={selection.isSelected(id)}
             onChange={() => selection.onToggleRow(id)}
+            onClick={(e) => e.stopPropagation()}
             className="w-4 h-4 rounded border-border/60 accent-brand-blue"
           />
         );
@@ -242,7 +249,14 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
             tableLayout="auto"
             emptyText={loading ? "Loading..." : emptyMessage}
             onHeaderRow={() => ({ className: "bg-muted/30 text-muted-foreground border-b border-border/60" })}
-            rowClassName={() => "hover:bg-muted/30 transition-colors group border-b border-border/60 last:border-b-0"}
+            onRow={
+              onRowClick
+                ? (record) => ({ onClick: () => onRowClick(record) })
+                : undefined
+            }
+            rowClassName={() =>
+              `hover:bg-muted/30 transition-colors group border-b border-border/60 last:border-b-0 ${onRowClick ? "cursor-pointer" : ""}`
+            }
             components={{
               table: TableRoot,
               header: { cell: HeaderCell },

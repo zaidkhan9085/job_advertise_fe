@@ -677,6 +677,8 @@ export interface CompanyAdminListItem extends Company {
   // Blended total (real follows + admin's bonusFollowers) -- the same
   // number the public and admin-detail views show, not _count.follows alone.
   followerCount: number;
+  // See CompanyAdminDetail's autoApprove for what this controls.
+  autoApprove: boolean;
 }
 
 export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCount"> {
@@ -1878,6 +1880,27 @@ export function giftSubscriptionAdmin(employerId: number, data: GiftSubscription
     `/api/admin/billing/subscriptions/${employerId}/gift`,
     { method: "POST", body: JSON.stringify(data) },
   );
+}
+
+export interface SocialLinks {
+  facebook: string;
+  instagram: string;
+  linkedin: string;
+  youtube: string;
+  whatsappChannel: string;
+  whatsappGroup: string;
+}
+
+// Public -- used by the footer and homepage for anonymous visitors too.
+export function getSocialLinks() {
+  return apiFetch<SocialLinks>("/api/settings/social-links");
+}
+
+export function updateSocialLinksAdmin(data: Partial<SocialLinks>) {
+  return apiFetch<SocialLinks>("/api/admin/settings/social-links", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
 export { apiFetch, API_URL };
