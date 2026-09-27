@@ -5,12 +5,41 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, Clock, ImagePlus, Phone, MessageSquare, Zap, Crown, Loader2 } from "lucide-react";
-import { createJob, getMyBilling, ApiError, type StoryTag } from "@/lib/api";
+import {
+  createJob,
+  getMyBilling,
+  parseJobPoster,
+  ApiError,
+  type StoryTag,
+  type ParsedJobPoster,
+  type PosterScanMeta,
+} from "@/lib/api";
 import PhoneInput from "@/components/common/PhoneInput";
 import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import { validateFileSize } from "@/lib/fileValidation";
+import { compressForScan } from "@/lib/compressImage";
+import { resolveBestLocationMatch } from "@/lib/resolveLocationMatch";
+import PosterScanPanel, { SCAN_STEPS, type ScanPhase } from "@/components/jobs/PosterScanPanel";
 
 const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
+
+// Stories have no separate vacancies/salary/benefits fields -- everything
+// collapses into the one short (300-char) description, so this is a lean
+// version of jobs/new's buildTitleFromPoster/buildDescriptionFromPoster,
+// not a reuse of the full multi-section composer (which assumes far more
+// room than a Story's description has).
+function buildStoryTitle(parsed: ParsedJobPoster): string {
+  if (parsed.title) return parsed.title.trim();
+  if (parsed.jobs.length === 1) return (parsed.jobs[0].category || parsed.jobs[0].title || "").trim();
+  return "";
+}
+
+function buildStoryDescription(parsed: ParsedJobPoster): string {
+  if (parsed.overview?.length > 0) return parsed.overview.join(" ");
+  const roles = parsed.jobs.map((j) => j.category || j.title).filter(Boolean);
+  if (roles.length > 0) return `Hiring: ${roles.join(", ")}`;
+  return "";
+}
 
 // Checked once on mount rather than only at submit -- letting a Free-plan
 // employer fill in a title, upload an image, and pick contact numbers just
@@ -72,6 +101,104 @@ export default function PostStoryPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Same AI poster-scan flow as Post Job (PosterScanPanel/parseJobPoster) --
+  // the recruiter uploads first, then chooses AI auto-fill or manual entry.
+  const [scanPhase, setScanPhase] = useState<ScanPhase | null>(null);
+  const isParsingPoster = scanPhase === "scanning";
+  const [parsingStep, setParsingStep] = useState(0);
+  const [parsingProgress, setParsingProgress] = useState(0);
+  const [parsedPoster, setParsedPoster] = useState<ParsedJobPoster | null>(null);
+  const [scanBasic, setScanBasic] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanLocked, setScanLocked] = useState(false);
+  const [scanQuota, setScanQuota] = useState<PosterScanMeta["quota"]>(null);
+  const [posterLocationText, setPosterLocationText] = useState<string | null>(null);
+
+  // Resets the cosmetic stepper/progress when a scan isn't running -- same
+  // pattern already used for this exact purpose in jobs/new/page.tsx.
+  useEffect(() => {
+    if (!isParsingPoster) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setParsingStep(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setParsingStep((s) => Math.min(s + 1, SCAN_STEPS.length - 1));
+    }, 1700);
+    return () => clearInterval(interval);
+  }, [isParsingPoster]);
+
+  useEffect(() => {
+    if (!isParsingPoster) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setParsingProgress(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setParsingProgress((p) => (p >= 92 ? 92 : p + Math.max(1, (92 - p) / 8)));
+    }, 200);
+    return () => clearInterval(interval);
+  }, [isParsingPoster]);
+
+  const applyParsedPoster = async (parsed: ParsedJobPoster, overwrite: boolean) => {
+    const canFill = (current: string) => overwrite || !current.trim();
+
+    const nextTitle = buildStoryTitle(parsed).slice(0, 100);
+    if (nextTitle && canFill(title)) setTitle(nextTitle);
+
+    const nextDescription = buildStoryDescription(parsed).slice(0, 300);
+    if (nextDescription && canFill(description)) setDescription(nextDescription);
+
+    if (parsed.job_type === "short" && (overwrite || tag === "Long Term")) {
+      setTag("Short Term");
+    }
+
+    const phone = parsed.phone_numbers[0];
+    if (phone) {
+      if (canFill(contactPhone)) setContactPhone(phone);
+      if (canFill(contactWhatsapp)) setContactWhatsapp(phone);
+    }
+
+    setPosterLocationText(parsed.location);
+    if (parsed.location && (overwrite || !location)) {
+      const match = await resolveBestLocationMatch(parsed.location);
+      if (match) setLocation(match);
+    }
+  };
+
+  const runScan = async (file: File, { rescan = false }: { rescan?: boolean } = {}) => {
+    setParsedPoster(null);
+    setScanError(null);
+    setScanLocked(false);
+    setScanBasic(false);
+    setScanPhase("scanning");
+    try {
+      const scanFile = await compressForScan(file);
+      const result = await parseJobPoster(scanFile, { rescan });
+      setParsedPoster(result.parsed);
+      await applyParsedPoster(result.parsed, rescan);
+      setScanBasic(result.parsed.degraded);
+      setScanQuota(result.meta?.quota ?? null);
+      setScanPhase("scanned");
+      if (result.parsed.degraded) {
+        toast.warning("AI was busy, so we used a basic scan — please check every field carefully.");
+      } else {
+        toast.success("We've read your poster and filled the form — please review before posting.");
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "";
+      const shown =
+        message && message.length <= 160
+          ? message
+          : "This doesn't look like a job poster — try a different image or fill in the form manually.";
+      setScanError(shown);
+      const code = err instanceof ApiError ? (err.body as { code?: string } | undefined)?.code : undefined;
+      setScanLocked(code === "AI_SCAN_LIMIT" || code === "AI_SCAN_PAUSED");
+      toast.error(shown);
+      setScanPhase("failed");
+    }
+  };
+
   const handlePosterChange = (file: File | null) => {
     if (file) {
       const error = validateFileSize(file);
@@ -82,6 +209,11 @@ export default function PostStoryPage() {
     }
     setPoster(file);
     setPosterPreview(file ? URL.createObjectURL(file) : null);
+    setParsedPoster(null);
+    setScanError(null);
+    setScanBasic(false);
+    // Nothing is scanned automatically: the panel asks first, same as Post Job.
+    setScanPhase(file ? "choose" : null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,6 +230,7 @@ export default function PostStoryPage() {
       const result = await createJob({
         title,
         jobLocationId: location?.id,
+        location: posterLocationText || undefined,
         description,
         type: "STORY",
         tag,
@@ -165,8 +298,9 @@ export default function PostStoryPage() {
               <img src={posterPreview} alt="Story preview" className="w-full aspect-9/16 object-cover rounded-2xl border border-border/60" />
               <button
                 type="button"
+                disabled={isParsingPoster}
                 onClick={() => { handlePosterChange(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                className="absolute top-2 right-2 bg-white/90 text-foreground text-xs font-bold px-3 py-1.5 rounded-full border border-border/60 hover:bg-white"
+                className="absolute top-2 right-2 bg-white/90 text-foreground text-xs font-bold px-3 py-1.5 rounded-full border border-border/60 hover:bg-white disabled:opacity-60"
               >
                 Remove
               </button>
@@ -181,6 +315,23 @@ export default function PostStoryPage() {
               <span className="text-sm font-bold">Tap to upload image</span>
               <span className="text-xs">Max 5MB &bull; JPG, PNG, WebP</span>
             </button>
+          )}
+
+          {poster && scanPhase && (
+            <PosterScanPanel
+              phase={scanPhase}
+              step={parsingStep}
+              progress={parsingProgress}
+              roleCount={parsedPoster?.jobs.length}
+              shortTerm={parsedPoster?.job_type === "short"}
+              basic={scanBasic}
+              quota={scanQuota}
+              locked={scanLocked}
+              errorMessage={scanError}
+              onScan={() => runScan(poster)}
+              onManual={() => setScanPhase("manual")}
+              onRescan={() => runScan(poster, { rescan: true })}
+            />
           )}
         </div>
 
@@ -258,7 +409,7 @@ export default function PostStoryPage() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isParsingPoster}
           className="w-full py-4 rounded-2xl bg-brand-blue text-white font-black shadow-lg shadow-brand-blue/20 hover:bg-brand-blue-medium transition-all disabled:opacity-70 flex items-center justify-center gap-2"
         >
           <Zap className="w-5 h-5" /> {isSubmitting ? "Posting..." : "Post Story"}

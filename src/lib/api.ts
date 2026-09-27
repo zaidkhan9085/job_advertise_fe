@@ -327,6 +327,14 @@ export function updateJob(id: string, payload: UpdateJobPayload) {
   });
 }
 
+// Clones a General post into a brand new Story -- the original is never
+// touched, it stays exactly where it was in General. Admin/sub_admin only.
+export function promoteJobToStory(id: string) {
+  return apiFetch<{ message: string; story: JobPost }>(`/api/jobs/${id}/promote-to-story`, {
+    method: "POST",
+  });
+}
+
 // Structured data extracted from an uploaded job poster/flyer image —
 // returned for the Post Job form to review/pre-fill, never auto-saved by
 // the backend (no Job row is created by this call). A single poster often
@@ -676,6 +684,10 @@ export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCou
   // Raw admin-editable component of followerCount -- see companyController.js's
   // setCompanyBonusFollowers. Admin-only; not present on the public CompanyDetail.
   bonusFollowers: number;
+  // Sticks once an admin trusts this employer (see jobController.js's
+  // updateJobStatus "trustEmployer" flag) -- new posts skip manual review.
+  // revokeCompanyAutoApprove below is the only way to turn it back off.
+  autoApprove: boolean;
   // Every job this employer has ever posted, any status -- unlike the
   // public CompanyDetail.jobs, which is only currently-open ones.
   jobs: {
@@ -1262,6 +1274,13 @@ export function grantCreditsToCompany(
       method: "POST",
       body: JSON.stringify({ amount, note }),
     },
+  );
+}
+
+export function revokeCompanyAutoApprove(companyId: string) {
+  return apiFetch<{ message: string; jobsSetPending: number }>(
+    `/api/admin/companies/${companyId}/revoke-auto-approve`,
+    { method: "PATCH" },
   );
 }
 

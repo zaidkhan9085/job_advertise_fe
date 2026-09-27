@@ -23,7 +23,6 @@ import {
   getJobTypes,
   getIndustries,
   parseJobPoster,
-  searchJobLocations,
   getMyBilling,
   ApiError,
   type JobType,
@@ -41,6 +40,7 @@ import { useAuth } from "@/context/AuthContext";
 import PosterScanPanel, { SCAN_STEPS, type ScanPhase } from "@/components/jobs/PosterScanPanel";
 import { compressForScan } from "@/lib/compressImage";
 import { DESCRIPTION_MAX_LENGTH } from "@/lib/jobLimits";
+import { resolveBestLocationMatch } from "@/lib/resolveLocationMatch";
 
 // The listing headline comes from the scan (about the ROLE, never the agency
 // that posted it -- the backend strips the company name). Only if that's
@@ -133,29 +133,6 @@ function buildDescriptionFromPoster(parsed: ParsedJobPoster): string {
   }
 
   return lines.join("\n").trim();
-}
-
-// Best-effort match against the real location tree -- searchJobLocations
-// only does a prefix match on a single name, so a compound string like
-// "Dubai, UAE" is split into tokens (most specific first) and each is tried
-// in turn. Only an exact (or unambiguous single-result) match is returned;
-// anything weaker is left for the recruiter to pick manually rather than
-// risk silently attaching the wrong location.
-async function resolveBestLocationMatch(text: string): Promise<LocationValue | null> {
-  const tokens = text.split(/[,/-]/).map((t) => t.trim()).filter(Boolean);
-  for (const token of tokens) {
-    try {
-      const results = await searchJobLocations(token);
-      const exact = results.find((r) => r.name.toLowerCase() === token.toLowerCase());
-      if (exact) return exact;
-      if (results.length === 1 && results[0].name.toLowerCase().startsWith(token.toLowerCase())) {
-        return results[0];
-      }
-    } catch {
-      // Best-effort only — a failed lookup just means no auto-match.
-    }
-  }
-  return null;
 }
 
 export default function PostJobPage() {

@@ -41,7 +41,13 @@ export default function PricingPage() {
   }, [load]);
 
   const isEmployer = user?.displayRole === "Recruiter";
-  const ctaHref = isEmployer ? "/dashboard/billing" : "/register?role=recruiter";
+  // A logged-out visitor likely already has an account -- sending them to
+  // Register instead of Login forced a needless signup attempt. Only a
+  // signed-in non-employer (e.g. a candidate) actually needs to register a
+  // new recruiter account. redirect=/dashboard/billing lands them straight
+  // back on this purchase flow after signing in (login's own redirect
+  // handling only honors /dashboard/* targets).
+  const ctaHref = isEmployer ? "/dashboard/billing" : user ? "/register?role=recruiter" : "/login?redirect=/dashboard/billing";
 
   const free = templates?.find((t) => t.planType === "FREE");
   const pro = templates?.find((t) => t.planType === "PRO");
