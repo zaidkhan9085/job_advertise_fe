@@ -1903,4 +1903,47 @@ export function updateSocialLinksAdmin(data: Partial<SocialLinks>) {
   });
 }
 
+export interface CandidateImportRowResult {
+  row: number;
+  name: string;
+  email: string;
+  phone: string;
+  reason: string;
+}
+
+export interface CandidateImportResult {
+  totalRows: number;
+  imported: number;
+  partial: number;
+  failed: number;
+  failedRows: CandidateImportRowResult[];
+  partialRows: CandidateImportRowResult[];
+}
+
+export function importCandidatesAdmin(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return apiFetch<CandidateImportResult>("/api/candidate/admin/import", {
+    method: "POST",
+    body: form,
+  });
+}
+
+// Not apiFetch -- this returns a binary .xlsx, not JSON, so it needs its own
+// fetch + Blob handling (same auth-header pattern apiFetch uses internally).
+export async function downloadCandidateImportTemplate() {
+  const token = getTokenFromDocumentCookie();
+  const res = await fetch(`${API_URL}/api/candidate/admin/import-template`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError("Failed to download template", res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "candidate-import-template.xlsx";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export { apiFetch, API_URL };

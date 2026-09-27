@@ -27,6 +27,7 @@ import {
   UserX,
   ChevronDown,
   ChevronRight,
+  Upload,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTableSelection } from "@/hooks/useTableSelection";
@@ -51,6 +52,7 @@ import SearchableSelect from "@/components/common/SearchableSelect";
 import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
 import EditCandidateModal from "@/components/dashboard/EditCandidateModal";
 import ResetPasswordModal from "@/components/dashboard/ResetPasswordModal";
+import CandidateImportModal from "@/components/dashboard/CandidateImportModal";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { buildCsv, downloadCsv } from "@/lib/csv";
 
@@ -309,6 +311,7 @@ export default function SearchCandidatesPage() {
   const [deleteTarget, setDeleteTarget] = useState<StaffManageable | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Bulk delete -- two independent Gmail-style selections (same
   // useTableSelection hook the table-based admin pages use for "select all
@@ -490,13 +493,26 @@ export default function SearchCandidatesPage() {
     setIsExporting(true);
     try {
       const result = await searchCandidates({ ...filters, all: true });
+      const qualificationOf = (c: ATSCandidate) => {
+        const edu = c.education?.[0];
+        if (!edu?.course) return c.qualification ?? "";
+        return edu.specialization ? `${edu.course} - ${edu.specialization}` : edu.course;
+      };
+      const experienceOf = (c: ATSCandidate) => (c.isFresher ? "Fresher" : c.experienceYears != null ? `${c.experienceYears} Years` : "");
+
       const rows: string[][] = [
         ...result.data.map((c) => [
           c.account?.fullName ?? c.name,
           c.position,
           c.account?.email ?? "",
           c.account?.phone ?? "",
+          qualificationOf(c),
+          experienceOf(c),
+          c.industry ?? "",
+          c.gender ?? "",
           c.currentLocation ?? "",
+          c.preferredLocation ?? "",
+          c.hasResume ? "Yes" : "No",
           c.account?.isVerified ? "Yes" : "No",
           c.account?.isBlocked ? "Yes" : "No",
           c.account?.registeredAt ?? "",
@@ -506,13 +522,25 @@ export default function SearchCandidatesPage() {
           "",
           u.email,
           u.phone ?? "",
+          "",
+          "",
+          "",
+          "",
           u.jobLocation?.name ?? "",
+          "",
+          "No",
           u.isVerified ? "Yes" : "No",
           u.isBlocked ? "Yes" : "No",
           u.registeredAt,
         ]),
       ];
-      downloadCsv(buildCsv(["Name", "Position", "Email", "Phone", "Location", "Verified", "Blocked", "Registered"], rows), "candidates");
+      downloadCsv(
+        buildCsv(
+          ["Name", "Position", "Email", "Phone", "Qualification", "Experience", "Industry", "Gender", "Current Location", "Preferred Location", "Has Resume", "Verified", "Blocked", "Registered"],
+          rows
+        ),
+        "candidates"
+      );
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to export candidates.");
     } finally {
@@ -617,16 +645,29 @@ export default function SearchCandidatesPage() {
           </div>
         )}
         {isStaff && (
-          <button
-            onClick={handleExport}
-            disabled={isExporting || candidates.length === 0}
-            className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors disabled:opacity-60 shrink-0"
-          >
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Export CSV
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleExport}
+              disabled={isExporting || candidates.length === 0}
+              className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors disabled:opacity-60 shrink-0"
+            >
+              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              Export CSV
+            </button>
+            <button
+              onClick={() => setIsImportOpen(true)}
+              className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-colors shrink-0"
+            >
+              <Upload className="w-4 h-4" />
+              Import Candidates
+            </button>
+          </div>
         )}
       </div>
+
+      {isImportOpen && (
+        <CandidateImportModal onClose={() => setIsImportOpen(false)} onImported={() => loadCandidates()} />
+      )}
 
       {isStaff && totalSelectedCount > 0 && (
         <div className="flex flex-col gap-2 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3">
