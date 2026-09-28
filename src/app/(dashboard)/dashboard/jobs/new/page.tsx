@@ -41,6 +41,7 @@ import PosterScanPanel, { SCAN_STEPS, type ScanPhase } from "@/components/jobs/P
 import { compressForScan } from "@/lib/compressImage";
 import { DESCRIPTION_MAX_LENGTH } from "@/lib/jobLimits";
 import { resolveBestLocationMatch } from "@/lib/resolveLocationMatch";
+import { buttonClass, inputClass } from "@/lib/ui";
 
 // The listing headline comes from the scan (about the ROLE, never the agency
 // that posted it -- the backend strips the company name). Only if that's
@@ -581,7 +582,7 @@ export default function PostJobPage() {
                 required
                 type="text"
                 placeholder="e.g. Senior Site Engineer"
-                className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium"
+                className={inputClass({ variant: "filled" })}
               />
               <div className="text-xs text-muted-foreground text-right">{title.length}/100</div>
             </div>
@@ -608,7 +609,7 @@ export default function PostJobPage() {
               <select
                 value={jobTypeId}
                 onChange={(e) => setJobTypeId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
+                className={inputClass({ variant: "filled" }, "appearance-none cursor-pointer")}
               >
                 <option value="">Not specified</option>
                 {jobTypes.map((t) => (
@@ -640,14 +641,14 @@ export default function PostJobPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Email Address *</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     required
                     type="email"
                     placeholder="hr@company.com"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm"
+                    className={inputClass({ variant: "filled", withLeftIcon: true })}
                   />
                 </div>
               </div>
@@ -669,7 +670,7 @@ export default function PostJobPage() {
                 onChange={(e) => setDescription(e.target.value.slice(0, DESCRIPTION_MAX_LENGTH))}
                 rows={8}
                 placeholder="Include job responsibilities, requirements, salary benefits, duty hours, and contract details."
-                className="w-full px-5 py-4 rounded-2xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium resize-none"
+                className={inputClass({ variant: "filled" }, "h-auto py-3 resize-none")}
               />
               <div className="text-xs text-muted-foreground text-right">{description.length}/{DESCRIPTION_MAX_LENGTH}</div>
             </div>
@@ -679,19 +680,19 @@ export default function PostJobPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto flex-1 py-5 px-8 rounded-2xl bg-brand-blue text-white font-black text-xl shadow-xl shadow-brand-blue/25 hover:bg-brand-blue-medium hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
+              className={buttonClass({ variant: "primary", size: "hero", fullWidth: true }, "sm:w-auto flex-1 shadow-lg shadow-brand-blue/20 hover:-translate-y-0.5")}
             >
               {isSubmitting ? (
                 <>Submitting...</>
               ) : (
                 <>
-                  <Save className="w-6 h-6" /> Submit for Approval
+                  <Save className="w-4 h-4" /> Submit for Approval
                 </>
               )}
             </button>
             <Link
               href="/dashboard/jobs"
-              className="w-full sm:w-auto flex items-center justify-center py-4 px-8 rounded-2xl bg-white text-muted-foreground font-black uppercase tracking-widest text-xs border border-border/60 hover:bg-secondary transition-all"
+              className={buttonClass({ variant: "outline", size: "hero", fullWidth: true }, "sm:w-auto uppercase tracking-widest text-xs")}
             >
               Cancel
             </Link>

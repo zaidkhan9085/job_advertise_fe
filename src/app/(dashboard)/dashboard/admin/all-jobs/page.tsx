@@ -22,6 +22,7 @@ import CommonTable, { type CommonTableColumn } from "@/components/dashboard/Comm
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { StatusFilterPills } from "@/components/dashboard/StatusFilterPills";
 import { useTableSelection } from "@/hooks/useTableSelection";
+import { buttonClass } from "@/lib/ui";
 
 const PAGE_LIMIT = 20;
 
@@ -351,16 +352,16 @@ export default function AdminAllJobsPage() {
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href="/dashboard/stories/new"
-            className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 text-foreground hover:bg-secondary/60 px-4 py-3 rounded-xl font-bold transition-all shadow-sm whitespace-nowrap active:scale-95"
+            className={buttonClass({ variant: "outline" }, "shadow-sm whitespace-nowrap")}
           >
-            <PlayCircle className="w-5 h-5" />
+            <PlayCircle className="w-4 h-4" />
             Post Story
           </Link>
           <Link
             href="/dashboard/jobs/new"
-            className="inline-flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-blue/20 whitespace-nowrap active:scale-95"
+            className={buttonClass({ variant: "primary" }, "shadow-lg shadow-brand-blue/20 whitespace-nowrap")}
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             Post New Job
           </Link>
         </div>

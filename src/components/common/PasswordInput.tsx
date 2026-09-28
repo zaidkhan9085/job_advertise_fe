@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
+import { inputClass } from "@/lib/ui";
 
 // "bordered" matches Login/Register/Reset-Password's shared convention
 // (relative wrapper + left Lock icon + border-input/bg-background input).
@@ -9,10 +10,8 @@ import { Lock, Eye, EyeOff } from "lucide-react";
 // icon, same as every other field in those same modals) -- adding a Lock
 // icon there would look inconsistent next to its sibling inputs.
 const VARIANT_INPUT_CLASSES: Record<"bordered" | "compact", string> = {
-  bordered:
-    "w-full pl-10 pr-10 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all",
-  compact:
-    "w-full px-4 py-3 pr-10 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium text-sm",
+  bordered: inputClass({ variant: "outline", withLeftIcon: true }, "pr-10"),
+  compact: inputClass({ variant: "filled" }, "pr-10"),
 };
 
 export default function PasswordInput({
@@ -35,7 +34,7 @@ export default function PasswordInput({
   return (
     <div className="relative">
       {variant === "bordered" && (
-        <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
       )}
       <input
         type={visible ? "text" : "password"}
@@ -53,7 +52,7 @@ export default function PasswordInput({
         aria-label={visible ? "Hide password" : "Show password"}
         tabIndex={-1}
       >
-        {visible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
     </div>
   );

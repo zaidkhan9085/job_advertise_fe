@@ -42,7 +42,7 @@ function NavPanelTrigger({ label, children }: { label: string; children: (close:
     >
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
+        className={`flex items-center gap-1.5 px-2.5 lg:px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
           open ? "bg-brand-blue text-white shadow-lg shadow-[#C8422C]/20" : "text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted"
         }`}
         aria-expanded={open}
@@ -136,7 +136,22 @@ function ShortTermLink() {
   return (
     <Link
       href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
-      className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+      className="px-2.5 lg:px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+    >
+      Short Term
+    </Link>
+  );
+}
+
+// Same link, styled to match the "More" panel's other items instead of the
+// top-level nav bar -- used only inside that dropdown (md-to-lg gap).
+function ShortTermMoreLink({ onNavigate }: { onNavigate: () => void }) {
+  const searchParams = useSearchParams();
+  return (
+    <Link
+      href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
+      onClick={onNavigate}
+      className="px-4 py-2.5 rounded-xl text-sm text-foreground/80 hover:bg-brand-blue-muted hover:text-brand-blue transition-all"
     >
       Short Term
     </Link>
@@ -161,7 +176,7 @@ function NavItemComponent({ item }: { item: NavItem }) {
     return (
       <Link
         href={item.href}
-        className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+        className="px-2.5 lg:px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
       >
         {item.label}
       </Link>
@@ -177,7 +192,7 @@ function NavItemComponent({ item }: { item: NavItem }) {
     >
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
+        className={`flex items-center gap-1.5 px-2.5 lg:px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
           open ? 'bg-brand-blue text-white shadow-lg shadow-[#C8422C]/20' : 'text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted'
         }`}
         aria-expanded={open}
@@ -208,6 +223,58 @@ export default function Header() {
   // through the login form.
   const visibleNavItems = user ? mainNavItems.filter((item) => item.href !== "/login") : mainNavItems;
 
+  // At 768px (md, tablet portrait) the full 6-item bar plus logo and CTA
+  // measurably overflows the header (confirmed live: "Jobs Opening" wraps
+  // to two lines and the CTA button gets clipped off the right edge) --
+  // there just isn't room for all of it before `lg` (1024px). Rather than
+  // give tablet the exact same full-screen hamburger overlay as a phone
+  // (the bug this is fixing), keep the three richest items -- the ones with
+  // real dropdown panels -- inline, and fold the remaining three into a
+  // compact "More" menu that only exists in the md-to-lg gap; at `lg` and
+  // up they go back to being flat top-level items like before.
+  const PRIMARY_LABELS = ["Industry", "Location", "Jobs Opening"];
+  const primaryNavItems = visibleNavItems.filter((item) => PRIMARY_LABELS.includes(item.label));
+  const secondaryNavItems = visibleNavItems.filter((item) => !PRIMARY_LABELS.includes(item.label));
+
+  function renderNavItem(item: NavItem) {
+    if (item.label === "Industry") {
+      return (
+        <NavPanelTrigger key={item.label} label="Industry">
+          {() => <IndustryNavPanel />}
+        </NavPanelTrigger>
+      );
+    }
+    if (item.label === "Location") {
+      return (
+        <NavPanelTrigger key={item.label} label="Location">
+          {(close) => <LocationNavPanel onNavigate={close} />}
+        </NavPanelTrigger>
+      );
+    }
+    if (item.label === "Jobs Opening") {
+      return (
+        <NavPanelTrigger key={item.label} label="Jobs Opening">
+          {() => <JobsOpeningNavPanel />}
+        </NavPanelTrigger>
+      );
+    }
+    if (item.label === "Short Term") {
+      return (
+        <Suspense
+          key={item.label}
+          fallback={
+            <span className="px-2.5 lg:px-4 py-2 text-[15px] font-bold text-foreground/70">
+              Short Term
+            </span>
+          }
+        >
+          <ShortTermLink />
+        </Suspense>
+      );
+    }
+    return <NavItemComponent key={item.label} item={item} />;
+  }
+
   return (
     <>
       <header
@@ -221,48 +288,48 @@ export default function Header() {
               <Logo size="lg" />
             </Link>
 
-          <nav className="hidden lg:flex items-center gap-0 xl:gap-0.5">
-            {visibleNavItems.map((item) => {
-              if (item.label === "Industry") {
-                return (
-                  <NavPanelTrigger key={item.label} label="Industry">
-                    {() => <IndustryNavPanel />}
-                  </NavPanelTrigger>
-                );
-              }
-              if (item.label === "Location") {
-                return (
-                  <NavPanelTrigger key={item.label} label="Location">
-                    {(close) => <LocationNavPanel onNavigate={close} />}
-                  </NavPanelTrigger>
-                );
-              }
-              if (item.label === "Jobs Opening") {
-                return (
-                  <NavPanelTrigger key={item.label} label="Jobs Opening">
-                    {() => <JobsOpeningNavPanel />}
-                  </NavPanelTrigger>
-                );
-              }
-              if (item.label === "Short Term") {
-                return (
-                  <Suspense
-                    key={item.label}
-                    fallback={
-                      <span className="px-4 py-2 text-[15px] font-bold text-foreground/70">
-                        Short Term
-                      </span>
-                    }
-                  >
-                    <ShortTermLink />
-                  </Suspense>
-                );
-              }
-              return <NavItemComponent key={item.label} item={item} />;
-            })}
+          <nav className="hidden md:flex items-center gap-0 xl:gap-0.5">
+            {primaryNavItems.map(renderNavItem)}
+
+            {/* lg+ (1024px+): full room, these render as flat top-level
+                items exactly like before. `contents` makes this wrapper
+                itself invisible to the flex layout -- its children become
+                direct flex items of `nav`, not a nested box. */}
+            <div className="hidden lg:contents">{secondaryNavItems.map(renderNavItem)}</div>
+
+            {/* md only (768-1023px): not enough room for the full bar (see
+                the comment above), so these three fold into one "More". */}
+            {secondaryNavItems.length > 0 && (
+              <div className="lg:hidden">
+                <NavPanelTrigger label="More">
+                  {(close) => (
+                    <div className="absolute top-full left-0 pt-3 z-50">
+                      <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(200,66,44,0.15)] border border-border/40 p-2 w-56 flex flex-col gap-0.5 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                        {secondaryNavItems.map((item) =>
+                          item.label === "Short Term" ? (
+                            <Suspense key={item.label} fallback={null}>
+                              <ShortTermMoreLink onNavigate={close} />
+                            </Suspense>
+                          ) : (
+                            <Link
+                              key={item.label}
+                              href={item.href}
+                              onClick={close}
+                              className="px-4 py-2.5 rounded-xl text-sm text-foreground/80 hover:bg-brand-blue-muted hover:text-brand-blue transition-all"
+                            >
+                              {item.label}
+                            </Link>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </NavPanelTrigger>
+              </div>
+            )}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2 xl:gap-4">
+          <div className="hidden md:flex items-center gap-2 xl:gap-4">
             {user ? (
               <>
                 <Link
@@ -290,7 +357,7 @@ export default function Header() {
           </div>
 
           <button
-            className="lg:hidden p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
+            className="md:hidden p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >

@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ApiError, resendVerificationRequest } from "@/lib/api";
 import PhoneInput from "@/components/common/PhoneInput";
 import PasswordInput from "@/components/common/PasswordInput";
+import { buttonClass, inputClass } from "@/lib/ui";
 
 export default function RegisterPage() {
   const [role, setRole] = useState<"Candidate" | "Recruiter">("Candidate");
@@ -95,7 +96,7 @@ export default function RegisterPage() {
 
           <Link
             href={`/login?verify=${encodeURIComponent(registeredEmail)}`}
-            className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors mb-3"
+            className={buttonClass({ variant: "primary", size: "hero", fullWidth: true }, "mb-3")}
           >
             Continue to Sign In <ArrowRight className="w-4 h-4" />
           </Link>
@@ -162,13 +163,13 @@ export default function RegisterPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-foreground">Full Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
                 <input
                   type="text"
                   placeholder="John Doe"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                  className={inputClass({ variant: "outline", withLeftIcon: true })}
                   required
                 />
               </div>
@@ -178,13 +179,13 @@ export default function RegisterPage() {
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                className={inputClass({ variant: "outline", withLeftIcon: true })}
                 required
               />
             </div>
@@ -195,13 +196,13 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-foreground">Company Name</label>
                 <div className="relative">
-                  <Building className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
                   <input
                     type="text"
                     placeholder="Acme Corp"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                    className={inputClass({ variant: "outline", withLeftIcon: true })}
                     required
                   />
                 </div>
@@ -218,10 +219,10 @@ export default function RegisterPage() {
             <PasswordInput value={password} onChange={setPassword} required />
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
+            className={buttonClass({ variant: "primary", size: "hero", fullWidth: true }, "mt-2")}
           >
             {isLoading ? "Creating account..." : (
               <>

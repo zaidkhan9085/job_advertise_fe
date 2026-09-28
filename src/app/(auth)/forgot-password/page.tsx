@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Mail, ArrowLeft, ArrowRight } from "lucide-react";
 import { forgotPasswordRequest } from "@/lib/api";
+import { inputClass } from "@/lib/ui";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -37,9 +38,9 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-muted-foreground mb-6">
               If an account exists, we've sent you a password reset link.
             </p>
-            <Link 
+            <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 w-full bg-[oklch(0.47_0.20_25)] text-white hover:bg-[oklch(0.35_0.20_25)] py-2.5 rounded-xl font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 w-full h-11 bg-[oklch(0.47_0.20_25)] text-white hover:bg-[oklch(0.35_0.20_25)] rounded-control font-semibold transition-colors"
             >
               Return to login
             </Link>
@@ -57,22 +58,22 @@ export default function ForgotPasswordPage() {
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-foreground">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
                   <input
                     type="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-[oklch(0.68_0.21_45)] focus:border-[oklch(0.68_0.21_45)] outline-none transition-all"
+                    className={inputClass({ variant: "outline", withLeftIcon: true }, "focus:ring-[oklch(0.68_0.21_45)]/20 focus:border-[oklch(0.68_0.21_45)]")}
                     required
                   />
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
+                className="w-full h-11 flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] rounded-control font-semibold transition-colors disabled:opacity-70 mt-2"
               >
                 {isLoading ? "Sending link..." : (
                   <>
