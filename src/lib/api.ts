@@ -246,8 +246,12 @@ export interface CreateJobPayload {
   contactEmail?: string;
   isFreeRecruitment?: boolean;
   jobLocationId?: string;
-  jobTypeId?: string;
-  industryId?: string;
+  // string | null (not just omitted) explicitly clears it on an update --
+  // e.g. reverting a Story back to General sends null so the backend's own
+  // "never leave a regular job untyped/uncategorized" fallback backfills a
+  // real value, rather than leaving it unset.
+  jobTypeId?: string | null;
+  industryId?: string | null;
   poster?: File;
   // Legacy free-text location fallback -- jobLocationId is the real value
   // for both regular jobs and Stories now, this only matters if it wasn't set.
@@ -301,7 +305,7 @@ function buildJobBody(payload: CreateJobPayload): BodyInit {
   const form = new FormData();
   Object.entries(fields).forEach(([key, value]) => {
     if (value !== undefined)
-      form.append(key, typeof value === "boolean" ? String(value) : value);
+      form.append(key, value === null ? "" : typeof value === "boolean" ? String(value) : value);
   });
   form.append("poster", poster);
   return form;
@@ -327,8 +331,8 @@ export function updateJob(id: string, payload: UpdateJobPayload) {
   });
 }
 
-// Clones a General post into a brand new Story -- the original is never
-// touched, it stays exactly where it was in General. Admin/sub_admin only.
+// Clones a General or Featured post into a brand new Story -- the original
+// is never touched, it stays exactly where it was. Admin/sub_admin only.
 export function promoteJobToStory(id: string) {
   return apiFetch<{ message: string; story: JobPost }>(`/api/jobs/${id}/promote-to-story`, {
     method: "POST",
@@ -524,14 +528,10 @@ export function bulkDeleteJobs(payload: BulkDeletePayload) {
   );
 }
 
-export function updateJobStatus(
-  id: string,
-  status: "APPROVED" | "REJECTED",
-  trustEmployer?: boolean,
-) {
+export function updateJobStatus(id: string, status: "APPROVED" | "REJECTED") {
   return apiFetch<{ message: string; job: JobPost }>(`/api/jobs/${id}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status, trustEmployer }),
+    body: JSON.stringify({ status }),
   });
 }
 
@@ -686,9 +686,11 @@ export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCou
   // Raw admin-editable component of followerCount -- see companyController.js's
   // setCompanyBonusFollowers. Admin-only; not present on the public CompanyDetail.
   bonusFollowers: number;
-  // Sticks once an admin trusts this employer (see jobController.js's
-  // updateJobStatus "trustEmployer" flag) -- new posts skip manual review.
-  // revokeCompanyAutoApprove below is the only way to turn it back off.
+  // Sticks once an admin grants it (grantCompanyAutoApprove below) -- new
+  // posts skip manual review. revokeCompanyAutoApprove is the way back off;
+  // each direction also bulk-updates this employer's current jobs to match
+  // (grant approves their Pending jobs now, revoke un-approves their
+  // Approved ones), not just future posts.
   autoApprove: boolean;
   // Every job this employer has ever posted, any status -- unlike the
   // public CompanyDetail.jobs, which is only currently-open ones.
@@ -1282,6 +1284,13 @@ export function grantCreditsToCompany(
 export function revokeCompanyAutoApprove(companyId: string) {
   return apiFetch<{ message: string; jobsSetPending: number }>(
     `/api/admin/companies/${companyId}/revoke-auto-approve`,
+    { method: "PATCH" },
+  );
+}
+
+export function grantCompanyAutoApprove(companyId: string) {
+  return apiFetch<{ message: string; jobsApproved: number }>(
+    `/api/admin/companies/${companyId}/grant-auto-approve`,
     { method: "PATCH" },
   );
 }
@@ -1887,8 +1896,7 @@ export interface SocialLinks {
   instagram: string;
   linkedin: string;
   youtube: string;
-  whatsappChannel: string;
-  whatsappGroup: string;
+  whatsapp: string;
 }
 
 // Public -- used by the footer and homepage for anonymous visitors too.

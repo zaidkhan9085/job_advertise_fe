@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { MapPin, Trash2, Pencil, Star, Loader2, Users, Plus, PlayCircle } from "lucide-react";
+import { MapPin, Trash2, Pencil, Star, Loader2, Users, Plus, PlayCircle, Undo2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +11,7 @@ import {
   updateJob,
   deleteJob,
   bulkDeleteJobs,
+  promoteJobToStory,
   type AdminJob,
   type JobPostStatus,
   type PaginatedMeta,
@@ -75,6 +76,7 @@ export default function AdminAllJobsPage() {
 
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminJob | null>(null);
+  const [revertStoryTarget, setRevertStoryTarget] = useState<AdminJob | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -128,6 +130,39 @@ export default function AdminAllJobsPage() {
       setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, type: nextType } : j)));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update job type.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handlePromoteToStory = async (job: AdminJob) => {
+    setActioningId(job.id);
+    try {
+      const result = await promoteJobToStory(job.id);
+      toast.success(result.message);
+      loadJobs();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to post as a Story.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  // Sends jobTypeId/industryId as explicit nulls (not just omitted) so the
+  // backend's own "never leave a regular job untyped/uncategorized" fallback
+  // runs and backfills them -- a Story never has those set, so leaving them
+  // out here would revert the type but silently leave the job invisible to
+  // both job-type and industry filters.
+  const handleRevertStory = async () => {
+    if (!revertStoryTarget) return;
+    setActioningId(revertStoryTarget.id);
+    try {
+      const result = await updateJob(revertStoryTarget.id, { type: "NORMAL", jobTypeId: null, industryId: null });
+      toast.success(result.message);
+      setRevertStoryTarget(null);
+      loadJobs();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to revert this Story.");
     } finally {
       setActioningId(null);
     }
@@ -253,6 +288,26 @@ export default function AdminAllJobsPage() {
               <Star className="w-4 h-4" fill={job.type === "FEATURED" ? "currentColor" : "none"} />
             )}
           </button>
+          {job.status !== "EXPIRED" && (
+            <button
+              title={job.type === "STORY" ? "Revert this Story back to General" : "Post as a Story (the original post stays untouched)"}
+              disabled={actioningId === job.id}
+              onClick={() => (job.type === "STORY" ? setRevertStoryTarget(job) : handlePromoteToStory(job))}
+              className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+                job.type === "STORY"
+                  ? "text-brand-blue hover:bg-brand-blue/10"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              {actioningId === job.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : job.type === "STORY" ? (
+                <Undo2 className="w-4 h-4" />
+              ) : (
+                <PlayCircle className="w-4 h-4" />
+              )}
+            </button>
+          )}
           <Link
             href={`/dashboard/admin/all-jobs/${job.id}/applicants`}
             title={job.applicationsCount ? `Applicants (${job.applicationsCount})` : "No applicants yet"}
@@ -370,6 +425,16 @@ export default function AdminAllJobsPage() {
         isConfirming={isBulkDeleting}
         onConfirm={handleBulkDelete}
         onCancel={() => setIsBulkDeleteOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!revertStoryTarget}
+        title="Revert this Story?"
+        message={`"${revertStoryTarget?.title}" will leave Stories and go back to a regular General post. It stays live and approved.`}
+        confirmLabel="Revert"
+        isConfirming={actioningId === revertStoryTarget?.id}
+        onConfirm={handleRevertStory}
+        onCancel={() => setRevertStoryTarget(null)}
       />
     </div>
   );

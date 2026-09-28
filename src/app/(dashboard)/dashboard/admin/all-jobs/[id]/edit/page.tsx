@@ -3,12 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Mail, Zap, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Mail } from "lucide-react";
 import PhoneInput from "@/components/common/PhoneInput";
 import {
   getJobByIdAdmin,
   updateJob,
-  promoteJobToStory,
   getJobLocations,
   getJobTypes,
   getIndustries,
@@ -57,7 +56,6 @@ export default function AdminEditJobPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
 
   const loadJob = useCallback(async () => {
     setIsLoading(true);
@@ -96,19 +94,6 @@ export default function AdminEditJobPage() {
   useEffect(() => {
     loadJob();
   }, [loadJob]);
-
-  const handlePromoteToStory = async () => {
-    setIsPromoting(true);
-    try {
-      const result = await promoteJobToStory(params.id);
-      toast.success(result.message);
-      router.push(`/dashboard/admin/all-jobs/${result.story.id}/edit`);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to post as a Story.");
-    } finally {
-      setIsPromoting(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,11 +222,12 @@ export default function AdminEditJobPage() {
             className="w-full px-4 py-3 rounded-xl bg-secondary/30 border-2 border-transparent focus:border-brand-blue focus:bg-white transition-all outline-none font-medium appearance-none cursor-pointer"
           >
             {/* Featured <-> General convert freely either way. Story isn't
-                offered here at all -- getting a General post onto Stories
-                is a separate "Promote to Story" action below that clones
-                it instead, so the original never leaves General (see its
-                own comment). An existing Story can't be converted away
-                either -- it should run its normal 24h course or be deleted. */}
+                offered here at all -- getting a post onto Stories is a
+                "Promote to Story" action on the All Jobs list instead, which
+                clones it rather than converting this one, so the original
+                never leaves General/Featured. An existing Story can't be
+                converted away either -- it should run its normal 24h course
+                or be deleted. */}
             {originalType === "STORY" ? (
               <option value="STORY">Story</option>
             ) : (
@@ -252,26 +238,6 @@ export default function AdminEditJobPage() {
             )}
           </select>
         </div>
-
-        {originalType === "NORMAL" && (
-          <div className="rounded-2xl border border-dashed border-brand-blue/40 bg-brand-blue/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-bold text-foreground">Also post this as a Story</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Creates a separate Story from this post&apos;s details — this General post stays exactly as it is.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handlePromoteToStory}
-              disabled={isPromoting}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors disabled:opacity-60 shrink-0"
-            >
-              {isPromoting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              Post as Story
-            </button>
-          </div>
-        )}
 
         <div className="space-y-2">
           <label className="text-sm font-bold text-foreground/80">Description</label>

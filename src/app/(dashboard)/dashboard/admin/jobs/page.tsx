@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MapPin, Building2, Check, X, ShieldCheck, Loader2 } from "lucide-react";
+import { MapPin, Building2, Check, X, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -17,7 +17,7 @@ export default function AdminPendingJobsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
-  const [actioningAction, setActioningAction] = useState<"REJECT" | "APPROVE" | "TRUST" | null>(null);
+  const [actioningAction, setActioningAction] = useState<"REJECT" | "APPROVE" | null>(null);
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true);
@@ -41,12 +41,12 @@ export default function AdminPendingJobsPage() {
     return <ComingSoon title="Pending Jobs" />;
   }
 
-  const handleDecision = async (id: string, status: "APPROVED" | "REJECTED", trustEmployer = false) => {
+  const handleDecision = async (id: string, status: "APPROVED" | "REJECTED") => {
     setActioningId(id);
-    setActioningAction(trustEmployer ? "TRUST" : status === "APPROVED" ? "APPROVE" : "REJECT");
+    setActioningAction(status === "APPROVED" ? "APPROVE" : "REJECT");
     try {
-      const result = await updateJobStatus(id, status, trustEmployer);
-      toast.success(trustEmployer ? "Approved — this employer's future posts will skip review." : result.message);
+      const result = await updateJobStatus(id, status);
+      toast.success(result.message);
       setJobs((prev) => prev.filter((j) => j.id !== id));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update job status.");
@@ -120,19 +120,6 @@ export default function AdminPendingJobsPage() {
                     <Check className="w-4 h-4" />
                   )}
                   Approve
-                </button>
-                <button
-                  disabled={actioningId === job.id}
-                  onClick={() => handleDecision(job.id, "APPROVED", true)}
-                  title="Approve this job and skip the review queue for all of this employer's future posts"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-brand-blue/30 text-brand-blue hover:bg-brand-blue/5 font-bold text-sm transition-colors disabled:opacity-50"
-                >
-                  {actioningId === job.id && actioningAction === "TRUST" ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <ShieldCheck className="w-4 h-4" />
-                  )}
-                  Approve & Trust
                 </button>
               </div>
             </div>

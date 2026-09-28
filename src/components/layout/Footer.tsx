@@ -30,8 +30,7 @@ const INITIAL_SOCIAL_LINKS: SocialLinks = {
   instagram: staticSocialLinks.find((s) => s.label === "Instagram")?.href ?? "",
   linkedin: staticSocialLinks.find((s) => s.label === "LinkedIn")?.href ?? "",
   youtube: staticSocialLinks.find((s) => s.label === "YouTube")?.href ?? "",
-  whatsappChannel: contactLinks.whatsappChannel,
-  whatsappGroup: contactLinks.whatsappGroup,
+  whatsapp: contactLinks.whatsapp,
 };
 
 // Every href below is a real, working route -- the previous version linked
@@ -90,8 +89,7 @@ function buildSocialIcons(links: SocialLinks) {
     { label: "Instagram", href: links.instagram, Icon: Instagram, bg: "bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]", shadow: "shadow-[#ee2a7b]/30" },
     { label: "LinkedIn", href: links.linkedin, Icon: Linkedin, bg: "bg-[#0A66C2]", shadow: "shadow-[#0A66C2]/30" },
     { label: "YouTube", href: links.youtube, Icon: Youtube, bg: "bg-[#FF0000]", shadow: "shadow-[#FF0000]/30" },
-    { label: "WhatsApp Channel", href: links.whatsappChannel, Icon: WhatsAppIcon, bg: "bg-[#25D366]", shadow: "shadow-[#25D366]/30" },
-    { label: "WhatsApp Group", href: links.whatsappGroup, Icon: WhatsAppIcon, bg: "bg-[#20BE5A]", shadow: "shadow-[#20BE5A]/30" },
+    { label: "WhatsApp", href: links.whatsapp, Icon: WhatsAppIcon, bg: "bg-[#25D366]", shadow: "shadow-[#25D366]/30" },
   ].filter((s) => s.href);
 }
 
