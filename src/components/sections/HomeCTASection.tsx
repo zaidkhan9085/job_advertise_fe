@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Search, Clock } from "lucide-react";
 import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
+import { buttonClass } from "@/lib/ui";
 
 // "Free Recruitment" removed from the UI site-wide per Zaid's request
 // (the isFreeRecruitment field stays in the database, just no longer
@@ -11,24 +12,14 @@ import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
 // jobController.js/seed.js).
 export default function HomeCTASection() {
   const ctas = [
-    {
-      label: "Browse Jobs",
-      href: "/jobs",
-      icon: Search,
-      className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
-    },
-    {
-      label: "Short Term Jobs",
-      href: SHORT_TERM_JOBS_HREF,
-      icon: Clock,
-      className: "bg-brand-blue text-white hover:bg-brand-blue-medium",
-    },
+    { label: "Browse Jobs", href: "/jobs", icon: Search },
+    { label: "Short Term Jobs", href: SHORT_TERM_JOBS_HREF, icon: Clock },
   ];
 
   return (
     <section className="py-6 bg-brand-blue-muted/30">
       <div className="container-site">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 max-w-2xl mx-auto">
           {ctas.map((cta) => {
             const Icon = cta.icon;
 
@@ -36,10 +27,10 @@ export default function HomeCTASection() {
               <Link
                 key={cta.label}
                 href={cta.href}
-                className={`flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-bold transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] ${cta.className} whitespace-nowrap`}
+                className={buttonClass({ variant: "primary" }, "hover:-translate-y-1")}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-[15px]">{cta.label}</span>
+                <Icon className="w-4 h-4 shrink-0" />
+                {cta.label}
               </Link>
             );
           })}

@@ -3,16 +3,58 @@
 import Link from "next/link";
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
+import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut, Smartphone, Apple } from "lucide-react";
+import { toast } from "sonner";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildMergedJobsUrl } from "@/lib/utils";
+import { contactLinks } from "@/data/socialLinks";
 import MobileNav from "./MobileNav";
 import IndustryNavPanel from "./IndustryNavPanel";
 import LocationNavPanel from "./LocationNavPanel";
 import JobsOpeningNavPanel from "./JobsOpeningNavPanel";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+
+// Phone-only quick-access row (WhatsApp, Android/iOS app) -- the client
+// specifically asked for this to match the sister site's mobile header.
+// The apps aren't published yet, so Android/iOS are real, clickable buttons
+// (not disabled) that tell the visitor they're coming rather than silently
+// doing nothing; WhatsApp already has a real community link and opens it.
+function MobileAppLinks() {
+  const notifyComingSoon = (platform: string) => toast(`${platform} app coming soon`);
+
+  return (
+    <div className="flex md:hidden items-center gap-1.5">
+      <a
+        href={contactLinks.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Join our WhatsApp"
+        className="w-8 h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0"
+      >
+        <WhatsAppIcon className="w-4 h-4" />
+      </a>
+      <button
+        type="button"
+        onClick={() => notifyComingSoon("Android")}
+        aria-label="Android app"
+        className="w-8 h-8 rounded-full bg-[#3DDC84] text-white flex items-center justify-center shrink-0"
+      >
+        <Smartphone className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => notifyComingSoon("iOS")}
+        aria-label="iOS app"
+        className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"
+      >
+        <Apple className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 // Shared hover/click-outside trigger for a nav item whose panel is a
 // bespoke, live-data component rather than a static NavDropdownItem tree
@@ -291,16 +333,19 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-0 xl:gap-0.5">
             {primaryNavItems.map(renderNavItem)}
 
-            {/* lg+ (1024px+): full room, these render as flat top-level
+            {/* xl+ (1280px+): full room, these render as flat top-level
                 items exactly like before. `contents` makes this wrapper
                 itself invisible to the flex layout -- its children become
-                direct flex items of `nav`, not a nested box. */}
-            <div className="hidden lg:contents">{secondaryNavItems.map(renderNavItem)}</div>
+                direct flex items of `nav`, not a nested box. At lg
+                (1024-1279px) there still isn't enough room for all 6 items
+                plus the CTA without wrapping labels onto two lines, so the
+                fold now extends through the whole tablet-landscape range. */}
+            <div className="hidden xl:contents">{secondaryNavItems.map(renderNavItem)}</div>
 
-            {/* md only (768-1023px): not enough room for the full bar (see
-                the comment above), so these three fold into one "More". */}
+            {/* md through lg (768-1279px): not enough room for the full bar
+                (see the comment above), so these three fold into one "More". */}
             {secondaryNavItems.length > 0 && (
-              <div className="lg:hidden">
+              <div className="xl:hidden">
                 <NavPanelTrigger label="More">
                   {(close) => (
                     <div className="absolute top-full left-0 pt-3 z-50">
@@ -356,13 +401,16 @@ export default function Header() {
             )}
           </div>
 
-          <button
-            className="md:hidden p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="flex md:hidden items-center gap-2">
+            <MobileAppLinks />
+            <button
+              className="p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </header>
 
