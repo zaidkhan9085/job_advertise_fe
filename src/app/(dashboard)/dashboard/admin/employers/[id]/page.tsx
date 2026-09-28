@@ -13,6 +13,7 @@ import {
   unrateCompany,
   setCompanyBonusFollowers,
   revokeCompanyAutoApprove,
+  grantCompanyAutoApprove,
   resolveImageUrl,
   COMPANY_SIZE_OPTIONS,
   COMPANY_TYPE_OPTIONS,
@@ -55,6 +56,8 @@ export default function AdminEmployerDetailPage() {
   const [isBonusSaving, setIsBonusSaving] = useState(false);
   const [isRevokeConfirmOpen, setIsRevokeConfirmOpen] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isGrantConfirmOpen, setIsGrantConfirmOpen] = useState(false);
+  const [isGranting, setIsGranting] = useState(false);
 
   // `silent` skips the full-page loading state -- used when refreshing
   // after an in-place action (rating, clearing a rating, saving bonus
@@ -137,15 +140,33 @@ export default function AdminEmployerDetailPage() {
       const result = await revokeCompanyAutoApprove(params.id);
       toast.success(
         result.jobsSetPending > 0
-          ? `Auto-approval revoked — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
-          : "Auto-approval revoked."
+          ? `Auto-approval paused — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
+          : "Auto-approval paused."
       );
       setIsRevokeConfirmOpen(false);
       await loadCompany({ silent: true });
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to revoke auto-approval.");
+      toast.error(err instanceof ApiError ? err.message : "Failed to pause auto-approval.");
     } finally {
       setIsRevoking(false);
+    }
+  };
+
+  const handleGrantAutoApprove = async () => {
+    setIsGranting(true);
+    try {
+      const result = await grantCompanyAutoApprove(params.id);
+      toast.success(
+        result.jobsApproved > 0
+          ? `Auto-approval granted — ${result.jobsApproved} pending job${result.jobsApproved === 1 ? "" : "s"} approved now.`
+          : "Auto-approval granted."
+      );
+      setIsGrantConfirmOpen(false);
+      await loadCompany({ silent: true });
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to grant auto-approval.");
+    } finally {
+      setIsGranting(false);
     }
   };
 
@@ -343,27 +364,41 @@ export default function AdminEmployerDetailPage() {
             <button
               onClick={() => setIsRevokeConfirmOpen(true)}
               className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:text-rose-600 transition-colors"
-              title="This employer's jobs skip manual review — click to revoke"
+              title="This employer's jobs skip manual review — click to pause"
             >
               <ShieldCheck className="w-4 h-4" /> Trusted (auto-approved)
             </button>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+            <button
+              onClick={() => setIsGrantConfirmOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-brand-blue transition-colors"
+              title="Click to trust this employer — their jobs will skip manual review"
+            >
               <ShieldOff className="w-4 h-4" /> Not auto-approved
-            </span>
+            </button>
           )}
         </div>
       </div>
 
       <ConfirmDialog
         isOpen={isRevokeConfirmOpen}
-        title="Revoke auto-approval?"
+        title="Pause auto-approval?"
         message="Future job posts from this employer will need manual review again, and every job of theirs that's currently Approved will be set back to Pending for you to re-review."
-        confirmLabel="Revoke"
+        confirmLabel="Pause"
         variant="danger"
         isConfirming={isRevoking}
         onConfirm={handleRevokeAutoApprove}
         onCancel={() => setIsRevokeConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={isGrantConfirmOpen}
+        title="Grant auto-approval?"
+        message="Future job posts from this employer will skip manual review, and every job of theirs that's currently Pending will be approved right now too."
+        confirmLabel="Grant"
+        isConfirming={isGranting}
+        onConfirm={handleGrantAutoApprove}
+        onCancel={() => setIsGrantConfirmOpen(false)}
       />
 
       <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">

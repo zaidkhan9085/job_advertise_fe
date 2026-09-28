@@ -28,14 +28,14 @@ export default function TopBar() {
             {SUPPORT_EMAIL}
           </a>
           <a
-            href={contactLinks.whatsappGroup}
+            href={contactLinks.whatsapp}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 hover:text-[#25D366] transition-colors"
           >
             <MessageCircle className="w-3.5 h-3.5" />
-            Join Whatsapp Channel
-  </a>
+            Join WhatsApp
+          </a>
           <a
             href={contactLinks.androidApp}
             target="_blank"

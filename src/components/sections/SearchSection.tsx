@@ -23,7 +23,7 @@ export default function SearchSection() {
             Find Verified India, Gulf &amp; Overseas Jobs Faster
           </h1>
           <p className="text-muted-foreground font-medium mb-5">
-            Search live openings from real employers — no agency fees, ever.
+            Search live openings from real employers.
           </p>
 
           <form onSubmit={submit} className="bg-white border border-border/60 rounded-2xl shadow-lg p-2 flex flex-col sm:flex-row gap-2">

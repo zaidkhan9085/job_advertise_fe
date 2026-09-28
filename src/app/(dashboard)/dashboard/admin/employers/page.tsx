@@ -15,6 +15,7 @@ import {
   grantCreditsToCompany,
   setCompanyFeatured,
   revokeCompanyAutoApprove,
+  grantCompanyAutoApprove,
   resolveImageUrl,
   type CompanyAdminListItem,
   type PaginatedMeta,
@@ -218,6 +219,7 @@ export default function AdminEmployersPage() {
   const [passwordCompany, setPasswordCompany] = useState<CompanyAdminListItem | null>(null);
   const [creditsCompany, setCreditsCompany] = useState<CompanyAdminListItem | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<CompanyAdminListItem | null>(null);
+  const [grantTarget, setGrantTarget] = useState<CompanyAdminListItem | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const selection = useTableSelection<string>();
@@ -340,13 +342,32 @@ export default function AdminEmployersPage() {
       const result = await revokeCompanyAutoApprove(revokeTarget.id);
       toast.success(
         result.jobsSetPending > 0
-          ? `Auto-approval revoked — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
-          : "Auto-approval revoked."
+          ? `Auto-approval paused — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
+          : "Auto-approval paused."
       );
       setCompanies((prev) => prev.map((c) => (c.id === revokeTarget.id ? { ...c, autoApprove: false } : c)));
       setRevokeTarget(null);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to revoke auto-approval.");
+      toast.error(err instanceof ApiError ? err.message : "Failed to pause auto-approval.");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleGrantAutoApprove = async () => {
+    if (!grantTarget) return;
+    setActioningId(grantTarget.id);
+    try {
+      const result = await grantCompanyAutoApprove(grantTarget.id);
+      toast.success(
+        result.jobsApproved > 0
+          ? `Auto-approval granted — ${result.jobsApproved} pending job${result.jobsApproved === 1 ? "" : "s"} approved now.`
+          : "Auto-approval granted."
+      );
+      setCompanies((prev) => prev.map((c) => (c.id === grantTarget.id ? { ...c, autoApprove: true } : c)));
+      setGrantTarget(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to grant auto-approval.");
     } finally {
       setActioningId(null);
     }
@@ -513,16 +534,12 @@ export default function AdminEmployersPage() {
                 icon: <Coins className="w-4 h-4" />,
                 onClick: () => setCreditsCompany(company),
               },
-              ...(company.autoApprove
-                ? [
-                    {
-                      label: "Revoke Auto-Approval",
-                      icon: <ShieldOff className="w-4 h-4" />,
-                      onClick: () => setRevokeTarget(company),
-                      danger: true,
-                    },
-                  ]
-                : []),
+              {
+                label: company.autoApprove ? "Pause Auto-Approval" : "Grant Auto-Approval",
+                icon: company.autoApprove ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />,
+                onClick: () => (company.autoApprove ? setRevokeTarget(company) : setGrantTarget(company)),
+                danger: company.autoApprove,
+              },
             ]}
           />
         </div>
@@ -606,13 +623,23 @@ export default function AdminEmployersPage() {
 
       <ConfirmDialog
         isOpen={!!revokeTarget}
-        title="Revoke auto-approval?"
+        title="Pause auto-approval?"
         message="Future job posts from this employer will need manual review again, and every job of theirs that's currently Approved will be set back to Pending for you to re-review."
-        confirmLabel="Revoke"
+        confirmLabel="Pause"
         variant="danger"
         isConfirming={actioningId === revokeTarget?.id}
         onConfirm={handleRevokeAutoApprove}
         onCancel={() => setRevokeTarget(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!grantTarget}
+        title="Grant auto-approval?"
+        message="Future job posts from this employer will skip manual review, and every job of theirs that's currently Pending will be approved right now too."
+        confirmLabel="Grant"
+        isConfirming={actioningId === grantTarget?.id}
+        onConfirm={handleGrantAutoApprove}
+        onCancel={() => setGrantTarget(null)}
       />
 
       {editingCompany && (

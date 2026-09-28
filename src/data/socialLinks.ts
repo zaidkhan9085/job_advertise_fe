@@ -17,7 +17,6 @@ export const SUPPORT_EMAIL = "support@thejobsadvertise.com";
 
 export const contactLinks = {
   email: `mailto:${SUPPORT_EMAIL}`,
-  whatsappChannel: "https://whatsapp.com/channel/0029VaAXD6dL7UVQmJNt5X0E",
-  whatsappGroup: "https://chat.whatsapp.com/HGSAQokMgiqBEZJL5S67LD",
+  whatsapp: "https://chat.whatsapp.com/HGSAQokMgiqBEZJL5S67LD",
   androidApp: "https://play.google.com/store/apps/details?id=co.median.android.lpmaorp",
 };

@@ -389,8 +389,7 @@ const SOCIAL_LINK_FIELDS: { key: keyof SocialLinks; label: string; placeholder: 
   { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
   { key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/company/..." },
   { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/@..." },
-  { key: "whatsappChannel", label: "WhatsApp Channel", placeholder: "https://whatsapp.com/channel/..." },
-  { key: "whatsappGroup", label: "WhatsApp Group", placeholder: "https://chat.whatsapp.com/..." },
+  { key: "whatsapp", label: "WhatsApp", placeholder: "https://chat.whatsapp.com/..." },
 ];
 
 function SocialLinksSection() {
@@ -411,7 +410,7 @@ function SocialLinksSection() {
     try {
       const updated = await updateSocialLinksAdmin(links);
       setLinks(updated);
-      toast.success("Social links updated. The footer picks these up within a minute.");
+      toast.success("Social links updated.");
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update social links.");
     } finally {
