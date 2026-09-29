@@ -31,6 +31,8 @@ const INITIAL_SOCIAL_LINKS: SocialLinks = {
   linkedin: staticSocialLinks.find((s) => s.label === "LinkedIn")?.href ?? "",
   youtube: staticSocialLinks.find((s) => s.label === "YouTube")?.href ?? "",
   whatsapp: contactLinks.whatsapp,
+  androidApp: "",
+  iosApp: "",
 };
 
 // Every href below is a real, working route -- the previous version linked

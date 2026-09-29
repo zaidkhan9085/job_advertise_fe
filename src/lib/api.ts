@@ -1897,6 +1897,10 @@ export interface SocialLinks {
   linkedin: string;
   youtube: string;
   whatsapp: string;
+  // Empty by default until a real app exists -- the mobile header shows
+  // "Coming soon" for whichever of these is blank.
+  androidApp: string;
+  iosApp: string;
 }
 
 // Public -- used by the footer and homepage for anonymous visitors too.

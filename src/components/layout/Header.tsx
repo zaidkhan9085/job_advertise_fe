@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut, Smartphone, Apple } from "lucide-react";
+import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
@@ -11,24 +11,42 @@ import { Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildMergedJobsUrl } from "@/lib/utils";
 import { contactLinks } from "@/data/socialLinks";
+import { getSocialLinks, type SocialLinks } from "@/lib/api";
 import MobileNav from "./MobileNav";
 import IndustryNavPanel from "./IndustryNavPanel";
 import LocationNavPanel from "./LocationNavPanel";
 import JobsOpeningNavPanel from "./JobsOpeningNavPanel";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import AndroidIcon from "@/components/icons/AndroidIcon";
+import AppleIcon from "@/components/icons/AppleIcon";
+
+// Same static-fallback-then-live-fetch pattern Footer.tsx already uses for
+// these admin-editable links -- avoids a client-side fetch waterfall flash
+// of nothing before the real values load, at the one-time cost of a flash
+// of the static WhatsApp default before any admin-set app links appear.
+const INITIAL_APP_LINKS = { whatsapp: contactLinks.whatsapp, androidApp: "", iosApp: "" };
 
 // Phone-only quick-access row (WhatsApp, Android/iOS app) -- the client
 // specifically asked for this to match the sister site's mobile header.
-// The apps aren't published yet, so Android/iOS are real, clickable buttons
-// (not disabled) that tell the visitor they're coming rather than silently
-// doing nothing; WhatsApp already has a real community link and opens it.
+// Android/iOS have no real app yet, so until an admin sets a real Play
+// Store/App Store link in Settings, clicking either tells the visitor
+// it's coming rather than opening a dead/placeholder link; WhatsApp
+// already has a real community link and always opens it.
 function MobileAppLinks() {
+  const [links, setLinks] = useState<Pick<SocialLinks, "whatsapp" | "androidApp" | "iosApp">>(INITIAL_APP_LINKS);
+
+  useEffect(() => {
+    getSocialLinks()
+      .then(setLinks)
+      .catch(() => {});
+  }, []);
+
   const notifyComingSoon = (platform: string) => toast(`${platform} app coming soon`);
 
   return (
     <div className="flex md:hidden items-center gap-1.5">
       <a
-        href={contactLinks.whatsapp}
+        href={links.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Join our WhatsApp"
@@ -36,22 +54,46 @@ function MobileAppLinks() {
       >
         <WhatsAppIcon className="w-4 h-4" />
       </a>
-      <button
-        type="button"
-        onClick={() => notifyComingSoon("Android")}
-        aria-label="Android app"
-        className="w-8 h-8 rounded-full bg-[#3DDC84] text-white flex items-center justify-center shrink-0"
-      >
-        <Smartphone className="w-4 h-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => notifyComingSoon("iOS")}
-        aria-label="iOS app"
-        className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"
-      >
-        <Apple className="w-4 h-4" />
-      </button>
+      {links.androidApp ? (
+        <a
+          href={links.androidApp}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Get the Android app"
+          className="w-8 h-8 rounded-full bg-black flex items-center justify-center shrink-0"
+        >
+          <AndroidIcon className="w-4 h-4" />
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => notifyComingSoon("Android")}
+          aria-label="Android app"
+          className="w-8 h-8 rounded-full bg-black flex items-center justify-center shrink-0"
+        >
+          <AndroidIcon className="w-4 h-4" />
+        </button>
+      )}
+      {links.iosApp ? (
+        <a
+          href={links.iosApp}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Get the iOS app"
+          className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"
+        >
+          <AppleIcon className="w-4 h-4" />
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => notifyComingSoon("iOS")}
+          aria-label="iOS app"
+          className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"
+        >
+          <AppleIcon className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 }

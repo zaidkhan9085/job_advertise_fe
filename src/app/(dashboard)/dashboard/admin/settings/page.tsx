@@ -390,6 +390,8 @@ const SOCIAL_LINK_FIELDS: { key: keyof SocialLinks; label: string; placeholder: 
   { key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/company/..." },
   { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/@..." },
   { key: "whatsapp", label: "WhatsApp", placeholder: "https://chat.whatsapp.com/..." },
+  { key: "androidApp", label: "Android App (Play Store link)", placeholder: "Leave blank to show \"Coming soon\"" },
+  { key: "iosApp", label: "iOS App (App Store link)", placeholder: "Leave blank to show \"Coming soon\"" },
 ];
 
 function SocialLinksSection() {
