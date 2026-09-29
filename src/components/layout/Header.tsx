@@ -419,11 +419,18 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-2 xl:gap-4">
             {user ? (
               <>
+                {/* A logged-in employer (or staff -- same "who can post"
+                    rule DashboardHeader's own Post Job button already uses)
+                    goes straight to the posting form instead of a generic
+                    Dashboard link -- they already know what this site does,
+                    no need to detour through the overview page. Candidates
+                    keep the generic Dashboard link since posting isn't a
+                    relevant action for them. */}
                 <Link
-                  href="/dashboard"
+                  href={user.role !== "candidate" ? "/dashboard/jobs/new" : "/dashboard"}
                   className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-[#C8422C]/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
                 >
-                  Dashboard
+                  {user.role !== "candidate" ? "Post Jobs" : "Dashboard"}
                 </Link>
                 <button
                   onClick={logout}
@@ -434,8 +441,14 @@ export default function Header() {
                 </button>
               </>
             ) : (
+              // Signed-out visitors go straight to login instead of the
+              // /post-job marketing page -- that page stays public and
+              // reachable on its own (kept out of the SEO/first-time-visitor
+              // discovery funnel this way), but someone who already clicked
+              // a "Post Jobs" CTA has already decided to post and just needs
+              // to sign in/register, not another pitch.
               <Link
-                href="/post-job"
+                href="/login"
                 className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-[#C8422C]/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
               >
                 Post Jobs

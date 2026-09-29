@@ -163,12 +163,16 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           <div className="grid grid-cols-2 gap-4">
             {user ? (
               <>
+                {/* Same "who can post" rule as Header.tsx's desktop CTA and
+                    DashboardHeader's own Post Job button -- an employer/
+                    staff account goes straight to the posting form instead
+                    of the generic dashboard overview. */}
                 <Link
-                  href="/dashboard"
+                  href={user.role !== "candidate" ? "/dashboard/jobs/new" : "/dashboard"}
                   onClick={onClose}
                   className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#C8422C]/20 active:scale-95 text-center border border-white/10"
                 >
-                  Dashboard
+                  {user.role !== "candidate" ? "Post Jobs" : "Dashboard"}
                 </Link>
                 <button
                   onClick={() => { logout(); onClose(); }}
@@ -186,8 +190,12 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 >
                   Sign In
                 </Link>
+                {/* Goes to login, not the /post-job marketing page -- same
+                    reasoning as Header.tsx's desktop CTA: clicking "Post
+                    Job" already signals intent, no need for another pitch.
+                    /post-job itself stays public/reachable on its own. */}
                 <Link
-                  href="/post-job"
+                  href="/login"
                   onClick={onClose}
                   className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#C8422C]/20 active:scale-95 text-center border border-white/10"
                 >
