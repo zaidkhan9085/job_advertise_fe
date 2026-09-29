@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { buttonClass } from "@/lib/ui";
 
 export default function SearchSection() {
   const router = useRouter();
@@ -34,10 +35,10 @@ export default function SearchSection() {
                 onChange={(e) => setTerm(e.target.value)}
                 type="text"
                 placeholder="Job title, e.g. Electrician, Safety Officer"
-                className="w-full h-11 border-none outline-none bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground"
+                className="w-full h-10 sm:h-11 border-none outline-none bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground"
               />
             </div>
-            <button type="submit" className="h-11 px-6 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors shrink-0">
+            <button type="submit" className={buttonClass({ variant: "primary", size: "hero" }, "h-10 sm:h-11 shrink-0")}>
               Search Jobs
             </button>
           </form>

@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Select } from "@base-ui/react/select";
 import { Check, ChevronDown } from "lucide-react";
+import { inputClass } from "@/lib/ui";
 
 interface CountryCode {
   iso: string;
@@ -116,7 +117,7 @@ export default function PhoneInput({
         <Select.Trigger
           ref={triggerRef}
           aria-label="Country code"
-          className="shrink-0 w-[92px] flex items-center justify-between gap-1 pl-2.5 pr-2 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm"
+          className="shrink-0 w-[92px] h-10 flex items-center justify-between gap-1 pl-2.5 pr-2 rounded-control border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all text-sm"
         >
           <span className="truncate">{effectiveCountry.flag} {effectiveCountry.dial}</span>
           <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -154,7 +155,7 @@ export default function PhoneInput({
         placeholder={placeholder}
         value={number}
         onChange={(e) => handleNumberChange(e.target.value)}
-        className="flex-1 min-w-0 px-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+        className={inputClass({ variant: "outline" }, "flex-1 min-w-0")}
         required={required}
       />
     </div>

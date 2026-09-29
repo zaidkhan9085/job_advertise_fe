@@ -4,15 +4,99 @@ import Link from "next/link";
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChevronDown, Menu, ArrowRight, ChevronRight, LogOut } from "lucide-react";
+import { toast } from "sonner";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
 import { Globe } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { buildMergedJobsUrl } from "@/lib/utils";
+import { contactLinks } from "@/data/socialLinks";
+import { getSocialLinks, type SocialLinks } from "@/lib/api";
 import MobileNav from "./MobileNav";
 import IndustryNavPanel from "./IndustryNavPanel";
 import LocationNavPanel from "./LocationNavPanel";
 import JobsOpeningNavPanel from "./JobsOpeningNavPanel";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import AndroidIcon from "@/components/icons/AndroidIcon";
+import AppleIcon from "@/components/icons/AppleIcon";
+
+// Same static-fallback-then-live-fetch pattern Footer.tsx already uses for
+// these admin-editable links -- avoids a client-side fetch waterfall flash
+// of nothing before the real values load, at the one-time cost of a flash
+// of the static WhatsApp default before any admin-set app links appear.
+const INITIAL_APP_LINKS = { whatsapp: contactLinks.whatsapp, androidApp: "", iosApp: "" };
+
+// Phone-only quick-access row (WhatsApp, Android/iOS app) -- the client
+// specifically asked for this to match the sister site's mobile header.
+// Android/iOS have no real app yet, so until an admin sets a real Play
+// Store/App Store link in Settings, clicking either tells the visitor
+// it's coming rather than opening a dead/placeholder link; WhatsApp
+// already has a real community link and always opens it.
+function MobileAppLinks() {
+  const [links, setLinks] = useState<Pick<SocialLinks, "whatsapp" | "androidApp" | "iosApp">>(INITIAL_APP_LINKS);
+
+  useEffect(() => {
+    getSocialLinks()
+      .then(setLinks)
+      .catch(() => {});
+  }, []);
+
+  const notifyComingSoon = (platform: string) => toast(`${platform} app coming soon`);
+
+  return (
+    <div className="flex md:hidden items-center gap-1.5">
+      <a
+        href={links.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Join our WhatsApp"
+        className="w-8 h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0"
+      >
+        <WhatsAppIcon className="w-4 h-4" />
+      </a>
+      {links.androidApp ? (
+        <a
+          href={links.androidApp}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Get the Android app"
+          className="w-8 h-8 rounded-full bg-black flex items-center justify-center shrink-0"
+        >
+          <AndroidIcon className="w-4 h-4" />
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => notifyComingSoon("Android")}
+          aria-label="Android app"
+          className="w-8 h-8 rounded-full bg-black flex items-center justify-center shrink-0"
+        >
+          <AndroidIcon className="w-4 h-4" />
+        </button>
+      )}
+      {links.iosApp ? (
+        <a
+          href={links.iosApp}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Get the iOS app"
+          className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"
+        >
+          <AppleIcon className="w-4 h-4" />
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => notifyComingSoon("iOS")}
+          aria-label="iOS app"
+          className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0"
+        >
+          <AppleIcon className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 // Shared hover/click-outside trigger for a nav item whose panel is a
 // bespoke, live-data component rather than a static NavDropdownItem tree
@@ -42,7 +126,7 @@ function NavPanelTrigger({ label, children }: { label: string; children: (close:
     >
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
+        className={`flex items-center gap-1.5 px-2.5 lg:px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
           open ? "bg-brand-blue text-white shadow-lg shadow-[#C8422C]/20" : "text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted"
         }`}
         aria-expanded={open}
@@ -136,7 +220,22 @@ function ShortTermLink() {
   return (
     <Link
       href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
-      className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+      className="px-2.5 lg:px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+    >
+      Short Term
+    </Link>
+  );
+}
+
+// Same link, styled to match the "More" panel's other items instead of the
+// top-level nav bar -- used only inside that dropdown (md-to-lg gap).
+function ShortTermMoreLink({ onNavigate }: { onNavigate: () => void }) {
+  const searchParams = useSearchParams();
+  return (
+    <Link
+      href={buildMergedJobsUrl(searchParams, "jobtype", "Short Term")}
+      onClick={onNavigate}
+      className="px-4 py-2.5 rounded-xl text-sm text-foreground/80 hover:bg-brand-blue-muted hover:text-brand-blue transition-all"
     >
       Short Term
     </Link>
@@ -161,7 +260,7 @@ function NavItemComponent({ item }: { item: NavItem }) {
     return (
       <Link
         href={item.href}
-        className="px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
+        className="px-2.5 lg:px-4 py-2 text-[15px] font-bold text-foreground/70 hover:text-brand-blue rounded-xl hover:bg-brand-blue-muted transition-all"
       >
         {item.label}
       </Link>
@@ -177,7 +276,7 @@ function NavItemComponent({ item }: { item: NavItem }) {
     >
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
+        className={`flex items-center gap-1.5 px-2.5 lg:px-4 py-2 text-[15px] font-bold transition-all rounded-xl ${
           open ? 'bg-brand-blue text-white shadow-lg shadow-[#C8422C]/20' : 'text-foreground/70 hover:text-brand-blue hover:bg-brand-blue-muted'
         }`}
         aria-expanded={open}
@@ -208,6 +307,58 @@ export default function Header() {
   // through the login form.
   const visibleNavItems = user ? mainNavItems.filter((item) => item.href !== "/login") : mainNavItems;
 
+  // At 768px (md, tablet portrait) the full 6-item bar plus logo and CTA
+  // measurably overflows the header (confirmed live: "Jobs Opening" wraps
+  // to two lines and the CTA button gets clipped off the right edge) --
+  // there just isn't room for all of it before `lg` (1024px). Rather than
+  // give tablet the exact same full-screen hamburger overlay as a phone
+  // (the bug this is fixing), keep the three richest items -- the ones with
+  // real dropdown panels -- inline, and fold the remaining three into a
+  // compact "More" menu that only exists in the md-to-lg gap; at `lg` and
+  // up they go back to being flat top-level items like before.
+  const PRIMARY_LABELS = ["Industry", "Location", "Jobs Opening"];
+  const primaryNavItems = visibleNavItems.filter((item) => PRIMARY_LABELS.includes(item.label));
+  const secondaryNavItems = visibleNavItems.filter((item) => !PRIMARY_LABELS.includes(item.label));
+
+  function renderNavItem(item: NavItem) {
+    if (item.label === "Industry") {
+      return (
+        <NavPanelTrigger key={item.label} label="Industry">
+          {() => <IndustryNavPanel />}
+        </NavPanelTrigger>
+      );
+    }
+    if (item.label === "Location") {
+      return (
+        <NavPanelTrigger key={item.label} label="Location">
+          {(close) => <LocationNavPanel onNavigate={close} />}
+        </NavPanelTrigger>
+      );
+    }
+    if (item.label === "Jobs Opening") {
+      return (
+        <NavPanelTrigger key={item.label} label="Jobs Opening">
+          {() => <JobsOpeningNavPanel />}
+        </NavPanelTrigger>
+      );
+    }
+    if (item.label === "Short Term") {
+      return (
+        <Suspense
+          key={item.label}
+          fallback={
+            <span className="px-2.5 lg:px-4 py-2 text-[15px] font-bold text-foreground/70">
+              Short Term
+            </span>
+          }
+        >
+          <ShortTermLink />
+        </Suspense>
+      );
+    }
+    return <NavItemComponent key={item.label} item={item} />;
+  }
+
   return (
     <>
       <header
@@ -221,48 +372,51 @@ export default function Header() {
               <Logo size="lg" />
             </Link>
 
-          <nav className="hidden lg:flex items-center gap-0 xl:gap-0.5">
-            {visibleNavItems.map((item) => {
-              if (item.label === "Industry") {
-                return (
-                  <NavPanelTrigger key={item.label} label="Industry">
-                    {() => <IndustryNavPanel />}
-                  </NavPanelTrigger>
-                );
-              }
-              if (item.label === "Location") {
-                return (
-                  <NavPanelTrigger key={item.label} label="Location">
-                    {(close) => <LocationNavPanel onNavigate={close} />}
-                  </NavPanelTrigger>
-                );
-              }
-              if (item.label === "Jobs Opening") {
-                return (
-                  <NavPanelTrigger key={item.label} label="Jobs Opening">
-                    {() => <JobsOpeningNavPanel />}
-                  </NavPanelTrigger>
-                );
-              }
-              if (item.label === "Short Term") {
-                return (
-                  <Suspense
-                    key={item.label}
-                    fallback={
-                      <span className="px-4 py-2 text-[15px] font-bold text-foreground/70">
-                        Short Term
-                      </span>
-                    }
-                  >
-                    <ShortTermLink />
-                  </Suspense>
-                );
-              }
-              return <NavItemComponent key={item.label} item={item} />;
-            })}
+          <nav className="hidden md:flex items-center gap-0 xl:gap-0.5">
+            {primaryNavItems.map(renderNavItem)}
+
+            {/* xl+ (1280px+): full room, these render as flat top-level
+                items exactly like before. `contents` makes this wrapper
+                itself invisible to the flex layout -- its children become
+                direct flex items of `nav`, not a nested box. At lg
+                (1024-1279px) there still isn't enough room for all 6 items
+                plus the CTA without wrapping labels onto two lines, so the
+                fold now extends through the whole tablet-landscape range. */}
+            <div className="hidden xl:contents">{secondaryNavItems.map(renderNavItem)}</div>
+
+            {/* md through lg (768-1279px): not enough room for the full bar
+                (see the comment above), so these three fold into one "More". */}
+            {secondaryNavItems.length > 0 && (
+              <div className="xl:hidden">
+                <NavPanelTrigger label="More">
+                  {(close) => (
+                    <div className="absolute top-full left-0 pt-3 z-50">
+                      <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(200,66,44,0.15)] border border-border/40 p-2 w-56 flex flex-col gap-0.5 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                        {secondaryNavItems.map((item) =>
+                          item.label === "Short Term" ? (
+                            <Suspense key={item.label} fallback={null}>
+                              <ShortTermMoreLink onNavigate={close} />
+                            </Suspense>
+                          ) : (
+                            <Link
+                              key={item.label}
+                              href={item.href}
+                              onClick={close}
+                              className="px-4 py-2.5 rounded-xl text-sm text-foreground/80 hover:bg-brand-blue-muted hover:text-brand-blue transition-all"
+                            >
+                              {item.label}
+                            </Link>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </NavPanelTrigger>
+              </div>
+            )}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2 xl:gap-4">
+          <div className="hidden md:flex items-center gap-2 xl:gap-4">
             {user ? (
               <>
                 <Link
@@ -289,13 +443,16 @@ export default function Header() {
             )}
           </div>
 
-          <button
-            className="lg:hidden p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="flex md:hidden items-center gap-2">
+            <MobileAppLinks />
+            <button
+              className="p-2.5 rounded-xl bg-secondary/50 hover:bg-brand-blue-muted text-foreground transition-colors"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </header>
 

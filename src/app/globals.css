@@ -157,6 +157,19 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
+  /* A separate, smaller radius pair for INTERACTIVE CONTROLS (buttons,
+     inputs, selects) -- deliberately not sharing the --radius-* scale above,
+     which is a card/decorative scale (16px+) that's load-bearing across the
+     app and stays untouched. Native-app/enterprise density convention for
+     controls going forward (Tailwind's own unmodified height scale already
+     has the right numbers, no new tokens needed for that part):
+       default control  -> h-10 (40px) + rounded-control
+       compact control   -> h-9  (36px) + rounded-control-sm  (dense admin
+                             tables, filter chips, secondary actions)
+       hero/high-emphasis -> h-11 (44px) -- homepage hero search, primary
+                             form submits ONLY; nothing should exceed this. */
+  --radius-control: 0.625rem;
+  --radius-control-sm: 0.5rem;
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-display: var(--font-display);
@@ -256,6 +269,6 @@
      the padding or max-width scale here and it applies everywhere at once,
      rather than each of the ~30 consuming files hand-tuning its own. */
   .container-site {
-    @apply w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10;
+    @apply w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10;
   }
 }

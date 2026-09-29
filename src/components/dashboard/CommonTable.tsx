@@ -3,6 +3,7 @@
 import Table, { type ColumnType } from "rc-table";
 import { Search, X, ChevronLeft, ChevronRight, Download, Trash2, RotateCcw } from "lucide-react";
 import type { ReactNode, TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
+import { buttonClass, inputClass } from "@/lib/ui";
 
 export interface CommonTableColumn<T> {
   key: string;
@@ -168,11 +169,11 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
             {search && (
               <div className="relative flex-1 max-w-md group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-blue transition-colors" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-blue transition-colors" />
                 <input
                   type="text"
                   placeholder={search.placeholder ?? "Search..."}
-                  className="w-full pl-11 pr-10 py-3 rounded-xl border border-border/60 bg-white focus:ring-2 focus:ring-brand-blue outline-none transition-all text-sm font-medium"
+                  className={inputClass({ variant: "outline", withLeftIcon: true }, "pr-10")}
                   value={search.value}
                   onChange={(e) => search.onChange(e.target.value)}
                 />
@@ -204,7 +205,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
             <button
               onClick={exportButton.onClick}
               disabled={exportButton.disabled}
-              className="inline-flex items-center justify-center gap-2 bg-white border border-border/60 hover:bg-secondary px-5 py-3 rounded-xl font-bold transition-all disabled:opacity-50 shrink-0"
+              className={buttonClass({ variant: "outline" }, "shrink-0")}
             >
               <Download className="w-4 h-4" /> {exportButton.label ?? "Export CSV"}
             </button>
@@ -232,7 +233,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
           <button
             onClick={selection!.onBulkDelete}
             disabled={selection!.isBulkDeleting}
-            className="inline-flex items-center justify-center gap-2 bg-rose-600 text-white hover:bg-rose-700 px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center justify-center gap-2 h-9 bg-rose-600 text-white hover:bg-rose-700 px-4 rounded-control-sm font-bold text-sm transition-all disabled:opacity-50 shrink-0"
           >
             <Trash2 className="w-4 h-4" />
             {selection!.bulkDeleteLabel ?? `Delete Selected (${selection!.selectedCount})`}
@@ -276,7 +277,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
             <button
               onClick={() => pagination.onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="p-2 rounded-lg border border-border/60 hover:bg-secondary disabled:opacity-40 transition-colors"
+              className="p-2 rounded-control-sm border border-border/60 hover:bg-secondary disabled:opacity-40 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -286,7 +287,7 @@ export default function CommonTable<T extends Record<string, any>, TId extends s
             <button
               onClick={() => pagination.onPageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="p-2 rounded-lg border border-border/60 hover:bg-secondary disabled:opacity-40 transition-colors"
+              className="p-2 rounded-control-sm border border-border/60 hover:bg-secondary disabled:opacity-40 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

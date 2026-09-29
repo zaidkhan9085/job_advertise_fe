@@ -7,6 +7,7 @@ import { Mail, Lock, ArrowRight, Eye, EyeOff, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError, resendVerificationRequest } from "@/lib/api";
+import { buttonClass, inputClass } from "@/lib/ui";
 
 // A structured error body carries a `code` alongside the message -- used
 // here to tell "wrong password" (a plain string is enough) apart from
@@ -125,13 +126,13 @@ function LoginForm() {
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                className={inputClass({ variant: "outline", withLeftIcon: true })}
                 required
               />
             </div>
@@ -145,30 +146,30 @@ function LoginForm() {
               </Link>
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground/60" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-input bg-background focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all"
+                className={inputClass({ variant: "outline", withLeftIcon: true }, "pr-10")}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-3 text-muted-foreground/60 hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70 mt-2"
+            className={buttonClass({ variant: "primary", size: "hero", fullWidth: true }, "mt-2")}
           >
             {isLoading ? "Signing in..." : (
               <>

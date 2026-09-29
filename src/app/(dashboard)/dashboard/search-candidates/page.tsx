@@ -993,13 +993,16 @@ export default function SearchCandidatesPage() {
 
       {error && <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">{error}</div>}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
         {/* ── Roster ──
-            The dashboard shell's own sidebar already reserves ~230-270px, so
-            the split view only gets real breathing room from `xl` (1280px)
-            up — below that, both panels are full-width and one is hidden,
-            same collapsing behavior as phone/tablet. */}
-        <div className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden ${mobileDetailOpen ? "hidden xl:block" : ""}`}>
+            The dashboard shell's own sidebar reserves ~80-288px (collapsed/
+            expanded), so at `lg` (1024px) worst case that leaves ~736px --
+            enough for a 300px roster + a usable detail pane. Below `lg`,
+            both panels are full-width and one is hidden, same collapsing
+            behavior as phone. (Previously gated at `xl`/1280px, which left
+            tablet and small-laptop widths stuck in phone-style single
+            column for no real reason.) */}
+        <div className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden ${mobileDetailOpen ? "hidden lg:block" : ""}`}>
           <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               {isStaff && candidates.length > 0 && (
@@ -1020,7 +1023,7 @@ export default function SearchCandidatesPage() {
             <span className="text-xs text-muted-foreground font-medium">{meta ? `of ${meta.total.toLocaleString()}` : ""}</span>
           </div>
 
-          <div className="max-h-[460px] xl:max-h-[600px] overflow-y-auto divide-y divide-border/60">
+          <div className="max-h-[460px] lg:max-h-[600px] overflow-y-auto divide-y divide-border/60">
             {isLoading && candidates.length === 0 ? (
               <div className="p-8 flex justify-center">
                 <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -1100,11 +1103,11 @@ export default function SearchCandidatesPage() {
             directly on this scrolling element rather than derived from a
             flex/grid ancestor squeezing it. */}
         <div
-          className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden xl:overflow-y-auto xl:sticky xl:top-0 xl:max-h-[calc(100vh-8rem)] ${!mobileDetailOpen ? "hidden xl:block" : ""}`}
+          className={`bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden lg:overflow-y-auto lg:sticky lg:top-0 lg:max-h-[calc(100vh-8rem)] ${!mobileDetailOpen ? "hidden lg:block" : ""}`}
         >
           <button
             onClick={() => setMobileDetailOpen(false)}
-            className="xl:hidden flex items-center gap-1.5 px-4 py-3 text-xs font-bold text-muted-foreground border-b border-border/60"
+            className="lg:hidden flex items-center gap-1.5 px-4 py-3 text-xs font-bold text-muted-foreground border-b border-border/60"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to list
           </button>

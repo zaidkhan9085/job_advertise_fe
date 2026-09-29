@@ -31,6 +31,8 @@ const INITIAL_SOCIAL_LINKS: SocialLinks = {
   linkedin: staticSocialLinks.find((s) => s.label === "LinkedIn")?.href ?? "",
   youtube: staticSocialLinks.find((s) => s.label === "YouTube")?.href ?? "",
   whatsapp: contactLinks.whatsapp,
+  androidApp: "",
+  iosApp: "",
 };
 
 // Every href below is a real, working route -- the previous version linked
@@ -127,7 +129,7 @@ export default function Footer() {
             </Link>
             <Link
               href={SHORT_TERM_JOBS_HREF}
-              className="w-full sm:w-auto px-8 py-4 bg-brand-blue-light text-white font-black rounded-2xl transition-all shadow-xl hover:-translate-y-1 active:scale-95 text-center border border-white/10"
+              className="w-full sm:w-auto px-8 py-4 bg-transparent text-white font-black rounded-2xl transition-all hover:-translate-y-1 hover:bg-white/10 active:scale-95 text-center border-2 border-white/40"
             >
               Short Term Jobs
             </Link>
@@ -136,7 +138,7 @@ export default function Footer() {
       </div>
 
       <div className="container-site pt-20 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-12 items-start">
           {/* Brand & Info */}
           <div className="lg:col-span-4 space-y-8">
             <Link href="/" className="flex items-center gap-3 shrink-0 group">
