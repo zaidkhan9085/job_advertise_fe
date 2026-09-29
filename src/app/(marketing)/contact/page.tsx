@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Clock, MessageSquare, Send } from "lucide-react";
+import { Mail, Clock, MessageSquare, Send } from "lucide-react";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
 import { SUPPORT_EMAIL } from "@/data/socialLinks";
 
@@ -36,26 +36,6 @@ export default function ContactPage() {
               <div>
                 <div className="text-xs font-black text-brand-blue/40 uppercase tracking-widest mb-1">Email Us</div>
                 <div className="font-bold text-brand-blue">{SUPPORT_EMAIL}</div>
-              </div>
-            </div>
-
-            <div className="flex gap-5 p-6 rounded-3xl border border-brand-blue/5 bg-brand-blue-muted/30 group hover:border-brand-blue/20 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-brand-blue shadow-sm border border-brand-blue/5">
-                <Phone className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-brand-blue/40 uppercase tracking-widest mb-1">Call Us</div>
-                <div className="font-bold text-brand-blue">+91 (800) 123-4567</div>
-              </div>
-            </div>
-
-            <div className="flex gap-5 p-6 rounded-3xl border border-brand-blue/5 bg-brand-blue-muted/30 group hover:border-brand-blue/20 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-brand-blue shadow-sm border border-brand-blue/5">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-brand-blue/40 uppercase tracking-widest mb-1">Our Office</div>
-                <div className="font-bold text-brand-blue">Knowledge Village, Dubai, UAE</div>
               </div>
             </div>
 

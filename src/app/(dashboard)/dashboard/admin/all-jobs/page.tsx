@@ -333,7 +333,7 @@ export default function AdminAllJobsPage() {
             title={job.type === "FEATURED" ? "Move to General" : "Make Featured"}
             disabled={actioningId === job.id || job.type === "STORY"}
             onClick={() => handleToggleFeatured(job)}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+            className={`p-1.5 rounded-full transition-colors disabled:opacity-30 ${
               job.type === "FEATURED"
                 ? "text-brand-blue hover:bg-brand-blue/10"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -358,7 +358,7 @@ export default function AdminAllJobsPage() {
                 title={isPromoted ? "Revert this Story back to General" : "Post as a Story (the original post stays untouched)"}
                 disabled={actioningId === job.id}
                 onClick={() => (isPromoted ? setRevertStoryTarget(job) : handlePromoteToStory(job))}
-                className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+                className={`p-1.5 rounded-full transition-colors disabled:opacity-30 ${
                   isPromoted
                     ? "text-brand-blue hover:bg-brand-blue/10"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -377,7 +377,7 @@ export default function AdminAllJobsPage() {
           <Link
             href={`/dashboard/admin/all-jobs/${job.id}/applicants`}
             title={job.applicationsCount ? `Applicants (${job.applicationsCount})` : "No applicants yet"}
-            className={`p-1.5 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-full transition-colors ${
               job.applicationsCount
                 ? "text-brand-blue hover:bg-brand-blue/10"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -388,7 +388,7 @@ export default function AdminAllJobsPage() {
           <Link
             href={`/dashboard/admin/all-jobs/${job.id}/edit`}
             title="Edit Job"
-            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1.5 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
             <Pencil className="w-4 h-4" />
           </Link>
@@ -396,7 +396,7 @@ export default function AdminAllJobsPage() {
             title="Delete Job"
             disabled={actioningId === job.id}
             onClick={() => setDeleteTarget(job)}
-            className="p-1.5 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-30"
+            className="p-1.5 rounded-full hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-30"
           >
             <Trash2 className="w-4 h-4" />
           </button>
