@@ -171,6 +171,14 @@ export default function AdminAllJobsPage() {
       setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, promotedStoryId: result.story.id } : j)));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to post as a Story.");
+      // The clicked row's local promotedStoryId can drift from the server's
+      // (e.g. someone else already promoted/reverted it, a Story expired
+      // between page load and this click, or the tab's been open since
+      // before a deploy). A failed action means the local guess was wrong
+      // either way -- resync quietly so the *next* click uses real data
+      // instead of leaving the admin stuck re-hitting the same 400/404
+      // until they think to reload the page themselves.
+      refreshJobsQuietly();
     } finally {
       setActioningId(null);
     }
@@ -206,6 +214,10 @@ export default function AdminAllJobsPage() {
       setRevertStoryTarget(null);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to revert this Story.");
+      setRevertStoryTarget(null);
+      // Same reasoning as handlePromoteToStory's catch -- resync so the
+      // next attempt (no manual page refresh needed) has real data.
+      refreshJobsQuietly();
     } finally {
       setActioningId(null);
     }
