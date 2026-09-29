@@ -339,6 +339,16 @@ export function promoteJobToStory(id: string) {
   });
 }
 
+// Deletes the live Story clone promoteJobToStory created from this job (the
+// source job's own id, not the clone's) -- the undo for promoting, and the
+// only way to actually remove the promoted duplicate rather than leave an
+// orphaned General row behind. Admin/sub_admin only.
+export function revertPromotedStory(id: string) {
+  return apiFetch<{ message: string }>(`/api/jobs/${id}/revert-promoted-story`, {
+    method: "POST",
+  });
+}
+
 // Structured data extracted from an uploaded job poster/flyer image —
 // returned for the Post Job form to review/pre-fill, never auto-saved by
 // the backend (no Job row is created by this call). A single poster often
@@ -500,6 +510,12 @@ export function getPendingJobs() {
 
 export type AdminJob = JobPost & {
   employer: { id: number; full_name: string | null; email: string };
+  // The id of this job's currently-live promoted Story clone, if any --
+  // null for a job that's never been promoted (or whose Story has since
+  // expired/been reverted). Only ever set on a General/Featured row; a
+  // promoted clone itself never appears in this list (see
+  // buildJobAdminWhere's promotedFromId filter on the backend).
+  promotedStoryId: string | null;
 };
 
 export function getAllJobsAdmin(
