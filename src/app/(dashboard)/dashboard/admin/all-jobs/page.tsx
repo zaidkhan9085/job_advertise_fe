@@ -12,6 +12,7 @@ import {
   deleteJob,
   bulkDeleteJobs,
   promoteJobToStory,
+  revertPromotedStory,
   type AdminJob,
   type JobPostStatus,
   type PaginatedMeta,
@@ -112,6 +113,24 @@ export default function AdminAllJobsPage() {
     }
   }, [filters, page]);
 
+  // Same fetch as loadJobs, but never flips isLoading -- CommonTable renders
+  // data={[]} while loading (see CommonTable.tsx), which empties the table
+  // for an instant and is exactly what was resetting scroll position before.
+  // Skipping that flash keeps the table's real DOM node in place the whole
+  // time, so both the page scroll and the table's own horizontal scroll
+  // survive a background refresh like this one.
+  const refreshJobsQuietly = useCallback(async () => {
+    try {
+      const result = await getAllJobsAdmin({ ...filters, page, limit: PAGE_LIMIT });
+      setJobs(result.data);
+      setMeta(result.meta);
+    } catch {
+      // Silent -- this is a background refresh after an action that already
+      // showed its own success/error toast; the initial loadJobs() above is
+      // what surfaces a real load failure.
+    }
+  }, [filters, page]);
+
   useEffect(() => {
     if (user?.role === "admin" || user?.role === "sub_admin") {
       loadJobs();
@@ -136,12 +155,20 @@ export default function AdminAllJobsPage() {
     }
   };
 
+  // Promoting clones the job into a brand new, separate Story row -- the
+  // backend leaves the original completely untouched, and now hides the
+  // clone from this list entirely (it's a duplicate of a row already
+  // visible here; see buildJobAdminWhere's promotedFromId filter). So
+  // there's no new row to show at all -- just flip the clicked row's own
+  // promotedStoryId locally, same in-place pattern handleToggleFeatured
+  // already uses, which is what drives its Actions icon switching to
+  // Revert immediately.
   const handlePromoteToStory = async (job: AdminJob) => {
     setActioningId(job.id);
     try {
       const result = await promoteJobToStory(job.id);
       toast.success(result.message);
-      loadJobs();
+      setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, promotedStoryId: result.story.id } : j)));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to post as a Story.");
     } finally {
@@ -149,19 +176,34 @@ export default function AdminAllJobsPage() {
     }
   };
 
-  // Sends jobTypeId/industryId as explicit nulls (not just omitted) so the
-  // backend's own "never leave a regular job untyped/uncategorized" fallback
-  // runs and backfills them -- a Story never has those set, so leaving them
-  // out here would revert the type but silently leave the job invisible to
-  // both job-type and industry filters.
+  // Two different rows can show a Revert icon, and they mean different
+  // things: a row that's itself type STORY (posted directly, or an older
+  // promoted clone from before clones were hidden from this list) reverts
+  // by converting its own type back to NORMAL. A General/Featured row with
+  // a live promotedStoryId reverts by deleting that clone outright --
+  // converting it would leave an orphaned duplicate NORMAL row behind,
+  // exactly what hiding clones from this list is trying to avoid. Both
+  // branches update local state optimistically instead of refetching, same
+  // reasoning as handleToggleFeatured: no scroll reset, no reordering.
   const handleRevertStory = async () => {
     if (!revertStoryTarget) return;
-    setActioningId(revertStoryTarget.id);
+    const target = revertStoryTarget;
+    setActioningId(target.id);
     try {
-      const result = await updateJob(revertStoryTarget.id, { type: "NORMAL", jobTypeId: null, industryId: null });
-      toast.success(result.message);
+      if (target.type === "STORY") {
+        // jobTypeId/industryId sent as explicit nulls so the backend's own
+        // "never leave a regular job untyped/uncategorized" fallback runs
+        // and backfills them server-side -- just not reflected here since
+        // this table doesn't display either column.
+        const result = await updateJob(target.id, { type: "NORMAL", jobTypeId: null, industryId: null });
+        toast.success(result.message);
+        setJobs((prev) => prev.map((j) => (j.id === target.id ? { ...j, type: "NORMAL" } : j)));
+      } else {
+        const result = await revertPromotedStory(target.id);
+        toast.success(result.message);
+        setJobs((prev) => prev.map((j) => (j.id === target.id ? { ...j, promotedStoryId: null } : j)));
+      }
       setRevertStoryTarget(null);
-      loadJobs();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to revert this Story.");
     } finally {
@@ -176,7 +218,7 @@ export default function AdminAllJobsPage() {
       const result = await deleteJob(deleteTarget.id);
       toast.success(result.message);
       setDeleteTarget(null);
-      loadJobs();
+      refreshJobsQuietly();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete job.");
     } finally {
@@ -191,7 +233,7 @@ export default function AdminAllJobsPage() {
       toast.success(`Deleted ${result.count} job(s).`);
       selection.clear();
       setIsBulkDeleteOpen(false);
-      loadJobs();
+      refreshJobsQuietly();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete jobs.");
     } finally {
@@ -213,23 +255,37 @@ export default function AdminAllJobsPage() {
 
   const columns: CommonTableColumn<AdminJob>[] = [
     {
+      // CommonTable renders with tableLayout="auto" (a real <table>'s
+      // native CSS auto layout, shared by every admin table this component
+      // serves) -- under that mode, a column's declared `width`/`minWidth`
+      // is only a floor, never a cap; the browser hands any *extra*
+      // container width to whichever column's content most wants to grow.
+      // With no other column capped, this one (long single-line job
+      // titles, forced onto one line by the table's own whitespace-nowrap)
+      // was swallowing 500px+ on large screens, which is exactly what
+      // pushed Actions off-screen and forced the scroll the client
+      // flagged. Scoped to this column's own content instead of changing
+      // CommonTable's shared layout mode for every other table it serves:
+      // capping the wrapper's max-width and re-enabling wrapping/truncation
+      // gives the title text a real ceiling, so the column stops being the
+      // one column with unbounded growth potential.
       key: "title",
       title: "Job Title & Location",
-      minWidth: 220,
+      minWidth: 180,
       render: (_, job) => (
-        <>
-          <div className="font-bold text-foreground">{job.title}</div>
-          <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {job.location || "Not specified"}
+        <div className="max-w-52">
+          <div className="font-bold text-foreground whitespace-normal wrap-break-word">{job.title}</div>
+          <div className="text-xs text-muted-foreground font-medium flex items-center gap-1 min-w-0">
+            <MapPin className="w-3 h-3 shrink-0" />
+            <span className="truncate">{job.location || "Not specified"}</span>
           </div>
-        </>
+        </div>
       ),
     },
     {
       key: "employer",
       title: "Employer",
-      minWidth: 180,
+      minWidth: 160,
       render: (_, job) => (
         <span className="text-muted-foreground font-medium">{job.employer.full_name || job.employer.email}</span>
       ),
@@ -257,7 +313,7 @@ export default function AdminAllJobsPage() {
     {
       key: "status",
       title: "Status",
-      minWidth: 110,
+      minWidth: 95,
       render: (_, job) => (
         <span
           className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${STATUS_STYLES[job.status]}`}
@@ -270,14 +326,14 @@ export default function AdminAllJobsPage() {
       key: "actions",
       title: "Actions",
       align: "right",
-      minWidth: 180,
+      minWidth: 160,
       render: (_, job) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-0.5">
           <button
             title={job.type === "FEATURED" ? "Move to General" : "Make Featured"}
             disabled={actioningId === job.id || job.type === "STORY"}
             onClick={() => handleToggleFeatured(job)}
-            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+            className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 ${
               job.type === "FEATURED"
                 ? "text-brand-blue hover:bg-brand-blue/10"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -289,30 +345,39 @@ export default function AdminAllJobsPage() {
               <Star className="w-4 h-4" fill={job.type === "FEATURED" ? "currentColor" : "none"} />
             )}
           </button>
-          {job.status !== "EXPIRED" && (
-            <button
-              title={job.type === "STORY" ? "Revert this Story back to General" : "Post as a Story (the original post stays untouched)"}
-              disabled={actioningId === job.id}
-              onClick={() => (job.type === "STORY" ? setRevertStoryTarget(job) : handlePromoteToStory(job))}
-              className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
-                job.type === "STORY"
-                  ? "text-brand-blue hover:bg-brand-blue/10"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              }`}
-            >
-              {actioningId === job.id ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : job.type === "STORY" ? (
-                <Undo2 className="w-4 h-4" />
-              ) : (
-                <PlayCircle className="w-4 h-4" />
-              )}
-            </button>
-          )}
+          {job.status !== "EXPIRED" && (() => {
+            // A row shows Revert either because it IS a Story (posted
+            // directly, or type flipped some other way) or because it's a
+            // General/Featured row with a live promoted clone hiding
+            // elsewhere -- both cases hand off to the same confirm dialog
+            // and handleRevertStory, which branches on target.type to run
+            // the right undo.
+            const isPromoted = job.type === "STORY" || !!job.promotedStoryId;
+            return (
+              <button
+                title={isPromoted ? "Revert this Story back to General" : "Post as a Story (the original post stays untouched)"}
+                disabled={actioningId === job.id}
+                onClick={() => (isPromoted ? setRevertStoryTarget(job) : handlePromoteToStory(job))}
+                className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+                  isPromoted
+                    ? "text-brand-blue hover:bg-brand-blue/10"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                {actioningId === job.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isPromoted ? (
+                  <Undo2 className="w-4 h-4" />
+                ) : (
+                  <PlayCircle className="w-4 h-4" />
+                )}
+              </button>
+            );
+          })()}
           <Link
             href={`/dashboard/admin/all-jobs/${job.id}/applicants`}
             title={job.applicationsCount ? `Applicants (${job.applicationsCount})` : "No applicants yet"}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-lg transition-colors ${
               job.applicationsCount
                 ? "text-brand-blue hover:bg-brand-blue/10"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -323,7 +388,7 @@ export default function AdminAllJobsPage() {
           <Link
             href={`/dashboard/admin/all-jobs/${job.id}/edit`}
             title="Edit Job"
-            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
             <Pencil className="w-4 h-4" />
           </Link>
@@ -331,7 +396,7 @@ export default function AdminAllJobsPage() {
             title="Delete Job"
             disabled={actioningId === job.id}
             onClick={() => setDeleteTarget(job)}
-            className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-30"
+            className="p-1.5 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-30"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -374,6 +439,7 @@ export default function AdminAllJobsPage() {
         data={jobs}
         rowKey={(j) => j.id}
         loading={isLoading}
+        dense
         emptyMessage="No jobs found."
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by title, company, or location..." }}
         filters={<StatusFilterPills options={STATUS_FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />}
@@ -431,7 +497,11 @@ export default function AdminAllJobsPage() {
       <ConfirmDialog
         isOpen={!!revertStoryTarget}
         title="Revert this Story?"
-        message={`"${revertStoryTarget?.title}" will leave Stories and go back to a regular General post. It stays live and approved.`}
+        message={
+          revertStoryTarget?.type === "STORY"
+            ? `"${revertStoryTarget?.title}" will leave Stories and go back to a regular General post. It stays live and approved.`
+            : `The Story created from "${revertStoryTarget?.title}" will be removed. The General post itself is unaffected.`
+        }
         confirmLabel="Revert"
         isConfirming={actioningId === revertStoryTarget?.id}
         onConfirm={handleRevertStory}
