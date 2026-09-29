@@ -11,8 +11,15 @@ import { cn } from "@/lib/utils";
 // Pass extra classes as the second cn() argument at the call site; twMerge
 // (inside cn) resolves any conflicting utility in the caller's favor.
 
+// Buttons round to a full pill, not --radius-control -- that token stays
+// right for inputs (a modest, form-appropriate curve), but on a button
+// it reads as almost-square next to the fully-round status pills/badges/
+// icon buttons already used everywhere else (filter pills, table action
+// icons, the search bar's own outer shape) -- confirmed live, repeatedly,
+// across several separately-reported "square button" spots. One shared
+// base class means every buttonClass() consumer gets this automatically.
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-control font-bold text-sm whitespace-nowrap transition-colors active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none",
+  "inline-flex items-center justify-center gap-2 rounded-full font-bold text-sm whitespace-nowrap transition-colors active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none",
   {
     variants: {
       variant: {

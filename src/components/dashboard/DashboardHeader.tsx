@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 import Logo from "@/components/common/Logo";
 import { getMyCompany, getMyCandidateProfile, getMe, resolveImageUrl } from "@/lib/api";
+import { buttonClass } from "@/lib/ui";
 
 // Where clicking the avatar goes -- each role's own "edit yourself" page.
 // Admin/sub_admin have no such page yet, so their avatar isn't a link.
@@ -112,7 +113,7 @@ export default function DashboardHeader() {
         {user && user.role !== "candidate" && (
           <Link
             href="/dashboard/jobs/new"
-            className="relative inline-flex items-center gap-1.5 bg-brand-blue text-white hover:bg-brand-blue-medium px-3 sm:px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className={buttonClass({ variant: "primary" }, "relative px-3 sm:px-4")}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Post Job</span>
