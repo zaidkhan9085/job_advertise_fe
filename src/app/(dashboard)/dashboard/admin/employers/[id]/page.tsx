@@ -22,6 +22,7 @@ import {
   type ReportStatus,
   ApiError,
 } from "@/lib/api";
+import { companyPagePath } from "@/lib/jobShare";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import StarRatingInput from "@/components/common/StarRatingInput";
@@ -215,7 +216,7 @@ export default function AdminEmployerDetailPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-black text-foreground">{company.name}</h1>
             <Link
-              href={`/companies/${company.id}`}
+              href={companyPagePath(company)}
               target="_blank"
               className="inline-flex items-center gap-1 text-xs font-bold text-brand-blue hover:underline"
             >

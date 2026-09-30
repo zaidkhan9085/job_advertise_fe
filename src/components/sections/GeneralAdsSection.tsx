@@ -9,6 +9,7 @@ import JobPosterImage from "@/components/common/JobPosterImage";
 import { useIsRecent } from "@/hooks/useIsRecent";
 import { useAppliedJobs } from "@/hooks/useAppliedJobs";
 import JobCardActions from "@/components/jobs/JobCardActions";
+import { jobPagePath } from "@/lib/jobShare";
 
 function GeneralAdCard({ job, hasApplied, onApplied }: { job: JobPost; hasApplied: boolean; onApplied: () => void }) {
   const router = useRouter();
@@ -16,7 +17,7 @@ function GeneralAdCard({ job, hasApplied, onApplied }: { job: JobPost; hasApplie
 
   return (
     <div
-      onClick={() => router.push(`/jobs/${job.id}`)}
+      onClick={() => router.push(jobPagePath(job))}
       className="group h-full flex flex-col bg-white rounded-2xl border border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden cursor-pointer"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary/30">

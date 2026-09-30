@@ -1,12 +1,34 @@
-import type { JobPost } from "@/lib/api";
+import type { JobPost, Company } from "@/lib/api";
 import { SITE_URL, SITE_REF } from "@/lib/site";
+import { slugify } from "@/lib/utils";
 
 type ShareJob = Pick<JobPost, "id" | "title" | "company" | "location">;
 
 const SITE_NAME = "thejobs4u";
 
-export function jobPageUrl(id: string) {
-  return `${SITE_URL}/jobs/${id}`;
+// A human-readable slug in front of the real id -- e.g.
+// /jobs/urgent-hiring-for-abu-dhabi-<uuid> instead of the bare uuid alone.
+// The backend only ever reads the trailing uuid back out (see
+// backend/utils/slugId.js's extractId), so this is purely cosmetic/SEO: no
+// schema change, and a bare-uuid link from before this change still works
+// since the id is still right there, just without a slug in front of it.
+export function jobPagePath(job: Pick<JobPost, "id" | "title">) {
+  const slug = slugify(job.title);
+  return slug ? `/jobs/${slug}-${job.id}` : `/jobs/${job.id}`;
+}
+
+export function jobPageUrl(job: Pick<JobPost, "id" | "title">) {
+  return `${SITE_URL}${jobPagePath(job)}`;
+}
+
+// Same slug-prefixed-id pattern as jobPagePath, for a company's public page.
+export function companyPagePath(company: Pick<Company, "id" | "name">) {
+  const slug = slugify(company.name);
+  return slug ? `/companies/${slug}-${company.id}` : `/companies/${company.id}`;
+}
+
+export function companyPageUrl(company: Pick<Company, "id" | "name">) {
+  return `${SITE_URL}${companyPagePath(company)}`;
 }
 
 // Jobs posted by staff use the site's own name as the "company" -- printing
@@ -21,7 +43,7 @@ function detailLines(job: ShareJob, boldTitle: boolean) {
     `Position: ${boldTitle ? `*${job.title}*` : job.title}`,
     hasRealCompany(job) ? `Company: ${job.company}` : null,
     job.location ? `Location: ${job.location}` : null,
-    `Link: ${jobPageUrl(job.id)}`,
+    `Link: ${jobPageUrl(job)}`,
   ].filter((line): line is string => !!line);
 }
 

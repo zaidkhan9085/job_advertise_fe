@@ -40,7 +40,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useCompanyActions } from "@/hooks/useCompanyActions";
 import { SHOW_COMPANY_REVIEWS } from "@/lib/featureFlags";
-import { buildCompanyWhatsAppUrl, buildCompanyMailtoUrl } from "@/lib/jobShare";
+import { buildCompanyWhatsAppUrl, buildCompanyMailtoUrl, jobPagePath } from "@/lib/jobShare";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import JobCardActions from "@/components/jobs/JobCardActions";
@@ -56,7 +56,7 @@ function CompanyJobCard({ job, hasApplied, onApplied }: { job: JobPost; hasAppli
 
   return (
     <div
-      onClick={() => router.push(`/jobs/${job.id}`)}
+      onClick={() => router.push(jobPagePath(job))}
       className="group h-full flex flex-col bg-white rounded-2xl border border-border/60 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden cursor-pointer"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary/30">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { JobPost } from "@/lib/api";
+import { jobPagePath } from "@/lib/jobShare";
 
 // The job page itself is a client component (it can't export
 // generateMetadata), and link-preview crawlers (WhatsApp, Facebook,
@@ -103,16 +104,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   // A text-only listing has no poster -- fall back to the site logo so the
   // preview still carries a thumbnail instead of nothing.
   const image = job.image ? previewImage(job.image) : { url: "/logo-icon.png" };
+  // The slug-prefixed path (see jobPagePath) -- the canonical/OG URL should
+  // point at the same pretty URL the page itself links to everywhere else,
+  // not the bare id this route still also accepts for old shared links.
+  const path = jobPagePath(job);
 
   return {
     title: job.title,
     description,
-    alternates: { canonical: `/jobs/${id}` },
+    alternates: { canonical: path },
     openGraph: {
       type: "website",
       siteName: SITE_NAME,
       locale: "en_US",
-      url: `/jobs/${id}`,
+      url: path,
       title: job.title,
       description,
       images: [{ ...image, secureUrl: image.url, alt: `${job.title} — ${job.company}` }],
