@@ -41,7 +41,7 @@ import { useCompanyActions } from "@/hooks/useCompanyActions";
 import JobPosterImage from "@/components/common/JobPosterImage";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
-import { buildJobWhatsAppUrl, buildJobMailtoUrl, buildJobShareText, jobPageUrl } from "@/lib/jobShare";
+import { buildJobWhatsAppUrl, buildJobMailtoUrl, buildJobShareText, jobPageUrl, jobPagePath, companyPagePath } from "@/lib/jobShare";
 import { copyToClipboard } from "@/lib/utils";
 
 function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: string }) {
@@ -171,7 +171,7 @@ export default function JobDetailPage() {
   // there's no share sheet (most desktops) the same message is copied.
   const handleShare = async () => {
     if (!job) return;
-    const url = jobPageUrl(job.id);
+    const url = jobPageUrl(job);
     const text = buildJobShareText(job);
     if (navigator.share) {
       try {
@@ -456,7 +456,7 @@ export default function JobDetailPage() {
               {company ? (
                 <>
                   <Link
-                    href={`/companies/${company.id}`}
+                    href={companyPagePath(company)}
                     className="flex items-center justify-center gap-1.5 text-xs font-bold text-brand-blue hover:underline"
                   >
                     View full company profile <ArrowUpRight className="w-3.5 h-3.5" />
@@ -508,7 +508,7 @@ export default function JobDetailPage() {
             <h3 className="text-lg font-bold text-foreground mb-4">Related Jobs</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {related.map((r) => (
-                <Link key={r.id} href={`/jobs/${r.id}`} className="flex gap-3 p-3 rounded-xl border border-border/60 hover:border-brand-blue/40 hover:bg-brand-blue/5 transition-all">
+                <Link key={r.id} href={jobPagePath(r)} className="flex gap-3 p-3 rounded-xl border border-border/60 hover:border-brand-blue/40 hover:bg-brand-blue/5 transition-all">
                   <JobPosterImage image={r.image} title={r.title} company={r.company} className="w-16 h-16 rounded-lg shrink-0" />
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-foreground line-clamp-1">{r.title}</p>

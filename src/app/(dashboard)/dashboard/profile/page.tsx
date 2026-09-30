@@ -23,6 +23,7 @@ import SearchableSelect from "@/components/common/SearchableSelect";
 import PhoneInput from "@/components/common/PhoneInput";
 import ChangePasswordDialog from "@/components/common/ChangePasswordDialog";
 import { validateFileSize } from "@/lib/fileValidation";
+import { companyPagePath } from "@/lib/jobShare";
 
 const TAGLINE_MAX = 140;
 const DESCRIPTION_MAX = 2000;
@@ -245,7 +246,7 @@ export default function CompanyProfilePage() {
           </div>
           {companyId && (
             <Link
-              href={`/companies/${companyId}`}
+              href={companyPagePath({ id: companyId, name })}
               target="_blank"
               className="sm:ml-auto inline-flex items-center gap-1.5 text-sm font-bold text-brand-blue hover:underline"
             >

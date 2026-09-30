@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { getJobStories, type JobPost, ApiError } from "@/lib/api";
+import { jobPagePath } from "@/lib/jobShare";
 import { useAuth } from "@/context/AuthContext";
 import JobPosterImage from "@/components/common/JobPosterImage";
 
@@ -106,7 +107,7 @@ export default function StoriesSection() {
             {stories.map((story) => (
               <Link
                 key={story.id}
-                href={`/jobs/${story.id}`}
+                href={jobPagePath(story)}
                 className="flex-shrink-0 w-[132px] h-[188px] sm:w-[140px] sm:h-[196px] rounded-[18px] overflow-hidden relative group cursor-pointer shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-left block"
               >
                 <JobPosterImage image={story.image} title={story.title} company={story.company} className="w-full h-full" />

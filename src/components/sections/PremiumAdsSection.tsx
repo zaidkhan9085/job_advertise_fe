@@ -9,6 +9,7 @@ import JobPosterImage from "@/components/common/JobPosterImage";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
 import JobCardActions from "@/components/jobs/JobCardActions";
 import { useAppliedJobs } from "@/hooks/useAppliedJobs";
+import { jobPagePath } from "@/lib/jobShare";
 
 export default function PremiumAdsSection() {
   const router = useRouter();
@@ -98,7 +99,7 @@ export default function PremiumAdsSection() {
             {premiumJobs.map((job) => (
               <div
                 key={job.id}
-                onClick={() => router.push(`/jobs/${job.id}`)}
+                onClick={() => router.push(jobPagePath(job))}
                 style={{ width: "min(calc(100vw - 4rem), 300px)" }}
                 className="flex-shrink-0 @container group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(200,66,44,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden sm:w-[calc(45%)] md:w-[calc(33.333%-1.25rem)] [@media(min-width:1366px)]:w-[calc(25%-1.25rem)] cursor-pointer"
               >
@@ -124,7 +125,7 @@ export default function PremiumAdsSection() {
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">{job.company}</span>
                   </div>
 
-                  <Link href={`/jobs/${job.id}`} className="block mb-3">
+                  <Link href={jobPagePath(job)} className="block mb-3">
                     <h3 className="text-base font-black text-brand-blue leading-tight line-clamp-2 transition-colors group-hover:text-brand-blue-medium">
                       {job.title}
                     </h3>

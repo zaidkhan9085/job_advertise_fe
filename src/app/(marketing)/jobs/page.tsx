@@ -29,6 +29,7 @@ import { useIsRecent } from "@/hooks/useIsRecent";
 import { useAppliedJobs } from "@/hooks/useAppliedJobs";
 import JobCardActions from "@/components/jobs/JobCardActions";
 import { slugify } from "@/lib/utils";
+import { jobPagePath } from "@/lib/jobShare";
 
 const PAGE_SIZE = 12;
 
@@ -378,7 +379,7 @@ function JobCardView({
 }) {
   const router = useRouter();
   const isNew = useIsRecent(job.createdAt);
-  const goToJob = () => router.push(`/jobs/${job.id}`);
+  const goToJob = () => router.push(jobPagePath(job));
 
   if (mode === "grid") {
     return (
