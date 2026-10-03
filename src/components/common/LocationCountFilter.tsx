@@ -16,16 +16,19 @@ function formatLabel(loc: LocationValue) {
   return loc.state && loc.country ? [loc.name, loc.state, loc.country].filter(Boolean).join(", ") : loc.name;
 }
 
-// A job counts toward a location if it's an exact match (job posted at
-// exactly that city/state/country) or that location is one of the job's
-// denormalized ancestors (e.g. a job posted in "Mumbai" counts toward a
-// "Maharashtra" or "India" search result too).
-function countJobsAt(jobs: JobPost[], locationId: string): number {
+// Which location-ish ids on a job count toward a match -- defaults to the
+// job's OWN posted location (exact id or one of its denormalized
+// ancestors, e.g. a job posted in "Mumbai" counts toward a "Maharashtra" or
+// "India" search result too). A caller filtering by a different dimension
+// (e.g. the company's own location, not the job's) passes its own accessor.
+function defaultLocationIds(job: JobPost): (string | null | undefined)[] {
+  return [job.jobLocationId, job.jobLocationCountryId, job.jobLocationStateId];
+}
+
+function countJobsAt(jobs: JobPost[], locationId: string, getLocationIds: (job: JobPost) => (string | null | undefined)[]): number {
   let count = 0;
   for (const job of jobs) {
-    if (job.jobLocationId === locationId || job.jobLocationCountryId === locationId || job.jobLocationStateId === locationId) {
-      count++;
-    }
+    if (getLocationIds(job).includes(locationId)) count++;
   }
   return count;
 }
@@ -40,12 +43,17 @@ export default function LocationCountFilter({
   selected,
   onChange,
   jobs,
+  getLocationIds = defaultLocationIds,
 }: {
   label: string;
   placeholder?: string;
   selected: LocationValue[];
   onChange: (next: LocationValue[]) => void;
   jobs: JobPost[];
+  // Lets a caller filter by a different location dimension than the job's
+  // own posted location (e.g. the job's COMPANY's location instead) without
+  // touching this component's default behavior for existing callers.
+  getLocationIds?: (job: JobPost) => (string | null | undefined)[];
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [overflowOpen, setOverflowOpen] = useState(false);
@@ -69,7 +77,7 @@ export default function LocationCountFilter({
   // Every matched location stays in the list (so the name is always
   // searchable/selectable) — only the count badge itself is real, and it's
   // simply blank for a location with no current jobs, never "0" or "-".
-  const results = rawResults.map((r) => ({ ...r, count: countJobsAt(jobs, r.id) })).sort((a, b) => b.count - a.count);
+  const results = rawResults.map((r) => ({ ...r, count: countJobsAt(jobs, r.id, getLocationIds) })).sort((a, b) => b.count - a.count);
 
   const visibleChip = selected[0];
   const overflowChips = selected.slice(1);

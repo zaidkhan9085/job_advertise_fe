@@ -234,6 +234,11 @@ export interface JobPost {
   industryId: string | null;
   industry: { id: string; name: string } | null;
   jobLocation: { id: string; name: string; parentId: string | null } | null;
+  // The company's OWN location (where the recruiter is based) -- as
+  // opposed to jobLocation above (where THIS job is posted). A Mumbai-based
+  // company can post a job anywhere; powers the /jobs listing's separate
+  // "Company Location" filter. Null for jobs with no linked Company row.
+  companyProfile: { id: string; jobLocationId: string | null; jobLocationCountryId: string | null; jobLocationStateId: string | null } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -990,6 +995,9 @@ export interface Company {
   companySize: CompanySize | null;
   companyType: CompanyType | null;
   foundedYear: number | null;
+  // Full street address -- distinct from jobLocationId below, which is
+  // only the city/state/country picker used for search/filtering.
+  address: string | null;
   // The company's own general contact details, shown on the public page --
   // distinct from a specific job's own contactPhone/contactWhatsapp/
   // contactEmail, which can differ per posting.
@@ -1003,6 +1011,8 @@ export interface Company {
   region: Region | null;
   jobLocationId: string | null;
   jobLocation: JobLocationRef | null;
+  jobLocationCountryId: string | null;
+  jobLocationStateId: string | null;
   isFeaturedTopHiring: boolean;
   createdAt: string;
 }
@@ -1063,6 +1073,7 @@ export interface UpdateCompanyPayload {
   name: string;
   description?: string;
   jobLocationId: string;
+  address?: string;
   website?: string;
   tagline?: string;
   industryId?: string;

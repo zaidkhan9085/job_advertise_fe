@@ -66,6 +66,7 @@ function JobsListingContent() {
   const { appliedIds, markApplied } = useAppliedJobs();
 
   const [selectedLocations, setSelectedLocations] = useState<LocationValue[]>([]);
+  const [selectedCompanyLocations, setSelectedCompanyLocations] = useState<LocationValue[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<ComboOption[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<ComboOption[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -111,17 +112,23 @@ function JobsListingContent() {
       setSelectedIndustries(industryOptions.filter((o) => industryIds.has(o.value)));
     }
 
-    const locationSlugs = parseCsv(searchParams.get("location"));
-    if (locationSlugs.length) {
+    const resolveSlugs = (slugs: string[]) =>
       Promise.all(
-        locationSlugs.map(async (slug) => {
+        slugs.map(async (slug) => {
           const guess = slug.replace(/-/g, " ");
           const results = await searchJobLocations(guess).catch(() => []);
           return results.find((r) => slugify(r.name) === slug) ?? null;
         })
-      ).then((matches) => {
-        setSelectedLocations(matches.filter((m): m is LocationValue => !!m));
-      });
+      ).then((matches) => matches.filter((m): m is LocationValue => !!m));
+
+    const locationSlugs = parseCsv(searchParams.get("location"));
+    if (locationSlugs.length) {
+      resolveSlugs(locationSlugs).then(setSelectedLocations);
+    }
+
+    const companyLocationSlugs = parseCsv(searchParams.get("companyLocation"));
+    if (companyLocationSlugs.length) {
+      resolveSlugs(companyLocationSlugs).then(setSelectedCompanyLocations);
     }
 
     const typeNames = new Set(parseCsv(searchParams.get("jobtype")));
@@ -142,23 +149,25 @@ function JobsListingContent() {
     if (searchTerm) params.set("q", searchTerm);
     if (timeFilter !== "any") params.set("time", timeFilter);
     if (selectedLocations.length) params.set("location", selectedLocations.map((o) => slugify(o.name)).join(","));
+    if (selectedCompanyLocations.length) params.set("companyLocation", selectedCompanyLocations.map((o) => slugify(o.name)).join(","));
     if (selectedIndustries.length) params.set("industry", selectedIndustries.map((o) => o.value).join(","));
     if (selectedJobTypes.length) params.set("jobtype", selectedJobTypes.map((o) => o.value).join(","));
     const next = params.toString();
     lastAppliedParams.current = next;
     router.replace(`/jobs${next ? `?${next}` : ""}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- router/searchParams intentionally excluded to avoid a loop with the hydration effect
-  }, [hydrated, searchTerm, timeFilter, selectedLocations, selectedIndustries, selectedJobTypes]);
+  }, [hydrated, searchTerm, timeFilter, selectedLocations, selectedCompanyLocations, selectedIndustries, selectedJobTypes]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchTerm, timeFilter, selectedLocations, selectedIndustries, selectedJobTypes]);
+  }, [searchTerm, timeFilter, selectedLocations, selectedCompanyLocations, selectedIndustries, selectedJobTypes]);
 
   const filteredJobs = useMemo(() => {
     const now = Date.now();
     const TIME_MS: Record<string, number> = { "24h": 86_400_000, "3d": 3 * 86_400_000, "7d": 7 * 86_400_000, "30d": 30 * 86_400_000 };
 
     const selectedLocationIds = new Set(selectedLocations.map((o) => o.id));
+    const selectedCompanyLocationIds = new Set(selectedCompanyLocations.map((o) => o.id));
     const selectedIndustryIds = new Set(selectedIndustries.map((o) => o.value));
     const selectedTypeNames = new Set(selectedJobTypes.map((o) => o.value));
 
@@ -184,6 +193,18 @@ function JobsListingContent() {
         (job.jobLocationStateId && selectedLocationIds.has(job.jobLocationStateId)) ||
         selectedLocations.some((o) => location.toLowerCase().includes(o.name.toLowerCase()));
 
+      // Separate from matchesLocation above -- this is where the job's
+      // COMPANY is based (a Mumbai-based recruiter can post a job in
+      // Dubai), not where the job itself is posted. No free-text fallback:
+      // a job with no linked Company row simply can't match this filter.
+      const company = job.companyProfile;
+      const matchesCompanyLocation =
+        selectedCompanyLocationIds.size === 0 ||
+        (!!company &&
+          ((company.jobLocationId && selectedCompanyLocationIds.has(company.jobLocationId)) ||
+            (company.jobLocationCountryId && selectedCompanyLocationIds.has(company.jobLocationCountryId)) ||
+            (company.jobLocationStateId && selectedCompanyLocationIds.has(company.jobLocationStateId))));
+
       const matchesIndustry = selectedIndustryIds.size === 0 || (!!job.industryId && selectedIndustryIds.has(job.industryId));
 
       const matchesJobType =
@@ -191,19 +212,25 @@ function JobsListingContent() {
         (selectedTypeNames.has("Long Term") && job.jobType?.name === "Long Term") ||
         (selectedTypeNames.has("Short Term") && job.jobType?.name === "Short Term");
 
-      return matchesSearch && matchesTime && matchesLocation && matchesIndustry && matchesJobType;
+      return matchesSearch && matchesTime && matchesLocation && matchesCompanyLocation && matchesIndustry && matchesJobType;
     });
-  }, [jobs, searchTerm, timeFilter, selectedLocations, selectedIndustries, selectedJobTypes]);
+  }, [jobs, searchTerm, timeFilter, selectedLocations, selectedCompanyLocations, selectedIndustries, selectedJobTypes]);
 
   const visibleJobs = filteredJobs.slice(0, visibleCount);
 
   const hasActiveFilters =
-    !!searchTerm || timeFilter !== "any" || selectedLocations.length > 0 || selectedIndustries.length > 0 || selectedJobTypes.length > 0;
+    !!searchTerm ||
+    timeFilter !== "any" ||
+    selectedLocations.length > 0 ||
+    selectedCompanyLocations.length > 0 ||
+    selectedIndustries.length > 0 ||
+    selectedJobTypes.length > 0;
 
   const resetAllFilters = () => {
     setSearchTerm("");
     setTimeFilter("any");
     setSelectedLocations([]);
+    setSelectedCompanyLocations([]);
     setSelectedIndustries([]);
     setSelectedJobTypes([]);
     router.replace("/jobs", { scroll: false });
@@ -255,13 +282,25 @@ function JobsListingContent() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
             <LocationCountFilter
               label="Location"
               placeholder="Search city, state, or country..."
               selected={selectedLocations}
               onChange={setSelectedLocations}
               jobs={jobs}
+            />
+            <LocationCountFilter
+              label="Company Location"
+              placeholder="Where the recruiter is based..."
+              selected={selectedCompanyLocations}
+              onChange={setSelectedCompanyLocations}
+              jobs={jobs}
+              getLocationIds={(job) => [
+                job.companyProfile?.jobLocationId,
+                job.companyProfile?.jobLocationCountryId,
+                job.companyProfile?.jobLocationStateId,
+              ]}
             />
             <MultiSelectCombobox
               label="Industry"
