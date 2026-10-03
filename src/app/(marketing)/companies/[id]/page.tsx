@@ -184,6 +184,7 @@ export default function CompanyProfilePublicPage() {
     company.companySize && { icon: Users, label: "Company Size", value: SIZE_LABELS[company.companySize] },
     company.foundedYear && { icon: Calendar, label: "Founded", value: String(company.foundedYear) },
     company.jobLocation && { icon: MapPin, label: "Location", value: company.jobLocation.name },
+    company.address && { icon: MapPin, label: "Address", value: company.address },
   ].filter(Boolean) as { icon: typeof Briefcase; label: string; value: string }[];
 
   const socials = [
@@ -382,7 +383,9 @@ export default function CompanyProfilePublicPage() {
                       <f.icon className="w-4 h-4 text-brand-blue/60 mt-0.5 shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">{f.label}</p>
-                        <p className="text-sm font-semibold text-foreground truncate">{f.value}</p>
+                        {/* Address is free text and can run long -- unlike the other
+                            short facts here, it should wrap instead of truncating. */}
+                        <p className={`text-sm font-semibold text-foreground ${f.label === "Address" ? "" : "truncate"}`}>{f.value}</p>
                       </div>
                     </div>
                   ))}

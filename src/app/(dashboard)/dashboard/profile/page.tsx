@@ -27,6 +27,7 @@ import { companyPagePath } from "@/lib/jobShare";
 
 const TAGLINE_MAX = 140;
 const DESCRIPTION_MAX = 2000;
+const ADDRESS_MAX = 500;
 
 // Shared card chrome for each section of the form -- gives the page the
 // same "one focused card per topic" structure as the Post Job form instead
@@ -71,6 +72,7 @@ export default function CompanyProfilePage() {
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
   const [jobLocation, setJobLocation] = useState<LocationValue | null>(null);
+  const [address, setAddress] = useState("");
 
   const [tagline, setTagline] = useState("");
   const [industryId, setIndustryId] = useState("");
@@ -106,6 +108,7 @@ export default function CompanyProfilePage() {
         setDescription(company.description ?? "");
         setWebsite(company.website ?? "");
         setJobLocation(toLocationValue(company.jobLocation));
+        setAddress(company.address ?? "");
         setTagline(company.tagline ?? "");
         setIndustryId(company.industryId ?? "");
         setCompanySize(company.companySize ?? "");
@@ -171,6 +174,7 @@ export default function CompanyProfilePage() {
         description: description.trim() || undefined,
         website: website.trim() || undefined,
         jobLocationId: jobLocation.id,
+        address: address.trim() || undefined,
         tagline: tagline.trim() || undefined,
         industryId: industryId || undefined,
         companySize: companySize || undefined,
@@ -323,6 +327,20 @@ export default function CompanyProfilePage() {
             <label className={labelClass}>Location *</label>
             <CityAutocomplete value={jobLocation} onChange={setJobLocation} required />
             <p className="text-xs text-muted-foreground">Candidates near this location will be prioritized for your job posts.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className={labelClass}>Complete Address</label>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value.slice(0, ADDRESS_MAX))}
+              rows={2}
+              placeholder="Building, street, area..."
+              className={`${inputClass} resize-none`}
+            />
+            <p className="text-xs text-muted-foreground">
+              Full address, shown on your public company page. The city/state above is what candidates search and filter by.
+            </p>
           </div>
 
           <div className="space-y-2">
