@@ -7,14 +7,18 @@ import { Crown, Coins, Briefcase, Star, PlayCircle, CheckCircle2, Loader2 } from
 import {
   getMyBilling,
   getCreditPackages,
+  getPlanTemplates,
   createProPlanOrder,
   createCreditPackOrder,
   verifyRazorpayPayment,
   ApiError,
   type MyBilling,
   type CreditPackage,
+  type PlanTemplate,
 } from "@/lib/api";
 import { openRazorpayCheckout } from "@/lib/razorpay";
+import { formatPrice, formatAmount, type BillingCurrency } from "@/lib/currency";
+import CurrencyToggle from "@/components/common/CurrencyToggle";
 
 function UsageBar({ label, used, limit, icon: Icon }: { label: string; used: number; limit: number; icon: typeof Briefcase }) {
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
@@ -42,14 +46,17 @@ function UsageBar({ label, used, limit, icon: Icon }: { label: string; used: num
 export default function BillingPage() {
   const [billing, setBilling] = useState<MyBilling | null>(null);
   const [packages, setPackages] = useState<CreditPackage[]>([]);
+  const [proTemplate, setProTemplate] = useState<PlanTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<BillingCurrency>("USD");
 
   const load = useCallback(async () => {
     try {
-      const [b, p] = await Promise.all([getMyBilling(), getCreditPackages()]);
+      const [b, p, templates] = await Promise.all([getMyBilling(), getCreditPackages(), getPlanTemplates()]);
       setBilling(b);
       setPackages(p);
+      setProTemplate(templates.find((t) => t.planType === "PRO") ?? null);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to load billing details.");
     } finally {
@@ -68,7 +75,7 @@ export default function BillingPage() {
   const handleBuyPro = async () => {
     setIsPurchasing("pro");
     try {
-      const order = await createProPlanOrder();
+      const order = await createProPlanOrder(currency);
       await openRazorpayCheckout({
         key: order.keyId,
         amount: order.amount,
@@ -98,7 +105,7 @@ export default function BillingPage() {
   const handleBuyCredits = async (pack: CreditPackage) => {
     setIsPurchasing(pack.id);
     try {
-      const order = await createCreditPackOrder(pack.id);
+      const order = await createCreditPackOrder(pack.id, currency);
       await openRazorpayCheckout({
         key: order.keyId,
         amount: order.amount,
@@ -138,9 +145,12 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Plans &amp; Billing</h1>
-        <p className="text-muted-foreground mt-1">Your plan, usage this period, credits, and purchase history.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Plans &amp; Billing</h1>
+          <p className="text-muted-foreground mt-1">Your plan, usage this period, credits, and purchase history.</p>
+        </div>
+        <CurrencyToggle value={currency} onChange={setCurrency} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -168,11 +178,11 @@ export default function BillingPage() {
             {!isPro && (
               <button
                 onClick={handleBuyPro}
-                disabled={isPurchasing === "pro"}
+                disabled={isPurchasing === "pro" || !proTemplate}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue-medium transition-colors disabled:opacity-60"
               >
                 {isPurchasing === "pro" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crown className="w-4 h-4" />}
-                Upgrade to Pro
+                Upgrade to Pro{proTemplate ? ` — ${formatPrice(proTemplate.price, currency)}/mo` : ""}
               </button>
             )}
           </div>
@@ -214,7 +224,7 @@ export default function BillingPage() {
                 <span className="text-sm font-bold text-foreground">{pack.credits} credits</span>
                 <span className="text-sm font-black text-brand-blue flex items-center gap-2">
                   {isPurchasing === pack.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  ₹{pack.price}
+                  {formatPrice(pack.price, currency)}
                 </span>
               </button>
             ))}
@@ -248,7 +258,11 @@ export default function BillingPage() {
                   </div>
                 </div>
                 <div className="text-right flex items-center gap-2">
-                  <span className="font-black text-foreground">₹{p.amount}</span>
+                  {/* The amount actually charged for this past purchase, in
+                      whatever currency it was paid in -- never re-derived
+                      from the current toggle, which only affects new
+                      purchases. */}
+                  <span className="font-black text-foreground">{formatAmount(p.amount, p.currency === "USD" ? "USD" : "INR")}</span>
                   {p.status === "PAID" && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
                 </div>
               </div>

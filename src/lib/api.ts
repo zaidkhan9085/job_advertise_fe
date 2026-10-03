@@ -1,4 +1,5 @@
 import { getTokenFromDocumentCookie } from "./auth-token";
+import type { BillingCurrency } from "./currency";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
@@ -1719,6 +1720,7 @@ export interface EmployerSubscription {
   planType: PlanType;
   status: "ACTIVE" | "EXPIRED" | "CANCELLED";
   price: number;
+  currency: string;
   featuredLimit: number;
   generalLimit: number;
   storiesAllowed: boolean;
@@ -1736,6 +1738,7 @@ export interface BillingPayment {
   userId: number;
   kind: "PLAN" | "CREDIT_PACK";
   amount: number;
+  currency: string;
   status: "PENDING" | "PAID" | "FAILED";
   subscriptionId: string | null;
   subscription: EmployerSubscription | null;
@@ -1781,12 +1784,18 @@ export interface RazorpayOrder {
   keyId: string;
 }
 
-export function createProPlanOrder() {
-  return apiFetch<RazorpayOrder>("/api/billing/plan/pro/order", { method: "POST" });
+export function createProPlanOrder(currency: BillingCurrency) {
+  return apiFetch<RazorpayOrder>("/api/billing/plan/pro/order", {
+    method: "POST",
+    body: JSON.stringify({ currency }),
+  });
 }
 
-export function createCreditPackOrder(creditPackageId: string) {
-  return apiFetch<RazorpayOrder>(`/api/billing/credits/${creditPackageId}/order`, { method: "POST" });
+export function createCreditPackOrder(creditPackageId: string, currency: BillingCurrency) {
+  return apiFetch<RazorpayOrder>(`/api/billing/credits/${creditPackageId}/order`, {
+    method: "POST",
+    body: JSON.stringify({ currency }),
+  });
 }
 
 export interface RazorpayVerifyPayload {

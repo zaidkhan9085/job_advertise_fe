@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Check, ArrowRight, Zap, Crown, Coins } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getPlanTemplates, getCreditPackages, ApiError, type PlanTemplate, type CreditPackage } from "@/lib/api";
+import { formatPrice, type BillingCurrency } from "@/lib/currency";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
+import CurrencyToggle from "@/components/common/CurrencyToggle";
 
 // Real Free/Pro numbers and credit packs, not marketing copy -- this used
 // to show three fabricated tiers ("Golden/Silver Package") that had nothing
@@ -24,6 +26,7 @@ export default function PricingPage() {
   const { user } = useAuth();
   const [templates, setTemplates] = useState<PlanTemplate[] | null>(null);
   const [packages, setPackages] = useState<CreditPackage[]>([]);
+  const [currency, setCurrency] = useState<BillingCurrency>("USD");
 
   const load = useCallback(async () => {
     try {
@@ -70,6 +73,10 @@ export default function PricingPage() {
       </div>
 
       <div className="container-site -mt-24 relative z-10">
+        <div className="flex justify-center mb-8">
+          <CurrencyToggle value={currency} onChange={setCurrency} className="bg-white shadow-lg border border-border/40" />
+        </div>
+
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {free && (
             <div className="relative flex flex-col bg-white rounded-[2rem] border border-brand-blue/15 shadow-xl hover:shadow-2xl hover:border-brand-blue/40 transition-all duration-300">
@@ -82,7 +89,7 @@ export default function PricingPage() {
                 </div>
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-brand-blue">₹0</span>
+                    <span className="text-4xl font-black text-brand-blue">{formatPrice(0, currency)}</span>
                     <span className="text-muted-foreground font-bold">/ month</span>
                   </div>
                   <p className="text-muted-foreground text-sm mt-3 font-medium leading-relaxed">
@@ -124,7 +131,7 @@ export default function PricingPage() {
                 </div>
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-brand-blue">₹{pro.price}</span>
+                    <span className="text-4xl font-black text-brand-blue">{formatPrice(pro.price, currency)}</span>
                     <span className="text-muted-foreground font-bold">/ month</span>
                   </div>
                   <p className="text-muted-foreground text-sm mt-3 font-medium leading-relaxed">
@@ -170,7 +177,7 @@ export default function PricingPage() {
                     <Coins className="w-6 h-6" />
                   </div>
                   <div className="text-2xl font-black text-foreground">{pack.credits} credits</div>
-                  <div className="text-lg font-bold text-brand-blue">₹{pack.price}</div>
+                  <div className="text-lg font-bold text-brand-blue">{formatPrice(pack.price, currency)}</div>
                   <Link
                     href={ctaHref}
                     className="block w-full py-2.5 rounded-xl bg-brand-blue/5 text-brand-blue font-bold text-sm hover:bg-brand-blue hover:text-white transition-all"
