@@ -13,7 +13,6 @@ import {
   Flag,
   Ban,
   MessageCircle,
-  AlertCircle,
   Phone,
   Mail,
   ArrowUpRight,
@@ -491,14 +490,6 @@ export default function JobDetailPage() {
                   Follow
                 </button>
               )}
-            </div>
-
-            <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-sm text-amber-800 leading-relaxed">
-                <span className="font-bold block mb-1">Safety First</span>
-                Never pay money to an employer for recruitment processing, visa fees, or interviews. Real agencies do not charge candidates.
-              </div>
             </div>
           </aside>
         </div>

@@ -15,6 +15,7 @@ import {
   type BillingPayment,
   type PaginatedMeta,
 } from "@/lib/api";
+import { formatAmount } from "@/lib/currency";
 import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
 
@@ -287,7 +288,7 @@ function PaymentHistoryModal({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-black text-foreground text-sm">₹{p.amount}</span>
+                    <span className="font-black text-foreground text-sm">{formatAmount(p.amount, p.currency === "USD" ? "USD" : "INR")}</span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${PAYMENT_STATUS_STYLES[p.status]}`}>
                       {p.status}
                     </span>
@@ -418,7 +419,7 @@ export default function AdminSubscriptionsPage() {
               {p.amount === 0 ? (
                 <span className="text-emerald-600 font-bold">Gifted by admin</span>
               ) : (
-                <>₹{p.amount} · {format(new Date(p.createdAt), "d MMM yyyy")}</>
+                <>{formatAmount(p.amount, p.currency === "USD" ? "USD" : "INR")} · {format(new Date(p.createdAt), "d MMM yyyy")}</>
               )}
             </div>
           </div>

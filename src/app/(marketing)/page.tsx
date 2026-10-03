@@ -8,7 +8,6 @@ import IndustrySection from "@/components/sections/IndustrySection";
 import RegionsSection from "@/components/sections/RegionsSection";
 import TrustCTASection from "@/components/sections/TrustCTASection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import SafetySection from "@/components/sections/SafetySection";
 
 export default function Home() {
   return (
@@ -22,7 +21,6 @@ export default function Home() {
       <RegionsSection />
       <TestimonialsSection />
       <TopCompaniesSection />
-      <SafetySection />
     </>
   );
 }
