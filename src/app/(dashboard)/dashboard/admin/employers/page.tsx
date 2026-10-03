@@ -32,13 +32,13 @@ import { isValidEmail } from "@/lib/isValidEmail";
 const PAGE_LIMIT = 20;
 
 function toCsv(companies: CompanyAdminListItem[]): string {
-  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Region", "Jobs", "Followers", "Pending Reports", "Top Hiring", "Blocked", "Created"];
+  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Location", "Jobs", "Followers", "Pending Reports", "Top Hiring", "Blocked", "Created"];
   const rows = companies.map((c) => [
     c.name,
     c.owner.full_name ?? "",
     c.owner.email,
     c.owner.phone ?? "",
-    c.region?.name ?? "",
+    c.jobLocation?.name ?? "",
     String(c._count.jobs),
     String(c.followerCount),
     String(c.pendingReportCount),
@@ -417,10 +417,10 @@ export default function AdminEmployersPage() {
       ),
     },
     {
-      key: "region",
-      title: "Region",
+      key: "location",
+      title: "Location",
       minWidth: 120,
-      render: (_, company) => <span className="text-muted-foreground font-medium">{company.region?.name ?? "—"}</span>,
+      render: (_, company) => <span className="text-muted-foreground font-medium">{company.jobLocation?.name ?? "—"}</span>,
     },
     {
       key: "jobs",
