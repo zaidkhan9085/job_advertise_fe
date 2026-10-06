@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 w-full h-11 bg-[oklch(0.47_0.20_25)] text-white hover:bg-[oklch(0.35_0.20_25)] rounded-control font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 w-full h-11 bg-brand-blue text-white hover:bg-brand-blue-medium rounded-control font-semibold transition-colors"
             >
               Return to login
             </Link>
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={inputClass({ variant: "outline", withLeftIcon: true }, "focus:ring-[oklch(0.68_0.21_45)]/20 focus:border-[oklch(0.68_0.21_45)]")}
+                    className={inputClass({ variant: "outline", withLeftIcon: true }, "focus:ring-brand-blue/20 focus:border-brand-blue")}
                     required
                   />
                 </div>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] rounded-control font-semibold transition-colors disabled:opacity-70 mt-2"
+                className="w-full h-11 flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium rounded-control font-semibold transition-colors disabled:opacity-70 mt-2"
               >
                 {isLoading ? "Sending link..." : (
                   <>

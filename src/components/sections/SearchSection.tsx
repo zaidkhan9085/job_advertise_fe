@@ -33,7 +33,7 @@ export default function SearchSection() {
     // the site still a flat white strip, inconsistent with everywhere else
     // and a weak first impression for a brand-new coat of paint.
     <section className="relative">
-      <div className="bg-hero-gradient text-white pt-14 pb-24 md:pt-20 md:pb-28 relative overflow-hidden">
+      <div className="bg-hero-gradient text-white pt-20 pb-32 md:pt-28 md:pb-40 relative overflow-hidden">
         <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue-light/20 -translate-y-1/3 translate-x-1/4" />
         <DecorativeBlur size="xl" blur="strong" className="bottom-0 left-0 bg-white/10 translate-y-1/3 -translate-x-1/4" />
         <div className="container-site relative text-center">

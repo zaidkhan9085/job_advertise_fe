@@ -242,7 +242,7 @@ export default function JobDetailPage() {
         />
       )}
 
-      <div className="bg-[oklch(0.12_0.02_40)] text-white pt-8 pb-32">
+      <div className="bg-brand-ink text-white pt-8 pb-32">
         <div className="container-site">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
             {/* Reachable from the /jobs listing, the public homepage, the
@@ -358,7 +358,7 @@ export default function JobDetailPage() {
           </div>
 
           <aside className="w-full lg:w-80 shrink-0 space-y-6">
-            <div className="bg-white p-6 rounded-2xl border border-[oklch(0.68_0.21_45)]/30 shadow-[var(--shadow-card)]">
+            <div className="bg-white p-6 rounded-2xl border border-brand-blue/30 shadow-[var(--shadow-card)]">
               <h3 className="font-bold text-lg mb-2">Ready to Apply?</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                 Ensure your resume is updated and targeted towards this role.
@@ -368,7 +368,7 @@ export default function JobDetailPage() {
                 {!user ? (
                   <Link
                     href="/login"
-                    className="w-full flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] py-3 px-4 rounded-xl font-bold transition-colors shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-3 px-4 rounded-xl font-bold transition-colors shadow-sm"
                   >
                     <ArrowUpRight className="w-5 h-5" /> Sign In to Apply
                   </Link>
@@ -379,7 +379,7 @@ export default function JobDetailPage() {
                 ) : (
                   <button
                     onClick={() => setIsApplyDialogOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-[oklch(0.68_0.21_45)] text-white hover:bg-[oklch(0.55_0.22_45)] py-3 px-4 rounded-xl font-bold transition-colors shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 bg-brand-blue text-white hover:bg-brand-blue-medium py-3 px-4 rounded-xl font-bold transition-colors shadow-sm"
                   >
                     <ArrowUpRight className="w-5 h-5" /> Apply Now
                   </button>

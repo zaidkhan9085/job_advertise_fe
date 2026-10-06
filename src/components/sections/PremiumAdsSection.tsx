@@ -58,7 +58,7 @@ export default function PremiumAdsSection() {
   if (premiumJobs.length === 0) return null;
 
   return (
-    <section className="pt-6 pb-10 md:pb-14 bg-gradient-to-b from-[#fff3f0] via-white to-[#fff3f0] overflow-hidden relative">
+    <section className="pt-6 pb-10 md:pb-14 bg-gradient-to-b from-brand-blue-muted via-white to-brand-blue-muted overflow-hidden relative">
       <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue/5 -translate-y-1/2 translate-x-1/2" />
 
       <div className="container-site relative">

@@ -197,7 +197,7 @@ export default function CompanyProfilePublicPage() {
     <div className="bg-muted/10 min-h-screen pb-20">
       {/* Plain dark banner, matching the job detail page's own header, with
           the logo overlapping its bottom edge, LinkedIn-style. */}
-      <div className="relative h-40 sm:h-56 bg-[oklch(0.12_0.02_40)]">
+      <div className="relative h-40 sm:h-56 bg-brand-ink">
         <div className="container-site relative h-full flex flex-col justify-between py-4">
           <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white transition-colors w-fit">
             <ArrowLeft className="w-4 h-4" /> Back

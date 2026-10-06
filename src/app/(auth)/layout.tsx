@@ -11,7 +11,7 @@ export default function AuthLayout({
       {/* Simple Auth Header */}
       <header className="h-20 flex items-center justify-center border-b border-border/60 bg-white">
         <Link href="/" className="flex items-center gap-2">
-          <Logo size="xl" />
+          <Logo size="md" />
         </Link>
       </header>
 

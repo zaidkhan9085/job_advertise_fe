@@ -1,9 +1,9 @@
-// The brand mark is icon image + coded text, not one flattened raster wordmark
-// -- the source artwork (the pin+briefcase icon) is meant to sit at a range
-// of compact heights (nav bars, sidebars, favicon), and rendering "thejobs4u"
-// as real text means it never needs a separate asset per size/weight, and
-// lets the sidebar's collapsed state just omit the text instead of
-// CSS-clipping a wide image (see DashboardSidebar.tsx).
+// The brand mark is icon image + coded text, not one flattened raster
+// wordmark -- the icon is meant to sit at a range of compact heights (nav
+// bars, sidebars, favicon), and rendering "TheJobs4U" as real text means it
+// never needs a separate asset per size/weight, and lets the sidebar's
+// collapsed state just omit the text instead of CSS-clipping a wide image
+// (see DashboardSidebar.tsx).
 const ICON_HEIGHT = {
   sm: "h-8",
   md: "h-10",
@@ -29,14 +29,14 @@ export interface LogoProps {
 }
 
 export default function Logo({ size = "md", variant = "default", showText = true, className = "" }: LogoProps) {
-  // Icon mark stays coral (the brand's action color). The wordmark splits
-  // in two instead of being one flat color: "thejobs" in ink (calm, reads
-  // as the main name) and "4u" in coral (a bright pop on the distinctive
-  // suffix) -- on "white" variant (dark backgrounds) both parts go white
-  // since the ink/coral split has nothing to contrast against there.
-  // Trial per Zaid's request 2026-09-17.
-  const inkClass = variant === "white" ? "text-white" : "text-brand-ink";
-  const coralClass = variant === "white" ? "text-white" : "text-brand-blue";
+  // Matches the supplied artwork's wordmark, which is one continuous
+  // Navy->Signal gradient left to right, not two flat colors -- on "white"
+  // variant (dark backgrounds, e.g. the dashboard header/footer) it's a
+  // plain solid white instead, same as the reversed lockup in the brand kit.
+  const textClass =
+    variant === "white"
+      ? "text-white"
+      : "bg-gradient-to-r from-brand-blue-dark to-brand-blue bg-clip-text text-transparent";
 
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
@@ -46,11 +46,8 @@ export default function Logo({ size = "md", variant = "default", showText = true
         className={`${ICON_HEIGHT[size]} w-auto shrink-0 ${variant === "white" ? "brightness-0 invert" : ""}`}
       />
       {showText && (
-        <span className={`font-display font-black leading-none tracking-tight whitespace-nowrap ${TEXT_SIZE[size]}`}>
-          {/* Matches the brand kit's actual wordmark casing ("TheJobs4U") --
-              this used to be all-lowercase, which doesn't match the supplied
-              artwork. */}
-          <span className={inkClass}>TheJobs</span><span className={coralClass}>4U</span>
+        <span className={`font-display font-black leading-none tracking-tight whitespace-nowrap ${TEXT_SIZE[size]} ${textClass}`}>
+          TheJobs4U
         </span>
       )}
     </span>
