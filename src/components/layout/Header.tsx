@@ -419,18 +419,18 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-2 xl:gap-4">
             {user ? (
               <>
-                {/* A logged-in employer (or staff -- same "who can post"
-                    rule DashboardHeader's own Post Job button already uses)
-                    goes straight to the posting form instead of a generic
-                    Dashboard link -- they already know what this site does,
-                    no need to detour through the overview page. Candidates
-                    keep the generic Dashboard link since posting isn't a
-                    relevant action for them. */}
+                {/* A logged-in employer goes straight to the posting form
+                    instead of a generic Dashboard link -- they already know
+                    what this site does, no need to detour through the
+                    overview page. Candidates AND admin/sub_admin (who don't
+                    post jobs through this flow -- same role check
+                    DashboardHeader already uses) keep the generic Dashboard
+                    link. */}
                 <Link
-                  href={user.role !== "candidate" ? "/dashboard/jobs/new" : "/dashboard"}
+                  href={user.role === "employer" ? "/dashboard/jobs/new" : "/dashboard"}
                   className="px-4 xl:px-6 py-2.5 text-sm font-black text-white bg-brand-blue hover:bg-brand-blue-medium rounded-xl transition-all shadow-lg shadow-[#1098F0]/20 active:scale-95 flex items-center gap-2 border border-white/10 whitespace-nowrap shrink-0"
                 >
-                  {user.role !== "candidate" ? "Post Jobs" : "Dashboard"}
+                  {user.role === "employer" ? "Post Jobs" : "Dashboard"}
                 </Link>
                 <button
                   onClick={logout}

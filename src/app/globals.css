@@ -33,8 +33,12 @@
      elements (those stay Signal). */
   --brand-ink:          #07183C;
 
-  /* shadcn semantic tokens — mapped to brand */
-  --background: oklch(0.99 0.008 40);
+  /* shadcn semantic tokens — mapped to brand. Hue 250 (blue) everywhere a
+     "neutral" tone still carries a slight tint -- these were left at the
+     Coral Reef theme's hue 40 (warm/orange) in the first pass, which is
+     what made text/background combinations look off against the new blue
+     buttons even though the buttons themselves were correct. */
+  --background: oklch(0.99 0.008 250);
   --foreground: var(--brand-ink);
   --card: oklch(1 0 0);
   --card-foreground: var(--brand-ink);
@@ -45,12 +49,12 @@
   --secondary: var(--brand-blue-muted);
   --secondary-foreground: var(--brand-blue);
   --muted: var(--brand-blue-muted);
-  --muted-foreground: oklch(0.48 0.04 40);
+  --muted-foreground: oklch(0.48 0.04 250);
   --accent: var(--brand-blue-light);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.93 0.015 40);
-  --input: oklch(0.94 0.015 40);
+  --border: oklch(0.93 0.015 250);
+  --input: oklch(0.94 0.015 250);
   /* Kit: "Hover, secondary action, focus ring" is explicitly Azure's job
      (--brand-blue-medium), not the accent/highlight step. */
   --ring: var(--brand-blue-medium);
@@ -89,18 +93,18 @@
 }
 
 .dark {
-  --background: oklch(0.12 0.01 40);
+  --background: oklch(0.12 0.01 250);
   --foreground: oklch(0.96 0 0);
-  --card: oklch(0.18 0.01 40);
+  --card: oklch(0.18 0.01 250);
   --card-foreground: oklch(0.96 0 0);
-  --popover: oklch(0.18 0.01 40);
+  --popover: oklch(0.18 0.01 250);
   --popover-foreground: oklch(0.96 0 0);
   --primary: var(--brand-blue-light);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.24 0.01 40);
+  --secondary: oklch(0.24 0.01 250);
   --secondary-foreground: oklch(0.96 0 0);
-  --muted: oklch(0.22 0.01 40);
-  --muted-foreground: oklch(0.65 0.01 40);
+  --muted: oklch(0.22 0.01 250);
+  --muted-foreground: oklch(0.65 0.01 250);
   --accent: var(--brand-blue-light);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.704 0.191 22.216);

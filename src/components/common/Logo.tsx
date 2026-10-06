@@ -47,7 +47,10 @@ export default function Logo({ size = "md", variant = "default", showText = true
       />
       {showText && (
         <span className={`font-display font-black leading-none tracking-tight whitespace-nowrap ${TEXT_SIZE[size]}`}>
-          <span className={inkClass}>thejobs</span><span className={coralClass}>4u</span>
+          {/* Matches the brand kit's actual wordmark casing ("TheJobs4U") --
+              this used to be all-lowercase, which doesn't match the supplied
+              artwork. */}
+          <span className={inkClass}>TheJobs</span><span className={coralClass}>4U</span>
         </span>
       )}
     </span>

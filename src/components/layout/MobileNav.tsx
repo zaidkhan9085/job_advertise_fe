@@ -163,16 +163,17 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           <div className="grid grid-cols-2 gap-4">
             {user ? (
               <>
-                {/* Same "who can post" rule as Header.tsx's desktop CTA and
-                    DashboardHeader's own Post Job button -- an employer/
-                    staff account goes straight to the posting form instead
-                    of the generic dashboard overview. */}
+                {/* Same role rule as Header.tsx's desktop CTA and
+                    DashboardHeader's own Post Job button -- only an
+                    employer account goes straight to the posting form.
+                    Candidates and admin/sub_admin get the generic
+                    dashboard overview. */}
                 <Link
-                  href={user.role !== "candidate" ? "/dashboard/jobs/new" : "/dashboard"}
+                  href={user.role === "employer" ? "/dashboard/jobs/new" : "/dashboard"}
                   onClick={onClose}
                   className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#1098F0]/20 active:scale-95 text-center border border-white/10"
                 >
-                  {user.role !== "candidate" ? "Post Jobs" : "Dashboard"}
+                  {user.role === "employer" ? "Post Jobs" : "Dashboard"}
                 </Link>
                 <button
                   onClick={() => { logout(); onClose(); }}
