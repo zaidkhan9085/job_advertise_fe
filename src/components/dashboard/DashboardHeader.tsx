@@ -73,27 +73,31 @@ export default function DashboardHeader() {
 
   const avatar = (
     <div
-      className={`w-9 h-9 rounded-full bg-secondary border border-border/60 flex items-center justify-center overflow-hidden shrink-0 ${
-        profileHref ? "hover:ring-2 hover:ring-brand-blue/30 transition-all" : ""
+      className={`w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden shrink-0 ${
+        profileHref ? "hover:ring-2 hover:ring-white/30 transition-all" : ""
       }`}
     >
       {avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
       ) : initials ? (
-        <span className="text-xs font-black text-muted-foreground">{initials}</span>
+        <span className="text-xs font-black text-white/80">{initials}</span>
       ) : (
-        <User className="w-5 h-5 text-muted-foreground" />
+        <User className="w-5 h-5 text-white/80" />
       )}
     </div>
   );
 
   return (
-    <header className="h-16 bg-white border-b border-border/60 px-4 md:px-8 flex items-center justify-between shrink-0">
+    // Solid Navy, not white -- matches the brand kit's own stated role for
+    // this color ("headers, app bar") and is the one place on the site
+    // that actually uses the logo's darker figure's tone as a flat fill,
+    // not just a gradient stop.
+    <header className="h-16 bg-brand-blue-dark border-b border-white/10 px-4 md:px-8 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
         <button
           onClick={openMobileSidebar}
-          className="md:hidden p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors"
+          className="md:hidden p-2 -ml-2 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
@@ -102,7 +106,7 @@ export default function DashboardHeader() {
             the drawer above is opened) -- the one guaranteed way back to the
             public site from anywhere in the dashboard, on any device. */}
         <Link href="/" className="flex items-center gap-2" title="Back to the main site">
-          <Logo size="sm" />
+          <Logo size="sm" variant="white" />
         </Link>
       </div>
 
@@ -127,18 +131,18 @@ export default function DashboardHeader() {
           </Link>
         )}
 
-        <div className="w-px h-6 bg-border/60 hidden sm:block" />
+        <div className="w-px h-6 bg-white/15 hidden sm:block" />
 
         <div className="flex items-center gap-3">
           {profileHref ? (
             <Link href={profileHref} className="hidden sm:flex flex-col items-end text-sm" title="View your profile">
-              <span className="font-semibold leading-tight">{displayName}</span>
-              <span className="text-xs text-muted-foreground">{user?.displayRole}</span>
+              <span className="font-semibold leading-tight text-white">{displayName}</span>
+              <span className="text-xs text-white/60">{user?.displayRole}</span>
             </Link>
           ) : (
             <div className="hidden sm:flex flex-col items-end text-sm">
-              <span className="font-semibold leading-tight">{displayName}</span>
-              <span className="text-xs text-muted-foreground">{user?.displayRole}</span>
+              <span className="font-semibold leading-tight text-white">{displayName}</span>
+              <span className="text-xs text-white/60">{user?.displayRole}</span>
             </div>
           )}
           {profileHref ? (
@@ -151,7 +155,7 @@ export default function DashboardHeader() {
           <button
             onClick={logout}
             title="Sign out"
-            className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            className="p-2 rounded-full text-white/70 hover:bg-white/10 hover:text-white transition-colors"
           >
             <LogOut className="w-5 h-5" />
           </button>
