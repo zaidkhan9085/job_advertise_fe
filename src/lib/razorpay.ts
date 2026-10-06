@@ -56,7 +56,7 @@ export async function openRazorpayCheckout(opts: RazorpayCheckoutOptions): Promi
     name: opts.name,
     description: opts.description,
     order_id: opts.orderId,
-    theme: { color: "#C8422C" },
+    theme: { color: "#1098F0" },
     handler: (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
       opts.onSuccess(response);
     },

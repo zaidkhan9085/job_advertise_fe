@@ -170,7 +170,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href={user.role !== "candidate" ? "/dashboard/jobs/new" : "/dashboard"}
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#C8422C]/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#1098F0]/20 active:scale-95 text-center border border-white/10"
                 >
                   {user.role !== "candidate" ? "Post Jobs" : "Dashboard"}
                 </Link>
@@ -197,7 +197,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href="/login"
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#C8422C]/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#1098F0]/20 active:scale-95 text-center border border-white/10"
                 >
                   Post Job
                 </Link>

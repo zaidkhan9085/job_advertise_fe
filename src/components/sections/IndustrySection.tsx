@@ -75,7 +75,7 @@ function IndustryTile({ industry, tintIndex }: { industry: IndustryCard; tintInd
   return (
     <Link
       href={`/jobs?industry=${industry.id}`}
-      className="group flex flex-col items-start gap-3.5 p-5 rounded-2xl border border-border/60 bg-white hover:border-brand-blue/40 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(43,27,24,0.08)] transition-all"
+      className="group flex flex-col items-start gap-3.5 p-5 rounded-2xl border border-border/60 bg-white hover:border-brand-blue/40 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(7,24,60,0.08)] transition-all"
     >
       <span
         className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"

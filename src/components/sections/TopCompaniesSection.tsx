@@ -110,7 +110,7 @@ export default function TopCompaniesSection() {
             : companies.map((company) => (
                 <div
                   key={company.id}
-                  className="flex-shrink-0 w-[150px] flex flex-col items-center justify-center gap-2 px-3 py-5 rounded-2xl border border-brand-blue/10 bg-white hover:border-brand-blue/40 hover:shadow-[0_8px_24px_rgba(200,66,44,0.08)] transition-all text-center"
+                  className="flex-shrink-0 w-[150px] flex flex-col items-center justify-center gap-2 px-3 py-5 rounded-2xl border border-brand-blue/10 bg-white hover:border-brand-blue/40 hover:shadow-[0_8px_24px_rgba(16,152,240,0.08)] transition-all text-center"
                 >
                   {company.logo ? (
                     // eslint-disable-next-line @next/next/no-img-element

@@ -26,7 +26,7 @@ export default function LocationNavPanel({ onNavigate }: { onNavigate: () => voi
 
   return (
     <div className="absolute top-full left-0 pt-3 z-50">
-      <div className="w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(200,66,44,0.15)] border border-border/40 p-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+      <div className="w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(16,152,240,0.15)] border border-border/40 p-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
         <p className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3">
           <MapPin className="w-3.5 h-3.5 text-brand-blue" /> Find jobs by location
         </p>

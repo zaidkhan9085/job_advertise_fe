@@ -26,6 +26,11 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "thejobs4u",
     locale: "en_US",
+    // Default share preview for every page that doesn't set its own (job
+    // detail pages override this with a per-job image -- see
+    // jobs/[id]/layout.tsx). Previously unset, so every non-job link
+    // preview had no thumbnail at all.
+    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
   },
   icons: {
     icon: "/favicon-pin.png",
@@ -45,7 +50,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#C8422C",
+  themeColor: "#003090",
 };
 
 export default function RootLayout({
