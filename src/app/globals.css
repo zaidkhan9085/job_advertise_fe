@@ -92,6 +92,16 @@
   --shadow-header: 0 1px 0 0 rgb(0 0 0 / 0.08);
 }
 
+/* Client-preview toggle (homepage only, see HomePrimaryThemeToggle.tsx) --
+   lets the dominant/button color be swapped from Signal (light) to Navy
+   (dark) for a live side-by-side comparison. Every bg-brand-blue/
+   text-brand-blue/etc. usage inside the toggled wrapper picks this up for
+   free through the normal CSS variable cascade -- no component changes. */
+[data-primary-variant="dark"] {
+  --brand-blue: #003090;
+  --brand-blue-medium: #0A4CB8;
+}
+
 .dark {
   --background: oklch(0.12 0.01 250);
   --foreground: oklch(0.96 0 0);

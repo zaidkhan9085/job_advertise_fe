@@ -8,10 +8,11 @@ import IndustrySection from "@/components/sections/IndustrySection";
 import RegionsSection from "@/components/sections/RegionsSection";
 import TrustCTASection from "@/components/sections/TrustCTASection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
+import HomePrimaryThemeToggle from "@/components/home/HomePrimaryThemeToggle";
 
 export default function Home() {
   return (
-    <>
+    <HomePrimaryThemeToggle>
       <SearchSection />
       <StoriesSection />
       <HomeCTASection />
@@ -21,6 +22,6 @@ export default function Home() {
       <RegionsSection />
       <TestimonialsSection />
       <TopCompaniesSection />
-    </>
+    </HomePrimaryThemeToggle>
   );
 }
