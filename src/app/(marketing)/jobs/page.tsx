@@ -284,7 +284,7 @@ function JobsListingContent() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
             <LocationCountFilter
-              label="Location"
+              label="Job Location"
               placeholder="Search city, state, or country..."
               selected={selectedLocations}
               onChange={setSelectedLocations}
