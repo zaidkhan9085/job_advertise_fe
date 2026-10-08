@@ -70,7 +70,7 @@ export default function JobsOpeningNavPanel() {
 
   return (
     <div className="absolute top-full left-0 pt-3 z-50">
-      <div className="w-72 bg-white rounded-2xl shadow-[0_20px_50px_rgba(200,66,44,0.15)] border border-border/40 p-2 animate-in fade-in-0 slide-in-from-top-2 duration-200 max-h-[min(70vh,480px)] overflow-y-auto custom-scrollbar">
+      <div className="w-72 bg-white rounded-2xl shadow-[0_20px_50px_rgba(16,152,240,0.15)] border border-border/40 p-2 animate-in fade-in-0 slide-in-from-top-2 duration-200 max-h-[min(70vh,480px)] overflow-y-auto custom-scrollbar">
         {rows === null ? (
           <div className="flex flex-col gap-1 p-2">
             {Array.from({ length: 8 }).map((_, i) => (

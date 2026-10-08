@@ -160,29 +160,46 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
 
         {/* Footer Actions */}
         <div className="p-6 border-t border-border/40 bg-white/80 backdrop-blur-lg">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             {user ? (
               <>
-                {/* Same "who can post" rule as Header.tsx's desktop CTA and
-                    DashboardHeader's own Post Job button -- an employer/
-                    staff account goes straight to the posting form instead
-                    of the generic dashboard overview. */}
-                <Link
-                  href={user.role !== "candidate" ? "/dashboard/jobs/new" : "/dashboard"}
-                  onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#C8422C]/20 active:scale-95 text-center border border-white/10"
-                >
-                  {user.role !== "candidate" ? "Post Jobs" : "Dashboard"}
-                </Link>
-                <button
-                  onClick={() => { logout(); onClose(); }}
-                  className="flex items-center justify-center gap-2 py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95"
-                >
-                  <LogOut className="w-4 h-4" /> Sign Out
-                </button>
+                {/* Same role rule as Header.tsx's desktop CTA and
+                    DashboardHeader's own Post Job button -- an employer gets
+                    both the primary posting-form shortcut AND a plain
+                    Dashboard link (below, alongside Sign Out), not just one
+                    replacing the other. Candidates and admin/sub_admin just
+                    get the generic dashboard overview. */}
+                {user.role === "employer" && (
+                  <Link
+                    href="/dashboard/jobs/new"
+                    onClick={onClose}
+                    className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#1098F0]/20 active:scale-95 text-center border border-white/10"
+                  >
+                    Post Jobs
+                  </Link>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <Link
+                    href="/dashboard"
+                    onClick={onClose}
+                    className={
+                      user.role === "employer"
+                        ? "flex items-center justify-center py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95 text-center"
+                        : "flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#1098F0]/20 active:scale-95 text-center border border-white/10"
+                    }
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { logout(); onClose(); }}
+                    className="flex items-center justify-center gap-2 py-4 px-4 text-sm font-black text-brand-blue bg-brand-blue-muted/50 rounded-2xl hover:bg-brand-blue-muted transition-all active:scale-95"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
               </>
             ) : (
-              <>
+              <div className="grid grid-cols-2 gap-4">
                 <Link
                   href="/login"
                   onClick={onClose}
@@ -197,11 +214,11 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href="/login"
                   onClick={onClose}
-                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#C8422C]/20 active:scale-95 text-center border border-white/10"
+                  className="flex items-center justify-center py-4 px-4 text-sm font-black text-white bg-brand-blue rounded-2xl shadow-xl shadow-[#1098F0]/20 active:scale-95 text-center border border-white/10"
                 >
                   Post Job
                 </Link>
-              </>
+              </div>
             )}
           </div>
           

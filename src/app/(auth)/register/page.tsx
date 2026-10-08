@@ -234,7 +234,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm">
           <span className="text-muted-foreground">Already have an account? </span>
-          <Link href="/login" className="font-semibold text-[oklch(0.47_0.20_25)] hover:underline">
+          <Link href="/login" className="font-semibold text-brand-blue hover:underline">
             Sign in
           </Link>
         </div>

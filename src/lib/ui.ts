@@ -19,11 +19,28 @@ import { cn } from "@/lib/utils";
 // across several separately-reported "square button" spots. One shared
 // base class means every buttonClass() consumer gets this automatically.
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full font-bold text-sm whitespace-nowrap transition-colors active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none",
+  // "ui-button" carries no styles of its own -- it's a plain CSS hook
+  // (globals.css) for the hover lift + shadow. Tailwind's own hover:/
+  // active: utility variants for transform/box-shadow turned out not to
+  // win the cascade reliably here (this project's custom CSS lives
+  // outside any @layer, which beats Tailwind's layered utilities
+  // regardless of specificity -- fine for overriding a utility directly,
+  // but a hover:-translate-y-0.5 utility competing against another
+  // same-layer utility like shadow-sm didn't resolve the way plain CSS
+  // specificity would predict, confirmed by inspecting computed styles
+  // live rather than assuming the classes "should" work). Hand-written
+  // CSS sidesteps that entirely. bg-brand-blue's own hover/active
+  // brightness shift (also globals.css) still layers on top for primary.
+  "ui-button inline-flex items-center justify-center gap-2 rounded-full font-bold text-sm whitespace-nowrap disabled:opacity-60 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        primary: "bg-brand-blue text-white hover:bg-brand-blue-medium",
+        // hover:bg-brand-blue-medium removed -- bg-brand-blue is a gradient
+        // fill now (globals.css), so a flat hover background-color would
+        // never actually show (background-image always paints over it);
+        // the hover brightness shift there is this variant's real hover
+        // feedback now.
+        primary: "bg-brand-blue text-white shadow-sm",
         secondary: "bg-secondary text-foreground hover:bg-secondary/70",
         outline: "border border-border/60 bg-white text-foreground hover:bg-secondary/60",
         ghost: "text-foreground hover:bg-secondary/60",

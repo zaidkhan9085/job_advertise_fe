@@ -29,7 +29,7 @@ import Preview from "@/components/resume-builder/Preview";
 export default function ResumeBuilderPage() {
   const [resumeData, setResumeData] = useState({
     theme: {
-      color: "#C8422C", // brand-blue (Coral Reef)
+      color: "#1098F0", // brand-blue (Coral Reef)
       fontFamily: "Inter",
       fontSize: 11,
       lineHeight: 1.5,

@@ -11,7 +11,6 @@ import {
   Building,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
   ShieldCheck,
   Search,
   PlayCircle,
@@ -146,31 +145,6 @@ function SidebarNavContent({
         })}
       </nav>
 
-      <div className={`p-4 border-t border-border/60 shrink-0 transition-all duration-300 ${isCollapsed ? "px-2" : "p-4"}`}>
-        {isCollapsed ? (
-          <Link
-            href="/contact"
-            title="Contact Support"
-            className="flex items-center justify-center h-12 w-full rounded-xl bg-secondary/50 border border-border/40 text-muted-foreground hover:bg-brand-blue hover:text-white transition-all shadow-inner"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </Link>
-        ) : (
-          <div className="bg-brand-blue/5 rounded-2xl p-5 border border-brand-blue/10">
-            <p className="text-sm font-black text-brand-blue mb-2">Need help?</p>
-            <p className="text-[11px] text-brand-blue/60 mb-4 font-medium leading-relaxed">
-              Contact our global support team for hiring assistance.
-            </p>
-            <Link
-              href="/contact"
-              onClick={onLinkClick}
-              className="inline-flex w-full items-center justify-center py-2.5 text-[10px] font-black uppercase tracking-widest bg-white text-brand-blue border border-brand-blue/20 rounded-xl shadow-sm hover:bg-brand-blue hover:text-white transition-all"
-            >
-              Contact Support
-            </Link>
-          </div>
-        )}
-      </div>
     </>
   );
 }

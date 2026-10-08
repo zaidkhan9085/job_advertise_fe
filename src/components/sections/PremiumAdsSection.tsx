@@ -58,7 +58,7 @@ export default function PremiumAdsSection() {
   if (premiumJobs.length === 0) return null;
 
   return (
-    <section className="pt-6 pb-10 md:pb-14 bg-gradient-to-b from-[#fff3f0] via-white to-[#fff3f0] overflow-hidden relative">
+    <section className="pt-6 pb-10 md:pb-14 bg-gradient-to-b from-brand-blue-muted via-white to-brand-blue-muted overflow-hidden relative">
       <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue/5 -translate-y-1/2 translate-x-1/2" />
 
       <div className="container-site relative">
@@ -101,7 +101,7 @@ export default function PremiumAdsSection() {
                 key={job.id}
                 onClick={() => router.push(jobPagePath(job))}
                 style={{ width: "min(calc(100vw - 4rem), 300px)" }}
-                className="flex-shrink-0 @container group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(200,66,44,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden sm:w-[calc(45%)] md:w-[calc(33.333%-1.25rem)] [@media(min-width:1366px)]:w-[calc(25%-1.25rem)] cursor-pointer"
+                className="flex-shrink-0 @container group bg-white rounded-[32px] border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_-16px_rgba(16,152,240,0.2)] hover:border-brand-blue/30 transition-all duration-500 overflow-hidden sm:w-[calc(45%)] md:w-[calc(33.333%-1.25rem)] [@media(min-width:1366px)]:w-[calc(25%-1.25rem)] cursor-pointer"
               >
                 <div className="relative aspect-[4/5] overflow-hidden bg-secondary/20">
                   <JobPosterImage image={job.image} title={job.title} company={job.company} className="w-full h-full" />

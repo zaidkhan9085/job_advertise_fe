@@ -26,7 +26,7 @@ export default function IndustryNavPanel() {
 
   return (
     <div className="absolute top-full left-0 pt-3 z-50">
-      <div className="w-[860px] max-w-[calc(100vw-13rem)] bg-white rounded-2xl shadow-[0_20px_50px_rgba(200,66,44,0.15)] border border-border/40 p-3 animate-in fade-in-0 slide-in-from-top-2 duration-200 max-h-[min(70vh,520px)] overflow-y-auto custom-scrollbar">
+      <div className="w-[860px] max-w-[calc(100vw-13rem)] bg-white rounded-2xl shadow-[0_20px_50px_rgba(16,152,240,0.15)] border border-border/40 p-3 animate-in fade-in-0 slide-in-from-top-2 duration-200 max-h-[min(70vh,520px)] overflow-y-auto custom-scrollbar">
         {industries === null ? (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-0.5 p-2">
             {Array.from({ length: 15 }).map((_, i) => (

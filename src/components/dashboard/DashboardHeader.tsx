@@ -89,6 +89,9 @@ export default function DashboardHeader() {
   );
 
   return (
+    // Reverted back to white per direct request -- Navy was tried as the
+    // "headers, app bar" surface the brand kit names for that color, but
+    // the call is white here after seeing it live.
     <header className="h-16 bg-white border-b border-border/60 px-4 md:px-8 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
         <button

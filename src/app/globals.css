@@ -1,5 +1,5 @@
 /* ─── Google Fonts ─── */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -10,33 +10,35 @@
 
 /* ─── Brand Tokens ─── */
 :root {
-  /* Brand palette — "Coral Reef" (2026-09-17 client-approved rebrand from
-     the old dark-blue look). Token NAMES stay brand-blue-* on purpose: they
-     are consumed by ~74 files across the app, and renaming every usage site
-     carries real risk for zero visual benefit -- only the VALUES changed,
-     now a coral ladder (deep -> medium -> bright -> tint) instead of a blue
-     one. All four hex values are taken directly from the client-approved
-     mockup (deep coral chosen as the "dominant" step specifically because
-     it's dark enough to keep every existing `text-white` pairing built on
-     top of this token -- footer, nav CTAs, badges -- at safe contrast; the
-     brightest coral from the mockup is kept as the lighter/highlight step
-     instead, exactly where the mockup itself uses it as an accent). */
-  --brand-blue:         #C8422C;      /* Deep coral-red -- dominant, safe under white text */
-  --brand-blue-medium:  #E8543F;      /* Medium coral -- hover/lighten step */
-  --brand-blue-light:   #FF6F5E;      /* Bright coral -- highlight/accent step */
-  --brand-blue-muted:   #FFEDE9;      /* Very light coral tint for backgrounds */
+  /* Brand palette — official client brand kit (2026-10-05), replacing the
+     "Coral Reef" theme. Token NAMES stay brand-blue-* on purpose (same call
+     as the 09-17 rebrand that put coral here in the first place): they're
+     consumed by ~89 files across the app, and renaming every usage site
+     carries real risk for zero visual benefit -- only the VALUES changed.
+     Mapped from the kit's own named colors/roles (its page 11 interface
+     rule "Buttons: Signal fill, white Inter Semibold" is why Signal lands
+     on the dominant/button token rather than a literal brightness-ladder
+     match): --brand-blue=Signal, --brand-blue-medium=Azure ("hover,
+     secondary action, focus ring" per the kit), --brand-blue-light=Cobalt,
+     --brand-blue-muted=Mist. Gold is untouched -- not part of this kit,
+     kept for Featured/Premium per explicit client direction. */
+  --brand-blue:         #1098F0;      /* Signal -- dominant, buttons/links */
+  --brand-blue-medium:  #0874DC;      /* Azure -- hover/secondary/focus ring */
+  --brand-blue-light:   #0A4CB8;      /* Cobalt -- accent/highlight step */
+  --brand-blue-muted:   #E7EEF7;      /* Mist -- very light tint for backgrounds */
   --brand-gold:         #DAA520;                 /* Golden for Premium */
   --brand-gold-light:   #FFD700;                 /* Bright Gold */
-  /* The mockup's second color -- a warm near-black "ink", used there for
-     body text and for the one large dark structural surface (the CTA
-     banner), never for interactive/action elements (those stay coral).
-     Trial per Zaid's request 2026-09-17 -- easy to revert (this token +
-     the handful of `brand-ink` usages below are the only places it's
-     wired in). */
-  --brand-ink:          #2B1B18;
+  /* Ink -- the kit's own name for this role: body text and the one large
+     dark structural surface (the CTA banner), never interactive/action
+     elements (those stay Signal). */
+  --brand-ink:          #07183C;
 
-  /* shadcn semantic tokens — mapped to brand */
-  --background: oklch(0.99 0.008 40);
+  /* shadcn semantic tokens — mapped to brand. Hue 250 (blue) everywhere a
+     "neutral" tone still carries a slight tint -- these were left at the
+     Coral Reef theme's hue 40 (warm/orange) in the first pass, which is
+     what made text/background combinations look off against the new blue
+     buttons even though the buttons themselves were correct. */
+  --background: oklch(0.99 0.008 250);
   --foreground: var(--brand-ink);
   --card: oklch(1 0 0);
   --card-foreground: var(--brand-ink);
@@ -47,13 +49,15 @@
   --secondary: var(--brand-blue-muted);
   --secondary-foreground: var(--brand-blue);
   --muted: var(--brand-blue-muted);
-  --muted-foreground: oklch(0.48 0.04 40);
+  --muted-foreground: oklch(0.48 0.04 250);
   --accent: var(--brand-blue-light);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.93 0.015 40);
-  --input: oklch(0.94 0.015 40);
-  --ring: var(--brand-blue-light);
+  --border: oklch(0.93 0.015 250);
+  --input: oklch(0.94 0.015 250);
+  /* Kit: "Hover, secondary action, focus ring" is explicitly Azure's job
+     (--brand-blue-medium), not the accent/highlight step. */
+  --ring: var(--brand-blue-medium);
   --radius: 1rem;
 
   /* Chart */
@@ -74,36 +78,107 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* Spacing / typography */
-  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "Fira Code", monospace;
-  /* Coral Reef's display face -- used sparingly on hero headlines and the
-     wordmark, not swapped in as the site-wide body font: Karla (the
-     mockup's body face) has no 900 weight, and font-black is used
-     extremely heavily across the existing UI, so swapping it in wholesale
-     would quietly thin out bold text everywhere. Outfit covers the full
-     100-900 range, so it's safe wherever font-black is already used. */
-  --font-display: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  /* Kit: "Inter, beside the lockup... everywhere else -- site, app, social,
+     email -- set Inter." Inter is loaded up to weight 900, so (unlike the
+     Karla/Outfit split this replaces) one stack covers font-black too. */
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Shadows -- tinted with the new coral instead of neutral black, matching
-     the mockup's warm card shadows */
-  --shadow-card: 0 1px 3px 0 rgb(200 66 44 / 0.08), 0 1px 2px 0 rgb(200 66 44 / 0.05);
-  --shadow-card-hover: 0 8px 20px 0 rgb(200 66 44 / 0.14), 0 2px 6px 0 rgb(200 66 44 / 0.08);
+  /* Shadows -- tinted with Signal instead of neutral black, same "warm
+     brand-tinted shadow" idea as before, just the new brand's color. */
+  --shadow-card: 0 1px 3px 0 rgb(16 152 240 / 0.08), 0 1px 2px 0 rgb(16 152 240 / 0.05);
+  --shadow-card-hover: 0 8px 20px 0 rgb(16 152 240 / 0.14), 0 2px 6px 0 rgb(16 152 240 / 0.08);
   --shadow-header: 0 1px 0 0 rgb(0 0 0 / 0.08);
 }
 
+/* Client-confirmed primary treatment (2026-10-08): the logo mark's own
+   Signal->Navy gradient (sampled directly from the supplied artwork --
+   its two figures ARE these two colors, not a third distinct hue),
+   applied everywhere the site uses its dominant action color, instead of
+   a flat fill. Was a 3-way homepage-only toggle during review; now the
+   one permanent default site-wide.
+
+   A CSS color variable can't hold a gradient, so bg-brand-blue/
+   text-brand-blue can't pick this up through the normal variable cascade
+   the way a flat recolor would -- these target the utility classes
+   directly. Specificity ties with Tailwind's own generated
+   .bg-brand-blue/.text-brand-blue rules resolve in favor of whichever is
+   later in the compiled stylesheet, which is these (confirmed live, not
+   assumed) since they're declared after the @theme block below. */
+.bg-brand-blue {
+  background-image: linear-gradient(135deg, #1098F0, #003090);
+  /* Covers hand-rolled buttons that only ever declared transition-colors
+     -- the hover brightness/shadow treatment right below needs this to
+     animate smoothly regardless of which transition utility a given
+     button happens to already have. */
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+/* Every bg-brand-blue element gets a visible hover reaction -- swapping
+   to a flat hover color (the pre-gradient approach) would be invisible
+   now, since background-image always paints over background-color.
+   Brightness works equally well on a decorative fill (an icon circle,
+   a badge) as on a real button, so this is safe to apply this broadly;
+   the lift/shadow "button" feel itself lives in buttonClass() (lib/ui.ts)
+   instead, scoped to things actually meant to be pressed. */
+.bg-brand-blue:hover {
+  filter: brightness(1.08);
+}
+.bg-brand-blue:active {
+  filter: brightness(0.94);
+}
+
+/* buttonClass()'s shared hover/press feel (lib/ui.ts) -- a small lift +
+   deeper shadow on hover, settling back down on press/tap. Plain CSS
+   instead of Tailwind's hover:/active: utilities (see the comment on
+   "ui-button" in ui.ts for why). The shadow is a neutral dark tint so it
+   reads right under every button variant, not just the gradient-filled
+   primary one, which gets its own color feedback from the brightness
+   rule above. */
+.ui-button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.ui-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgb(0 0 0 / 0.2);
+}
+.ui-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.15);
+}
+.ui-button:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Scoped to h1/h2/h3 specifically, not every .text-brand-blue element --
+   that class is also how badges, pills, links, and (via currentColor)
+   every lucide-react icon on the page color themselves, and
+   background-clip text + color:transparent would silently blank out an
+   icon or an iconless-text wrapper with nothing to clip to. Section
+   headings ("title colors") are what this is actually meant to affect. */
+h1.text-brand-blue,
+h2.text-brand-blue,
+h3.text-brand-blue {
+  background-image: linear-gradient(135deg, #1098F0, #003090);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
 .dark {
-  --background: oklch(0.12 0.01 40);
+  --background: oklch(0.12 0.01 250);
   --foreground: oklch(0.96 0 0);
-  --card: oklch(0.18 0.01 40);
+  --card: oklch(0.18 0.01 250);
   --card-foreground: oklch(0.96 0 0);
-  --popover: oklch(0.18 0.01 40);
+  --popover: oklch(0.18 0.01 250);
   --popover-foreground: oklch(0.96 0 0);
   --primary: var(--brand-blue-light);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.24 0.01 40);
+  --secondary: oklch(0.24 0.01 250);
   --secondary-foreground: oklch(0.96 0 0);
-  --muted: oklch(0.22 0.01 40);
-  --muted-foreground: oklch(0.65 0.01 40);
+  --muted: oklch(0.22 0.01 250);
+  --muted-foreground: oklch(0.65 0.01 250);
   --accent: var(--brand-blue-light);
   --accent-foreground: oklch(0.99 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -150,7 +225,10 @@
   --color-brand-blue-medium: var(--brand-blue-medium);
   --color-brand-blue-light: var(--brand-blue-light);
   --color-brand-blue-muted: var(--brand-blue-muted);
-  --color-brand-blue-dark: #7A2418;
+  /* Navy -- the kit's one sanctioned gradient's dark stop (see
+     .bg-hero-gradient etc. below), also used for "headers, app bar" per
+     the kit's own role for this color. */
+  --color-brand-blue-dark: #003090;
   --color-brand-ink: var(--brand-ink);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -225,18 +303,15 @@
     text-wrap: balance;
   }
 
-  /* Brand gradients */
+  /* Brand gradients -- all three collapsed to the kit's one sanctioned
+     gradient (Signal -> Navy, page 5: "do not introduce a second
+     gradient"), instead of each inventing its own 2-3 stop mix. */
   .bg-brand-gradient {
-    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-medium) 50%, var(--brand-blue-light) 100%);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--color-brand-blue-dark) 100%);
   }
 
   .bg-hero-gradient {
-    background: linear-gradient(
-      135deg,
-      var(--color-brand-blue-dark) 0%,
-      var(--brand-blue) 40%,
-      var(--brand-blue-medium) 100%
-    );
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--color-brand-blue-dark) 100%);
   }
 
   .bg-premium-gradient {
@@ -254,10 +329,10 @@
 
   /* Glow effects */
   .glow-blue {
-    box-shadow: 0 0 30px -5px rgb(200 66 44 / 25%);
+    box-shadow: 0 0 30px -5px rgb(16 152 240 / 25%);
   }
   .glow-premium {
-    box-shadow: 0 0 40px -10px rgb(255 111 94 / 40%);
+    box-shadow: 0 0 40px -10px rgb(16 152 240 / 40%);
   }
 
   /* Section spacing */

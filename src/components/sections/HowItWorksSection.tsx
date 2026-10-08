@@ -91,10 +91,10 @@ function StepCard({
 
 export default function HowItWorksSection() {
   return (
-    <section className="section-padding bg-[oklch(0.975_0.008_40)]">
+    <section className="section-padding bg-[oklch(0.975_0.008_250)]">
       <div className="container-site">
         <div className="text-center mb-14">
-          <div className="text-xs font-semibold text-[oklch(0.68_0.21_45)] uppercase tracking-widest mb-2">
+          <div className="text-xs font-semibold text-brand-blue uppercase tracking-widest mb-2">
             How It Works
           </div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground">Simple. Fast. Effective.</h2>
@@ -116,7 +116,7 @@ export default function HowItWorksSection() {
 
           {/* Recruiters */}
           <div>
-            <div className="inline-flex items-center gap-2 bg-[oklch(0.68_0.21_45)]/10 text-[oklch(0.68_0.21_45)] text-sm font-bold px-4 py-2 rounded-full mb-7">
+            <div className="inline-flex items-center gap-2 bg-brand-blue/10 text-brand-blue text-sm font-bold px-4 py-2 rounded-full mb-7">
               For Recruiters
             </div>
             {recruiterSteps.map((s) => (
