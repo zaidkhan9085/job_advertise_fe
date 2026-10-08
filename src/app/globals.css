@@ -102,6 +102,31 @@
   --brand-blue-medium: #0A4CB8;
 }
 
+/* Third preview option: the logo mark's own Signal->Navy gradient (sampled
+   directly from the supplied artwork -- its two figures ARE these two
+   colors, not a third distinct hue) applied as a real fill/text-clip
+   instead of a flat color. bg-brand-blue/text-brand-blue can't pick this up
+   through the variable cascade like the "dark" variant above (a CSS color
+   variable can't hold a gradient), so these target the utility classes
+   directly, scoped the same way. */
+[data-primary-variant="gradient"] .bg-brand-blue {
+  background-image: linear-gradient(135deg, #1098F0, #003090);
+}
+/* Scoped to h1/h2/h3 specifically, not every .text-brand-blue element --
+   that class is also how badges, pills, links, and (via currentColor)
+   every lucide-react icon on the page color themselves, and
+   background-clip text + color:transparent would silently blank out an
+   icon or an iconless-text wrapper with nothing to clip to. Section
+   headings ("title colors") are what this is actually meant to affect. */
+[data-primary-variant="gradient"] h1.text-brand-blue,
+[data-primary-variant="gradient"] h2.text-brand-blue,
+[data-primary-variant="gradient"] h3.text-brand-blue {
+  background-image: linear-gradient(135deg, #1098F0, #003090);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
 .dark {
   --background: oklch(0.12 0.01 250);
   --foreground: oklch(0.96 0 0);
