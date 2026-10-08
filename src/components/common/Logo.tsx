@@ -4,11 +4,14 @@
 // never needs a separate asset per size/weight, and lets the sidebar's
 // collapsed state just omit the text instead of CSS-clipping a wide image
 // (see DashboardSidebar.tsx).
+// Icon shrunk relative to the wordmark per direct request -- it was sized
+// to roughly match the text's line-height, which made the mark read as
+// oversized next to "TheJobs4U" at every size step. TEXT_SIZE is untouched.
 const ICON_HEIGHT = {
-  sm: "h-8",
-  md: "h-10",
-  lg: "h-12",
-  xl: "h-14",
+  sm: "h-6",
+  md: "h-7",
+  lg: "h-8",
+  xl: "h-9",
 };
 
 const TEXT_SIZE = {
