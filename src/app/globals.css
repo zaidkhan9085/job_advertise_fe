@@ -92,35 +92,74 @@
   --shadow-header: 0 1px 0 0 rgb(0 0 0 / 0.08);
 }
 
-/* Client-preview toggle (homepage only, see HomePrimaryThemeToggle.tsx) --
-   lets the dominant/button color be swapped from Signal (light) to Navy
-   (dark) for a live side-by-side comparison. Every bg-brand-blue/
-   text-brand-blue/etc. usage inside the toggled wrapper picks this up for
-   free through the normal CSS variable cascade -- no component changes. */
-[data-primary-variant="dark"] {
-  --brand-blue: #003090;
-  --brand-blue-medium: #0A4CB8;
+/* Client-confirmed primary treatment (2026-10-08): the logo mark's own
+   Signal->Navy gradient (sampled directly from the supplied artwork --
+   its two figures ARE these two colors, not a third distinct hue),
+   applied everywhere the site uses its dominant action color, instead of
+   a flat fill. Was a 3-way homepage-only toggle during review; now the
+   one permanent default site-wide.
+
+   A CSS color variable can't hold a gradient, so bg-brand-blue/
+   text-brand-blue can't pick this up through the normal variable cascade
+   the way a flat recolor would -- these target the utility classes
+   directly. Specificity ties with Tailwind's own generated
+   .bg-brand-blue/.text-brand-blue rules resolve in favor of whichever is
+   later in the compiled stylesheet, which is these (confirmed live, not
+   assumed) since they're declared after the @theme block below. */
+.bg-brand-blue {
+  background-image: linear-gradient(135deg, #1098F0, #003090);
+  /* Covers hand-rolled buttons that only ever declared transition-colors
+     -- the hover brightness/shadow treatment right below needs this to
+     animate smoothly regardless of which transition utility a given
+     button happens to already have. */
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+/* Every bg-brand-blue element gets a visible hover reaction -- swapping
+   to a flat hover color (the pre-gradient approach) would be invisible
+   now, since background-image always paints over background-color.
+   Brightness works equally well on a decorative fill (an icon circle,
+   a badge) as on a real button, so this is safe to apply this broadly;
+   the lift/shadow "button" feel itself lives in buttonClass() (lib/ui.ts)
+   instead, scoped to things actually meant to be pressed. */
+.bg-brand-blue:hover {
+  filter: brightness(1.08);
+}
+.bg-brand-blue:active {
+  filter: brightness(0.94);
 }
 
-/* Third preview option: the logo mark's own Signal->Navy gradient (sampled
-   directly from the supplied artwork -- its two figures ARE these two
-   colors, not a third distinct hue) applied as a real fill/text-clip
-   instead of a flat color. bg-brand-blue/text-brand-blue can't pick this up
-   through the variable cascade like the "dark" variant above (a CSS color
-   variable can't hold a gradient), so these target the utility classes
-   directly, scoped the same way. */
-[data-primary-variant="gradient"] .bg-brand-blue {
-  background-image: linear-gradient(135deg, #1098F0, #003090);
+/* buttonClass()'s shared hover/press feel (lib/ui.ts) -- a small lift +
+   deeper shadow on hover, settling back down on press/tap. Plain CSS
+   instead of Tailwind's hover:/active: utilities (see the comment on
+   "ui-button" in ui.ts for why). The shadow is a neutral dark tint so it
+   reads right under every button variant, not just the gradient-filled
+   primary one, which gets its own color feedback from the brightness
+   rule above. */
+.ui-button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
+.ui-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgb(0 0 0 / 0.2);
+}
+.ui-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.15);
+}
+.ui-button:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
 /* Scoped to h1/h2/h3 specifically, not every .text-brand-blue element --
    that class is also how badges, pills, links, and (via currentColor)
    every lucide-react icon on the page color themselves, and
    background-clip text + color:transparent would silently blank out an
    icon or an iconless-text wrapper with nothing to clip to. Section
    headings ("title colors") are what this is actually meant to affect. */
-[data-primary-variant="gradient"] h1.text-brand-blue,
-[data-primary-variant="gradient"] h2.text-brand-blue,
-[data-primary-variant="gradient"] h3.text-brand-blue {
+h1.text-brand-blue,
+h2.text-brand-blue,
+h3.text-brand-blue {
   background-image: linear-gradient(135deg, #1098F0, #003090);
   background-clip: text;
   -webkit-background-clip: text;
