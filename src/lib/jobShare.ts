@@ -2,32 +2,38 @@ import type { JobPost, Company } from "@/lib/api";
 import { SITE_URL, SITE_REF } from "@/lib/site";
 import { slugify } from "@/lib/utils";
 
-type ShareJob = Pick<JobPost, "id" | "title" | "company" | "location">;
+type ShareJob = Pick<JobPost, "id" | "title" | "company" | "location" | "slug">;
 
 const SITE_NAME = "thejobs4u";
 
-// A human-readable slug in front of the real id -- e.g.
-// /jobs/urgent-hiring-for-abu-dhabi-<uuid> instead of the bare uuid alone.
-// The backend only ever reads the trailing uuid back out (see
-// backend/utils/slugId.js's extractId), so this is purely cosmetic/SEO: no
-// schema change, and a bare-uuid link from before this change still works
-// since the id is still right there, just without a slug in front of it.
-export function jobPagePath(job: Pick<JobPost, "id" | "title">) {
+// Pure slug now (e.g. /jobs/urgent-hiring-for-abu-dhabi), no id at all --
+// better for SEO than a trailing uuid, matching the sister site's own URL
+// scheme. job.slug is generated once server-side at creation time
+// (backend/utils/slug.js), not re-derived from the title here, so it can't
+// drift from whatever the backend actually stored (e.g. if two jobs share
+// a title and the backend disambiguated with a -2 suffix). Falls back to
+// the older slug-prefixed-id format only if slug is somehow missing (a job
+// created in the brief window before the backfill script ran) -- the
+// backend's findBySlugOrId() resolves that format too, so this is just a
+// defensive fallback, not something that should normally trigger.
+export function jobPagePath(job: Pick<JobPost, "id" | "title" | "slug">) {
+  if (job.slug) return `/jobs/${job.slug}`;
   const slug = slugify(job.title);
   return slug ? `/jobs/${slug}-${job.id}` : `/jobs/${job.id}`;
 }
 
-export function jobPageUrl(job: Pick<JobPost, "id" | "title">) {
+export function jobPageUrl(job: Pick<JobPost, "id" | "title" | "slug">) {
   return `${SITE_URL}${jobPagePath(job)}`;
 }
 
-// Same slug-prefixed-id pattern as jobPagePath, for a company's public page.
-export function companyPagePath(company: Pick<Company, "id" | "name">) {
+// Same pure-slug scheme as jobPagePath, for a company's public page.
+export function companyPagePath(company: Pick<Company, "id" | "name" | "slug">) {
+  if (company.slug) return `/companies/${company.slug}`;
   const slug = slugify(company.name);
   return slug ? `/companies/${slug}-${company.id}` : `/companies/${company.id}`;
 }
 
-export function companyPageUrl(company: Pick<Company, "id" | "name">) {
+export function companyPageUrl(company: Pick<Company, "id" | "name" | "slug">) {
   return `${SITE_URL}${companyPagePath(company)}`;
 }
 

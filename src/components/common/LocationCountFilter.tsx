@@ -44,6 +44,7 @@ export default function LocationCountFilter({
   onChange,
   jobs,
   getLocationIds = defaultLocationIds,
+  singleSelect = false,
 }: {
   label: string;
   placeholder?: string;
@@ -54,6 +55,15 @@ export default function LocationCountFilter({
   // own posted location (e.g. the job's COMPANY's location instead) without
   // touching this component's default behavior for existing callers.
   getLocationIds?: (job: JobPost) => (string | null | undefined)[];
+  // Client wants the job-location filter to only ever hold one selection at
+  // a time -- picking a new one replaces whatever was picked before,
+  // instead of adding to it. The underlying Combobox stays in `multiple`
+  // mode either way (its chip/overflow rendering already assumes an array,
+  // and base-ui's own single-select mode would change that value shape
+  // entirely) -- this just collapses the array back down to the latest
+  // pick in onValueChange, so everything else about the component (search,
+  // counts, chip UI) is untouched for a caller that doesn't opt in.
+  singleSelect?: boolean;
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [overflowOpen, setOverflowOpen] = useState(false);
@@ -91,7 +101,10 @@ export default function LocationCountFilter({
         multiple
         autoHighlight
         value={selected}
-        onValueChange={(next) => onChange(next as LocationValue[])}
+        onValueChange={(next) => {
+          const arr = next as LocationValue[];
+          onChange(singleSelect && arr.length > 1 ? [arr[arr.length - 1]] : arr);
+        }}
         inputValue={inputValue}
         onInputValueChange={setInputValue}
         isItemEqualToValue={(a, b) => a?.id === b?.id}

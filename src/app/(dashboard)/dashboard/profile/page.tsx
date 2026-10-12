@@ -68,6 +68,7 @@ const labelClass = "text-sm font-bold text-foreground/80 flex items-center gap-2
 
 export default function CompanyProfilePage() {
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companySlug, setCompanySlug] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
@@ -104,6 +105,7 @@ export default function CompanyProfilePage() {
       setIndustries(industryList);
       if (company) {
         setCompanyId(company.id);
+        setCompanySlug(company.slug);
         setName(company.name);
         setDescription(company.description ?? "");
         setWebsite(company.website ?? "");
@@ -189,6 +191,7 @@ export default function CompanyProfilePage() {
         logo: logo ?? undefined,
       });
       setCompanyId(result.company.id);
+      setCompanySlug(result.company.slug);
       toast.success(result.message);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to save company profile.");
@@ -250,7 +253,7 @@ export default function CompanyProfilePage() {
           </div>
           {companyId && (
             <Link
-              href={companyPagePath({ id: companyId, name })}
+              href={companyPagePath({ id: companyId, name, slug: companySlug })}
               target="_blank"
               className="sm:ml-auto inline-flex items-center gap-1.5 text-sm font-bold text-brand-blue hover:underline"
             >

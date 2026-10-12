@@ -26,7 +26,7 @@ export default function PricingPage() {
   const { user } = useAuth();
   const [templates, setTemplates] = useState<PlanTemplate[] | null>(null);
   const [packages, setPackages] = useState<CreditPackage[]>([]);
-  const [currency, setCurrency] = useState<BillingCurrency>("USD");
+  const [currency, setCurrency] = useState<BillingCurrency>("INR");
 
   const load = useCallback(async () => {
     try {

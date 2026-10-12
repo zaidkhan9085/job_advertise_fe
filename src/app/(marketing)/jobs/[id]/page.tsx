@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useAppliedJobs } from "@/hooks/useAppliedJobs";
+import JobScrollSection from "@/components/jobs/JobScrollSection";
 import {
   getJobById,
   getRelatedJobs,
@@ -37,10 +39,9 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useCompanyActions } from "@/hooks/useCompanyActions";
-import JobPosterImage from "@/components/common/JobPosterImage";
 import StarRatingInput from "@/components/common/StarRatingInput";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
-import { buildJobWhatsAppUrl, buildJobMailtoUrl, buildJobShareText, jobPageUrl, jobPagePath, companyPagePath } from "@/lib/jobShare";
+import { buildJobWhatsAppUrl, buildJobMailtoUrl, buildJobShareText, jobPageUrl, companyPagePath } from "@/lib/jobShare";
 import { copyToClipboard } from "@/lib/utils";
 
 function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: string }) {
@@ -109,6 +110,7 @@ export default function JobDetailPage() {
   const { user } = useAuth();
 
   const [job, setJob] = useState<JobPost | null>(null);
+  const [featuredJobs, setFeaturedJobs] = useState<JobPost[]>([]);
   const [related, setRelated] = useState<JobPost[]>([]);
   const [companyData, setCompanyData] = useState<CompanyDetail | null>(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
@@ -117,6 +119,10 @@ export default function JobDetailPage() {
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  // For the Related Jobs cards below -- a separate per-job-id applied set,
+  // since those are OTHER jobs than the one this page is for (hasApplied
+  // above is scoped to just this page's own job).
+  const { appliedIds, markApplied } = useAppliedJobs();
 
   const { company, myRating, toggleFollow, rate, clearRating, toggleBlock } = useCompanyActions(companyData, {
     requireLogin: () => router.push("/login"),
@@ -127,7 +133,12 @@ export default function JobDetailPage() {
     try {
       const jobData = await getJobById(params.id);
       setJob(jobData);
-      getRelatedJobs(params.id).then(setRelated).catch(() => {});
+      getRelatedJobs(params.id)
+        .then((r) => {
+          setFeaturedJobs(r.featured);
+          setRelated(r.related);
+        })
+        .catch(() => {});
       if (jobData.companyId) {
         setIsCompanyLoading(true);
         getCompanyById(jobData.companyId)
@@ -494,22 +505,26 @@ export default function JobDetailPage() {
           </aside>
         </div>
 
-        {related.length > 0 && (
-          <div className="mt-8 bg-white p-6 sm:p-8 rounded-2xl shadow-[var(--shadow-card)] border border-border/60">
-            <h3 className="text-lg font-bold text-foreground mb-4">Related Jobs</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {related.map((r) => (
-                <Link key={r.id} href={jobPagePath(r)} className="flex gap-3 p-3 rounded-xl border border-border/60 hover:border-brand-blue/40 hover:bg-brand-blue/5 transition-all">
-                  <JobPosterImage image={r.image} title={r.title} company={r.company} className="w-16 h-16 rounded-lg shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-bold text-sm text-foreground line-clamp-1">{r.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{r.company} &middot; {r.location}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Featured/Premium and plain related postings stay in two separate
+            sections (client found a single mixed grid confusing), each a
+            single horizontally-scrollable row with arrow buttons -- same
+            interaction pattern as the homepage's own carousels -- instead
+            of a multi-row grid. Related Jobs on top per direct request. */}
+        <JobScrollSection
+          title="Related Jobs"
+          jobs={related}
+          appliedIds={appliedIds}
+          onApplied={markApplied}
+        />
+
+        <JobScrollSection
+          title="Premium Jobs"
+          titleIcon={<Star className="w-5 h-5 fill-[#DAA520] text-[#DAA520]" />}
+          jobs={featuredJobs}
+          appliedIds={appliedIds}
+          onApplied={markApplied}
+          accentBorderClass="border-[#DAA520]/30"
+        />
       </div>
     </div>
   );
