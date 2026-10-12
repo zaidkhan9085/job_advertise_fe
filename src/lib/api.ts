@@ -209,6 +209,11 @@ export type StoryTag = "Long Term" | "Short Term" | "Urgent" | "Contract";
 export interface JobPost {
   id: string;
   title: string;
+  // Generated once server-side at creation (backend/utils/slug.js), never
+  // regenerated on a later title edit. Null only for a job created in the
+  // brief window before the slug backfill ran -- jobPagePath() in
+  // jobShare.ts falls back to the older id-based URL for that case.
+  slug: string | null;
   company: string;
   location: string | null;
   description: string;
@@ -293,8 +298,16 @@ export function getJobByIdAdmin(id: string) {
   return apiFetch<JobPost>(`/api/jobs/admin/${id}`);
 }
 
+// Split into two groups, not one flat mixed list -- Featured/Premium
+// postings get their own section on the job detail page instead of being
+// interleaved with plain related postings.
+export interface RelatedJobsResponse {
+  featured: JobPost[];
+  related: JobPost[];
+}
+
 export function getRelatedJobs(id: string) {
-  return apiFetch<JobPost[]>(`/api/jobs/${id}/related`);
+  return apiFetch<RelatedJobsResponse>(`/api/jobs/${id}/related`);
 }
 
 export function getMyJobs() {
@@ -986,6 +999,9 @@ export const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = [
 export interface Company {
   id: string;
   name: string;
+  // Same convention as JobPost.slug -- generated once, stays fixed across
+  // a later rename.
+  slug: string | null;
   description: string | null;
   logo: string | null;
   website: string | null;

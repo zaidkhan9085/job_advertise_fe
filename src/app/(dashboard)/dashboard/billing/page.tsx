@@ -49,7 +49,7 @@ export default function BillingPage() {
   const [proTemplate, setProTemplate] = useState<PlanTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
-  const [currency, setCurrency] = useState<BillingCurrency>("USD");
+  const [currency, setCurrency] = useState<BillingCurrency>("INR");
 
   const load = useCallback(async () => {
     try {

@@ -16,7 +16,7 @@ export default function CurrencyToggle({
 }) {
   return (
     <div className={`inline-flex items-center bg-secondary/60 rounded-full p-1 gap-1 ${className}`}>
-      {(["USD", "INR"] as const).map((currency) => (
+      {(["INR", "USD"] as const).map((currency) => (
         <button
           key={currency}
           type="button"

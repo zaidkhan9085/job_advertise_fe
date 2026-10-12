@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import ApplyDialog from "@/components/jobs/ApplyDialog";
 import { buildJobWhatsAppUrl } from "@/lib/jobShare";
 
-type ActionJob = Pick<JobPost, "id" | "title" | "company" | "location" | "contactPhone" | "contactWhatsapp">;
+type ActionJob = Pick<JobPost, "id" | "title" | "company" | "location" | "contactPhone" | "contactWhatsapp" | "slug">;
 
 // The one action row every job card on the site uses -- Apply, WhatsApp,
 // Call, always in that order and always all three, so a card behaves the
