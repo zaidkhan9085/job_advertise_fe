@@ -171,13 +171,21 @@ function JobsListingContent() {
     const selectedIndustryIds = new Set(selectedIndustries.map((o) => o.value));
     const selectedTypeNames = new Set(selectedJobTypes.map((o) => o.value));
 
+    const searchKeywords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+
     return jobs.filter((job) => {
       const location = job.location ?? "";
-      const matchesSearch =
-        !searchTerm ||
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        location.toLowerCase().includes(searchTerm.toLowerCase());
+      // Was only checking title/company/location -- a job whose title is
+      // generic but whose description says "electrician" never matched a
+      // search for "electrician", even though that's exactly the kind of
+      // search a candidate would try. Searches the full posting now.
+      // Keywords are also matched individually (AND'd across keywords, each
+      // one OR'd across fields) instead of the whole typed phrase needing to
+      // appear verbatim in one field, so e.g. "senior electrician" matches a
+      // job with "Senior" in the title and "electrician" only mentioned
+      // further down in the description.
+      const searchableText = `${job.title} ${job.company} ${location} ${job.description}`.toLowerCase();
+      const matchesSearch = searchKeywords.every((kw) => searchableText.includes(kw));
 
       const matchesTime = timeFilter === "any" || now - new Date(job.createdAt).getTime() <= TIME_MS[timeFilter];
 
