@@ -20,12 +20,15 @@ function errorCode(err: unknown): string | undefined {
 }
 
 // proxy.ts sends here with ?redirect=<original path> when it bounces an
-// unauthenticated /dashboard/* request -- only ever a same-app dashboard
-// path, but validated anyway so a malformed/foreign value can't be handed
-// straight to the router.
+// unauthenticated /dashboard/* request -- validated anyway so a malformed/
+// foreign value can't be handed straight to the router. /resume-builder is
+// also allowed -- Footer.tsx's own "Post Resume" link sends a signed-out
+// visitor here with that redirect so they land back on the builder they
+// actually clicked for, not the generic dashboard.
 function resolveRedirectTarget(searchParams: URLSearchParams): string {
   const redirect = searchParams.get("redirect");
-  return redirect && redirect.startsWith("/dashboard") ? redirect : "/dashboard";
+  const isSafe = redirect === "/resume-builder" || (!!redirect && redirect.startsWith("/dashboard"));
+  return isSafe ? redirect! : "/dashboard";
 }
 
 function LoginForm() {

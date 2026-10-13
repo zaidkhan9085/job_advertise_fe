@@ -8,6 +8,7 @@ import { socialLinks as staticSocialLinks, contactLinks, SUPPORT_EMAIL } from "@
 import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
 import { getSocialLinks, type SocialLinks } from "@/lib/api";
 import Logo from "@/components/common/Logo";
+import { useAuth } from "@/context/AuthContext";
 
 // A client-side fetch (same pattern every other dynamic value on this site
 // already uses, e.g. the /pricing page) rather than fetching inside the
@@ -96,6 +97,7 @@ function buildSocialIcons(links: SocialLinks) {
 }
 
 export default function Footer() {
+  const { user } = useAuth();
   const [socialLinks, setSocialLinks] = useState<SocialLinks>(INITIAL_SOCIAL_LINKS);
 
   useEffect(() => {
@@ -105,6 +107,13 @@ export default function Footer() {
   }, []);
 
   const socialIcons = buildSocialIcons(socialLinks);
+
+  // "Post Resume" -> /resume -> /resume-builder has no auth guard of its
+  // own, so a signed-out visitor clicking it from here landed straight on
+  // the builder UI with no account to actually save anything against.
+  // Every other footer link stays a plain static href.
+  const resolveFooterHref = (link: { label: string; href: string }) =>
+    link.label === "Post Resume" && !user ? "/login?redirect=/resume-builder" : link.href;
 
   return (
     <footer className="bg-brand-ink text-white overflow-hidden selection:bg-brand-blue-light selection:text-white">
@@ -158,7 +167,7 @@ export default function Footer() {
                   {section.links.map((link) => (
                     <li key={link.label}>
                       <Link
-                        href={link.href}
+                        href={resolveFooterHref(link)}
                         className="text-white/60 hover:text-white text-[14px] font-bold transition-all flex items-center gap-2 group"
                       >
                         <ArrowRight className="w-0 h-3 opacity-0 group-hover:w-3 group-hover:opacity-100 transition-all text-brand-blue-light" />

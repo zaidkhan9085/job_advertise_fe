@@ -33,7 +33,7 @@ export default function SearchSection() {
     // the site still a flat white strip, inconsistent with everywhere else
     // and a weak first impression for a brand-new coat of paint.
     <section className="relative">
-      <div className="bg-hero-gradient text-white pt-20 pb-32 md:pt-28 md:pb-40 relative overflow-hidden">
+      <div className="bg-hero-gradient text-white pt-16 pb-24 md:pt-20 md:pb-28 relative overflow-hidden">
         <DecorativeBlur size="2xl" blur="strong" className="top-0 right-0 bg-brand-blue-light/20 -translate-y-1/3 translate-x-1/4" />
         <DecorativeBlur size="xl" blur="strong" className="bottom-0 left-0 bg-white/10 translate-y-1/3 -translate-x-1/4" />
         <div className="container-site relative text-center">
@@ -43,10 +43,23 @@ export default function SearchSection() {
           <p className="text-white/70 font-medium text-lg max-w-xl mx-auto">
             Search live openings from real employers.
           </p>
+          {/* Moved here from under the search bar -- it used to land in the
+              white area below the gradient instead of actually sitting in
+              the blue section, and pulling it up here (plus trimming the
+              gradient's own padding above) is what brings Live Highlights
+              up too, with no changes needed there. */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-5">
+            {TRUST_POINTS.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-1.5 text-sm font-semibold text-white/80">
+                <Icon className="w-4 h-4 text-white/60 shrink-0" />
+                {label}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="container-site relative -mt-12 md:-mt-14 z-10">
+      <div className="container-site relative -mt-8 md:-mt-10 z-10">
         <div className="max-w-3xl mx-auto">
           <form onSubmit={submit} className="bg-white rounded-2xl shadow-xl border border-border/60 p-2 flex flex-col sm:flex-row gap-2">
             <div className="flex-1 flex items-center gap-2.5 px-3">
@@ -63,15 +76,6 @@ export default function SearchSection() {
               Search Jobs
             </button>
           </form>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-5">
-            {TRUST_POINTS.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
-                <Icon className="w-4 h-4 text-brand-blue shrink-0" />
-                {label}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>

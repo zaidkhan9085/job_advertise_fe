@@ -4,22 +4,16 @@
 // never needs a separate asset per size/weight, and lets the sidebar's
 // collapsed state just omit the text instead of CSS-clipping a wide image
 // (see DashboardSidebar.tsx).
-// Client wants the icon the same size as the wordmark text next to it, not
-// proportioned smaller or larger -- each step here is set to the matching
-// TEXT_SIZE step's actual font-size (text-base=16px, text-lg=18px,
-// text-xl=20px, text-2xl=24px), not just "a size that looks about right".
-const ICON_HEIGHT = {
-  sm: "h-4",
-  md: "h-[18px]",
-  lg: "h-5",
-  xl: "h-6",
-};
-
-const TEXT_SIZE = {
-  sm: "text-base",
-  md: "text-lg",
-  lg: "text-xl",
-  xl: "text-2xl",
+// Stacked lockup (icon on top, wordmark below) per the client's reference
+// mark, replacing the old side-by-side layout everywhere. Icon is kept
+// visually the same size as the wordmark under it -- just ~2px taller, per
+// direct client feedback that a noticeably bigger icon looked wrong -- same
+// "equal size" rule the old side-by-side layout used.
+const SIZES = {
+  sm: { icon: "h-[18px]", text: "text-base", gap: "gap-0.5" },
+  md: { icon: "h-5", text: "text-base", gap: "gap-0.5" },
+  lg: { icon: "h-[25px]", text: "text-base", gap: "gap-1" },
+  xl: { icon: "h-[26px]", text: "text-2xl", gap: "gap-1" },
 };
 
 export interface LogoProps {
@@ -32,7 +26,12 @@ export interface LogoProps {
   className?: string;
 }
 
-export default function Logo({ size = "md", variant = "default", showText = true, className = "" }: LogoProps) {
+export default function Logo({
+  size = "md",
+  variant = "default",
+  showText = true,
+  className = "",
+}: LogoProps) {
   // Matches the supplied artwork's wordmark, which is one continuous
   // Navy->Signal gradient left to right, not two flat colors -- on "white"
   // variant (dark backgrounds, e.g. the dashboard header/footer) it's a
@@ -42,15 +41,19 @@ export default function Logo({ size = "md", variant = "default", showText = true
       ? "text-white"
       : "bg-gradient-to-r from-brand-blue-dark to-brand-blue bg-clip-text text-transparent";
 
+  const { icon, text, gap } = SIZES[size];
+
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
+    <span className={`inline-flex flex-col items-center ${gap} ${className}`}>
       <img
         src="/logo-icon.png"
         alt="thejobs4u"
-        className={`${ICON_HEIGHT[size]} w-auto shrink-0 ${variant === "white" ? "brightness-0 invert" : ""}`}
+        className={`${icon} w-auto shrink-0 ${variant === "white" ? "brightness-0 invert" : ""}`}
       />
       {showText && (
-        <span className={`font-display font-black leading-none tracking-tight whitespace-nowrap ${TEXT_SIZE[size]} ${textClass}`}>
+        <span
+          className={`font-display font-black leading-none tracking-tight whitespace-nowrap ${text} ${textClass}`}
+        >
           TheJobs4U
         </span>
       )}
