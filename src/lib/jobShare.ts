@@ -1,6 +1,7 @@
 import type { JobPost, Company } from "@/lib/api";
 import { SITE_URL, SITE_REF } from "@/lib/site";
 import { slugify } from "@/lib/utils";
+import { buildWaMeUrl } from "@/lib/whatsapp";
 
 type ShareJob = Pick<JobPost, "id" | "title" | "company" | "location" | "slug">;
 
@@ -70,8 +71,7 @@ export function buildJobWhatsAppMessage(job: ShareJob) {
 }
 
 export function buildJobWhatsAppUrl(number: string, job: ShareJob) {
-  const digits = number.replace(/[^\d+]/g, "");
-  return `https://wa.me/${digits}?text=${encodeURIComponent(buildJobWhatsAppMessage(job))}`;
+  return buildWaMeUrl(number, buildJobWhatsAppMessage(job));
 }
 
 // mailto can only pre-fill a subject and plain-text body -- no thumbnail.
@@ -94,11 +94,10 @@ export function buildJobMailtoUrl(email: string, job: ShareJob) {
 // company's own general contact details on its public profile page (no
 // specific job to reference).
 export function buildCompanyWhatsAppUrl(number: string, companyName: string) {
-  const digits = number.replace(/[^\d+]/g, "");
   const text = [`Ref By ${SITE_REF}`, `Hello, I found ${companyName} on thejobs4u and would like to know more about your job openings.`].join(
     "\n"
   );
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+  return buildWaMeUrl(number, text);
 }
 
 export function buildCompanyMailtoUrl(email: string, companyName: string) {

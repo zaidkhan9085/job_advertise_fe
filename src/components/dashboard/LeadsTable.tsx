@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Phone, MessageCircle, Search, Download, Loader2, UserPlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { recordJobInteraction, type JobLead } from "@/lib/api";
+import { buildWaMeUrl } from "@/lib/whatsapp";
 
 const SOURCE_LABEL: Record<JobLead["source"], string> = {
   CANDIDATE: "Applied",
@@ -191,7 +192,7 @@ export default function LeadsTable({
                       )}
                       {lead.phone && (
                         <a
-                          href={`https://wa.me/${lead.phone.replace(/[^\d+]/g, "")}`}
+                          href={buildWaMeUrl(lead.phone)}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => recordJobInteraction(lead.jobId, "WHATSAPP")}

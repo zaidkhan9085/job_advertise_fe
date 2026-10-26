@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { getFeaturedCompanies, resolveImageUrl, type FeaturedCompany, ApiError } from "@/lib/api";
 
@@ -10,8 +11,12 @@ import { getFeaturedCompanies, resolveImageUrl, type FeaturedCompany, ApiError }
 // choice, so it never silently disappears just because it has no active
 // jobs right now. An empty list just means no one is currently featured,
 // and the section renders nothing rather than an empty block.
-// Cards aren't links yet -- what a click should filter to (exact company vs
-// a name-text search) is still an open decision, deferred on purpose.
+// A card is a link to /jobs?q=<company name> only when it actually has open
+// positions -- the jobs page's own search already AND-matches every typed
+// keyword against title/company/location/description, so searching the
+// full company name there is already an effective "this company's jobs"
+// filter without needing a dedicated companyId param. A 0-job company stays
+// a plain, non-interactive card (nothing to send someone to).
 //
 // A single scrollable row with arrow buttons, not a wrapping grid -- same
 // pattern as StoriesSection's "Live Highlights" row -- so a growing
@@ -107,31 +112,46 @@ export default function TopCompaniesSection() {
             ? Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-[150px] h-28 rounded-2xl bg-secondary/40 animate-pulse" />
               ))
-            : companies.map((company) => (
-                <div
-                  key={company.id}
-                  className="flex-shrink-0 w-[150px] flex flex-col items-center justify-center gap-2 px-3 py-5 rounded-2xl border border-brand-blue/10 bg-white hover:border-brand-blue/40 hover:shadow-[0_8px_24px_rgba(16,152,240,0.08)] transition-all text-center"
-                >
-                  {company.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={resolveImageUrl(company.logo)}
-                      alt={company.name}
-                      className="w-12 h-12 rounded-xl object-cover border border-border/60"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-xl bg-brand-blue-muted/40 flex items-center justify-center text-brand-blue">
-                      <Building2 className="w-6 h-6" />
-                    </div>
-                  )}
-                  <span className="text-[13px] font-bold text-foreground leading-tight line-clamp-2" title={company.name}>
-                    {company.name}
-                  </span>
-                  <span className="text-xs font-black text-brand-blue">
-                    {company.jobCount} open position{company.jobCount === 1 ? "" : "s"}
-                  </span>
-                </div>
-              ))}
+            : companies.map((company) => {
+                const cardClass =
+                  "flex-shrink-0 w-[150px] flex flex-col items-center justify-center gap-2 px-3 py-5 rounded-2xl border border-brand-blue/10 bg-white text-center transition-all";
+                const card = (
+                  <>
+                    {company.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={resolveImageUrl(company.logo)}
+                        alt={company.name}
+                        className="w-12 h-12 rounded-xl object-cover border border-border/60"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-brand-blue-muted/40 flex items-center justify-center text-brand-blue">
+                        <Building2 className="w-6 h-6" />
+                      </div>
+                    )}
+                    <span className="text-[13px] font-bold text-foreground leading-tight line-clamp-2" title={company.name}>
+                      {company.name}
+                    </span>
+                    <span className="text-xs font-black text-brand-blue">
+                      {company.jobCount} open position{company.jobCount === 1 ? "" : "s"}
+                    </span>
+                  </>
+                );
+
+                return company.jobCount > 0 ? (
+                  <Link
+                    key={company.id}
+                    href={`/jobs?q=${encodeURIComponent(company.name)}`}
+                    className={`${cardClass} hover:border-brand-blue/40 hover:shadow-[0_8px_24px_rgba(16,152,240,0.08)] cursor-pointer`}
+                  >
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={company.id} className={`${cardClass} cursor-default`}>
+                    {card}
+                  </div>
+                );
+              })}
         </div>
       </div>
     </section>
