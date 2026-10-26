@@ -35,8 +35,8 @@ export default function AnnouncementContent({ title, message, buttonText, button
         <Megaphone className="w-4 h-4 text-brand-blue" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-bold text-foreground">{title || "Announcement title"}</p>
-        <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">
+        <p className="text-sm font-bold text-foreground break-words">{title || "Announcement title"}</p>
+        <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap break-words">
           {message || "Your dashboard message will appear here."}
         </p>
         {cta}

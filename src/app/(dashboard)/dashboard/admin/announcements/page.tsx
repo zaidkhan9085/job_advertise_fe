@@ -55,6 +55,13 @@ function toIsoOrUndefined(localValue: string): string | undefined {
   return new Date(localValue).toISOString();
 }
 
+// Marks the two fields that actually block submission (the Publish/Save
+// button stays disabled while either is empty) -- every other field here is
+// optional, including Starts, which just defaults to "now" on its own.
+function RequiredMark() {
+  return <span className="text-rose-500">*</span>;
+}
+
 function statusOf(a: Announcement): { label: string; className: string } {
   if (!a.isPublished) return { label: "Draft", className: "bg-secondary text-muted-foreground" };
   const now = new Date();
@@ -167,7 +174,7 @@ function EditAnnouncementModal({
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-semibold text-foreground block mb-1.5">Announcement title</label>
+            <label className="text-sm font-semibold text-foreground block mb-1.5">Announcement title <RequiredMark /></label>
             <input
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -176,7 +183,7 @@ function EditAnnouncementModal({
             />
           </div>
           <div>
-            <label className="text-sm font-semibold text-foreground block mb-1.5">Message</label>
+            <label className="text-sm font-semibold text-foreground block mb-1.5">Message <RequiredMark /></label>
             <textarea
               value={form.message}
               onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
@@ -439,7 +446,7 @@ export default function AdminAnnouncementsPage() {
 
       <div className="bg-white rounded-2xl border border-border/60 p-6 space-y-4">
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1.5">Announcement title</label>
+          <label className="text-sm font-semibold text-foreground block mb-1.5">Announcement title <RequiredMark /></label>
           <input
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -451,7 +458,7 @@ export default function AdminAnnouncementsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1.5">Message</label>
+          <label className="text-sm font-semibold text-foreground block mb-1.5">Message <RequiredMark /></label>
           <textarea
             value={form.message}
             onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
