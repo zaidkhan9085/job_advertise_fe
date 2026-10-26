@@ -17,6 +17,7 @@ import SearchableSelect from "@/components/common/SearchableSelect";
 import SimpleSelect from "@/components/common/SimpleSelect";
 import { COURSE_OPTIONS, getSpecializationOptions } from "@/lib/courseSpecializations";
 import { SITE_REF } from "@/lib/site";
+import { buildWaMeUrl } from "@/lib/whatsapp";
 
 const COURSE_SELECT_OPTIONS = COURSE_OPTIONS.map((c) => ({ value: c, label: c }));
 const EXPERIENCE_YEAR_SELECT_OPTIONS = Array.from({ length: 41 }, (_, i) => ({
@@ -151,8 +152,7 @@ export default function ApplyDialog({
 
       if (result.contactWhatsapp) {
         const message = buildWhatsAppMessage(payload, jobTitle, result.resumeLink);
-        const cleanedNumber = result.contactWhatsapp.replace(/[^\d+]/g, "");
-        setWhatsappUrl(`https://wa.me/${cleanedNumber}?text=${encodeURIComponent(message)}`);
+        setWhatsappUrl(buildWaMeUrl(result.contactWhatsapp, message));
         setStage("confirm");
         onSuccess();
       } else {

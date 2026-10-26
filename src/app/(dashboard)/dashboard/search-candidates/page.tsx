@@ -55,6 +55,7 @@ import ResetPasswordModal from "@/components/dashboard/ResetPasswordModal";
 import CandidateImportModal from "@/components/dashboard/CandidateImportModal";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { buildCsv, downloadCsv } from "@/lib/csv";
+import { buildWaMeUrl } from "@/lib/whatsapp";
 
 // Naukri-style min-max range filters, not fixed bands — a plain number
 // dropdown for each bound so a recruiter can build any custom range (e.g.
@@ -153,7 +154,7 @@ function ResumeModal({
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
               {candidate.whatsapp && (
                 <a
-                  href={`https://wa.me/${candidate.whatsapp.replace(/[^\d+]/g, "")}`}
+                  href={buildWaMeUrl(candidate.whatsapp)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-emerald-600 font-bold hover:underline"
@@ -1149,7 +1150,7 @@ export default function SearchCandidatesPage() {
                 <div className="flex flex-wrap gap-2">
                   {selected.isUnlocked && selected.whatsapp && (
                     <a
-                      href={`https://wa.me/${selected.whatsapp.replace(/[^\d+]/g, "")}`}
+                      href={buildWaMeUrl(selected.whatsapp)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100"
