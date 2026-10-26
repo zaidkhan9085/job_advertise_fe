@@ -14,6 +14,10 @@ export default function AnnouncementBell() {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  // Opening the dropdown counts as "seen" -- the badge count clears right
+  // away, independent of actually dismissing any individual item (that's
+  // what the per-item x button is for; this is just "I've looked").
+  const [hasViewed, setHasViewed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   // Fetched once per dashboard session, not polled -- this is meant to read
@@ -47,12 +51,15 @@ export default function AnnouncementBell() {
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => {
+          setIsOpen((v) => !v);
+          setHasViewed(true);
+        }}
         aria-label="Announcements"
         className="relative p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
       >
         <Bell className="w-5 h-5" />
-        {announcements.length > 0 && (
+        {!hasViewed && announcements.length > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold leading-4 text-center ring-2 ring-white">
             {announcements.length > 9 ? "9+" : announcements.length}
           </span>
