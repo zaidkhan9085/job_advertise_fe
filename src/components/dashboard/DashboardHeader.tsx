@@ -8,6 +8,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import Logo from "@/components/common/Logo";
 import { getMyCompany, getMyCandidateProfile, getMe, resolveImageUrl } from "@/lib/api";
 import { buttonClass } from "@/lib/ui";
+import AnnouncementBell from "./AnnouncementBell";
 
 // Where clicking the avatar goes -- each role's own "edit yourself" page.
 // Admin/sub_admin have no such page yet, so their avatar isn't a link.
@@ -129,6 +130,8 @@ export default function DashboardHeader() {
             </span>
           </Link>
         )}
+
+        <AnnouncementBell />
 
         <div className="w-px h-6 bg-border/60 hidden sm:block" />
 

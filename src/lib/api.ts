@@ -1703,6 +1703,96 @@ export function deleteTestimonialAdmin(id: string) {
   });
 }
 
+// --- Announcements ---
+// Admin-authored in-app notice shown to candidates/employers/both via the
+// dashboard bell (AnnouncementBell.tsx) -- not email/push. "Active" (live
+// right now, for my role, not yet dismissed by me) is computed server-side;
+// the frontend never re-derives it from startsAt/endsAt itself.
+export type AnnouncementAudience = "candidate" | "employer" | "all";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  audience: AnnouncementAudience;
+  buttonText: string | null;
+  buttonLink: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnnouncementInput {
+  title: string;
+  message: string;
+  audience: AnnouncementAudience;
+  buttonText?: string;
+  buttonLink?: string;
+  startsAt?: string;
+  endsAt?: string;
+  isPublished?: boolean;
+}
+
+export function getActiveAnnouncements() {
+  return apiFetch<{ announcements: Announcement[] }>("/api/announcements/active");
+}
+
+export function dismissAnnouncement(id: string) {
+  return apiFetch<{ message: string }>(`/api/announcements/${id}/dismiss`, {
+    method: "POST",
+  });
+}
+
+export function getAllAnnouncementsAdmin(filters?: AdminListParams) {
+  const query = buildQuery({
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+  });
+  return apiFetch<Paginated<Announcement>>(`/api/admin/announcements${query}`);
+}
+
+export function createAnnouncementAdmin(payload: AnnouncementInput) {
+  return apiFetch<{ message: string; announcement: Announcement }>(
+    "/api/admin/announcements",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function updateAnnouncementAdmin(id: string, payload: AnnouncementInput) {
+  return apiFetch<{ message: string; announcement: Announcement }>(
+    `/api/admin/announcements/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function setAnnouncementPublished(id: string, isPublished: boolean) {
+  return apiFetch<{ message: string; isPublished: boolean }>(
+    `/api/admin/announcements/${id}/publish`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ isPublished }),
+    },
+  );
+}
+
+export function deleteAnnouncementAdmin(id: string) {
+  return apiFetch<{ message: string }>(`/api/admin/announcements/${id}`, {
+    method: "DELETE",
+  });
+}
+
 // --- Billing: plans, credits, subscriptions ---
 // FREE never has an EmployerSubscription row -- "no active row" simply
 // means Free, whose numbers come live from the PlanTemplate below. A PRO
