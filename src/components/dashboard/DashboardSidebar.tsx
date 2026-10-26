@@ -19,6 +19,7 @@ import {
   ScanText,
   MessageSquareQuote,
   CreditCard,
+  Megaphone,
   X,
 } from "lucide-react";
 
@@ -44,6 +45,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
     { label: "AI Scans", href: "/dashboard/admin/ai-scans", icon: ScanText },
     { label: "Testimonials", href: "/dashboard/admin/testimonials", icon: MessageSquareQuote },
+    { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone },
     { label: "Subscriptions", href: "/dashboard/admin/subscriptions", icon: CreditCard },
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
