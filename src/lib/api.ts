@@ -745,6 +745,22 @@ export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCou
   }[];
 }
 
+// Registered employer accounts with no Company row yet -- invisible to the
+// Company-driven list above, same reasoning as ATS's IncompleteSignupCandidate.
+export interface IncompleteSignupEmployer {
+  userId: number;
+  fullName: string | null;
+  email: string;
+  phone: string | null;
+  registeredAt: string;
+  isVerified: boolean;
+  isBlocked: boolean;
+}
+
+export interface CompaniesAdminResult extends Paginated<CompanyAdminListItem> {
+  incompleteSignups: IncompleteSignupEmployer[];
+}
+
 export function getAllCompaniesAdmin(filters?: AdminListParams) {
   const query = buildQuery({
     page: filters?.page,
@@ -754,7 +770,7 @@ export function getAllCompaniesAdmin(filters?: AdminListParams) {
     sortOrder: filters?.sortOrder,
     all: filters?.all,
   });
-  return apiFetch<Paginated<CompanyAdminListItem>>(
+  return apiFetch<CompaniesAdminResult>(
     `/api/admin/companies${query}`,
   );
 }
@@ -773,6 +789,15 @@ export function deleteCompanyAdmin(id: string, confirm?: boolean) {
       method: "DELETE",
     },
   );
+}
+
+// For an incomplete signup (a User with role employer but no Company row
+// yet) -- deleteCompanyAdmin above is keyed off a company id, which doesn't
+// exist for one of these.
+export function deleteEmployerUserAdmin(userId: number) {
+  return apiFetch<{ message: string }>(`/api/admin/companies/employer-users/${userId}`, {
+    method: "DELETE",
+  });
 }
 
 export function bulkDeleteCompanies(payload: BulkDeletePayload) {
@@ -1829,6 +1854,10 @@ export interface EffectivePlan {
   periodStart: string;
   periodEnd: string;
   expiresAt: string | null;
+  // True only for a PRO plan an admin gave away free (gift or a top-up
+  // created from Free) -- never a real paid subscription. Lets the admin
+  // Subscriptions list show a Revert action only where one actually applies.
+  isGifted: boolean;
 }
 
 export interface EmployerSubscription {
@@ -2030,6 +2059,15 @@ export function giftSubscriptionAdmin(employerId: number, data: GiftSubscription
   return apiFetch<{ message: string; subscription: EmployerSubscription }>(
     `/api/admin/billing/subscriptions/${employerId}/gift`,
     { method: "POST", body: JSON.stringify(data) },
+  );
+}
+
+// Undoes a gift/admin top-up -- the employer drops back to Free. Refuses
+// (400) if their active subscription isn't actually isGifted.
+export function revertGiftedSubscriptionAdmin(employerId: number) {
+  return apiFetch<{ message: string }>(
+    `/api/admin/billing/subscriptions/${employerId}/revert`,
+    { method: "POST" },
   );
 }
 

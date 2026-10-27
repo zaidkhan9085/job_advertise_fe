@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star } from "lucide-react";
+import { Building, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star, UserX, ChevronDown, ChevronRight, KeyRound } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   getAllCompaniesAdmin,
   deleteCompanyAdmin,
+  deleteEmployerUserAdmin,
   bulkDeleteCompanies,
   updateCandidateUser,
   setCandidateBlocked,
@@ -18,6 +19,7 @@ import {
   grantCompanyAutoApprove,
   resolveImageUrl,
   type CompanyAdminListItem,
+  type IncompleteSignupEmployer,
   type PaginatedMeta,
   ApiError,
 } from "@/lib/api";
@@ -222,6 +224,15 @@ export default function AdminEmployersPage() {
   const [grantTarget, setGrantTarget] = useState<CompanyAdminListItem | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Registered but never finished a company profile -- invisible to the
+  // Company-driven table above, same reasoning/pattern as Search
+  // Candidates' own "Incomplete Signups" section.
+  const [incompleteSignups, setIncompleteSignups] = useState<IncompleteSignupEmployer[]>([]);
+  const [signupsExpanded, setSignupsExpanded] = useState(false);
+  const [signupActioningId, setSignupActioningId] = useState<number | null>(null);
+  const [signupPasswordTarget, setSignupPasswordTarget] = useState<IncompleteSignupEmployer | null>(null);
+  const [signupDeleteTarget, setSignupDeleteTarget] = useState<IncompleteSignupEmployer | null>(null);
+
   const selection = useTableSelection<string>();
 
   useEffect(() => {
@@ -242,6 +253,7 @@ export default function AdminEmployersPage() {
       const result = await getAllCompaniesAdmin({ ...filters, page, limit: PAGE_LIMIT });
       setCompanies(result.data);
       setMeta(result.meta);
+      setIncompleteSignups(result.incompleteSignups);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load employers.");
     } finally {
@@ -313,6 +325,34 @@ export default function AdminEmployersPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to update employer.");
     } finally {
       setActioningId(null);
+    }
+  };
+
+  const handleToggleSignupBlock = async (u: IncompleteSignupEmployer) => {
+    setSignupActioningId(u.userId);
+    try {
+      const result = await setCandidateBlocked(u.userId, !u.isBlocked);
+      toast.success(result.message);
+      setIncompleteSignups((prev) => prev.map((x) => (x.userId === u.userId ? { ...x, isBlocked: result.user.isBlocked } : x)));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to update employer.");
+    } finally {
+      setSignupActioningId(null);
+    }
+  };
+
+  const handleDeleteSignup = async () => {
+    if (!signupDeleteTarget) return;
+    setSignupActioningId(signupDeleteTarget.userId);
+    try {
+      await deleteEmployerUserAdmin(signupDeleteTarget.userId);
+      toast.success("Employer deleted");
+      setSignupDeleteTarget(null);
+      setIncompleteSignups((prev) => prev.filter((u) => u.userId !== signupDeleteTarget.userId));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete employer.");
+    } finally {
+      setSignupActioningId(null);
     }
   };
 
@@ -558,6 +598,71 @@ export default function AdminEmployersPage() {
 
       {error && <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">{error}</div>}
 
+      {/* Registered but never finished a company profile -- invisible to the
+          table below since none of its columns (location, jobs, followers,
+          Top Hiring...) apply to an account with no company, so they get
+          their own small, collapsible spot instead. */}
+      {incompleteSignups.length > 0 && (
+        <div className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden">
+          <button
+            onClick={() => setSignupsExpanded((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 px-4 py-3.5 text-left"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-bold text-foreground">
+              <UserX className="w-4 h-4 text-amber-600" />
+              Incomplete Signups ({incompleteSignups.length})
+            </span>
+            {signupsExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          </button>
+          {signupsExpanded && (
+            <div className="border-t border-border/60 divide-y divide-border/60">
+              {incompleteSignups.map((u) => (
+                <div key={u.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-foreground truncate">{u.fullName || "(no name)"}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {u.email} &middot; Registered {formatDistanceToNow(new Date(u.registeredAt), { addSuffix: true })}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <button
+                      onClick={() => setSignupPasswordTarget(u)}
+                      title="Reset Password"
+                      className="p-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      disabled={signupActioningId === u.userId}
+                      onClick={() => handleToggleSignupBlock(u)}
+                      title={u.isBlocked ? "Unblock" : "Block"}
+                      className={`p-2 rounded-lg disabled:opacity-60 ${
+                        u.isBlocked ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      }`}
+                    >
+                      {signupActioningId === u.userId ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : u.isBlocked ? (
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      ) : (
+                        <ShieldOff className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setSignupDeleteTarget(u)}
+                      title="Delete"
+                      className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <CommonTable<CompanyAdminListItem, string>
         columns={columns}
         data={companies}
@@ -662,6 +767,25 @@ export default function AdminEmployersPage() {
       )}
 
       {creditsCompany && <GrantCreditsModal company={creditsCompany} onClose={() => setCreditsCompany(null)} />}
+
+      {signupPasswordTarget && (
+        <ResetPasswordModal
+          targetLabel={signupPasswordTarget.fullName || signupPasswordTarget.email}
+          userId={signupPasswordTarget.userId}
+          onClose={() => setSignupPasswordTarget(null)}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={!!signupDeleteTarget}
+        title="Delete Employer"
+        message={`Permanently delete "${signupDeleteTarget?.fullName || signupDeleteTarget?.email}" and their account?\n\nThis cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isConfirming={signupActioningId === signupDeleteTarget?.userId}
+        onConfirm={handleDeleteSignup}
+        onCancel={() => setSignupDeleteTarget(null)}
+      />
     </div>
   );
 }
