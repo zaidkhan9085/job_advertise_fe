@@ -263,7 +263,7 @@ export default function JobDetailPage() {
       <div className="bg-muted/10 min-h-screen pb-20">
         <div className="bg-brand-ink text-white pt-8 pb-16">
           <div className="container-site">
-            <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors w-fit mb-8">
+            <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors w-fit mb-8">
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
             <span className="inline-block px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs font-bold uppercase tracking-wide mb-3">
