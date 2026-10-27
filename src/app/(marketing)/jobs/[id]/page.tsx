@@ -44,6 +44,20 @@ import ApplyDialog from "@/components/jobs/ApplyDialog";
 import { buildJobWhatsAppUrl, buildJobMailtoUrl, buildJobShareText, jobPageUrl, companyPagePath } from "@/lib/jobShare";
 import { copyToClipboard } from "@/lib/utils";
 
+// The minimal payload the backend's 410 response carries for an expired job
+// (controllers/jobController.js's getJobById) -- everything else was
+// already cleared server-side when it expired (poster image, full
+// description, contact details), so there's nothing more to type here.
+interface ExpiredJobInfo {
+  id: string;
+  slug: string | null;
+  title: string;
+  company: string;
+  location: string | null;
+  companyId: string | null;
+  createdAt: string;
+}
+
 function DisabledAction({ icon: Icon, label }: { icon: typeof Heart; label: string }) {
   return (
     <button
@@ -116,6 +130,7 @@ export default function JobDetailPage() {
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [expiredJob, setExpiredJob] = useState<ExpiredJobInfo | null>(null);
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -147,7 +162,27 @@ export default function JobDetailPage() {
           .finally(() => setIsCompanyLoading(false));
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 404) setNotFound(true);
+      if (err instanceof ApiError && err.status === 404) {
+        setNotFound(true);
+      } else if (err instanceof ApiError && err.status === 410) {
+        // The job itself is gone (its heavy fields were already cleared
+        // server-side), but Related Jobs still works off the same id/slug
+        // -- findBySlugOrId resolves the row regardless of status, and
+        // getRelatedJobs only ever needed `company` + `id`, both of which
+        // survive an expiry.
+        const body = err.body as { job?: ExpiredJobInfo } | undefined;
+        if (body?.job) {
+          setExpiredJob(body.job);
+          getRelatedJobs(params.id)
+            .then((r) => {
+              setFeaturedJobs(r.featured);
+              setRelated(r.related);
+            })
+            .catch(() => {});
+        } else {
+          setNotFound(true);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -221,6 +256,46 @@ export default function JobDetailPage() {
 
   if (isLoading) {
     return <div className="min-h-screen bg-muted/10 animate-pulse" />;
+  }
+
+  if (expiredJob) {
+    return (
+      <div className="bg-muted/10 min-h-screen pb-20">
+        <div className="bg-brand-ink text-white pt-8 pb-16">
+          <div className="container-site">
+            <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors w-fit mb-8">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
+            <span className="inline-block px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs font-bold uppercase tracking-wide mb-3">
+              Expired
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 leading-tight">{expiredJob.title}</h1>
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 text-sm sm:text-base font-medium text-white/80">
+              <span className="flex items-center gap-1.5"><Building className="w-5 h-5 opacity-70" /> {expiredJob.company}</span>
+              {expiredJob.location && (
+                <span className="flex items-center gap-1.5"><MapPin className="w-5 h-5 opacity-70" /> {expiredJob.location}</span>
+              )}
+              <span className="flex items-center gap-1.5"><Calendar className="w-5 h-5 opacity-70" /> Posted {formatDistanceToNow(new Date(expiredJob.createdAt), { addSuffix: true })}</span>
+            </div>
+            <p className="text-white/70 mt-4 max-w-xl">
+              This job posting has expired and is no longer accepting applications. Browse similar openings below.
+            </p>
+          </div>
+        </div>
+
+        <div className="container-site relative mt-10">
+          <JobScrollSection title="Related Jobs" jobs={related} appliedIds={appliedIds} onApplied={markApplied} />
+          <JobScrollSection
+            title="Premium Jobs"
+            titleIcon={<Star className="w-5 h-5 fill-[#DAA520] text-[#DAA520]" />}
+            jobs={featuredJobs}
+            appliedIds={appliedIds}
+            onApplied={markApplied}
+            accentBorderClass="border-[#DAA520]/30"
+          />
+        </div>
+      </div>
+    );
   }
 
   if (notFound || !job) {
