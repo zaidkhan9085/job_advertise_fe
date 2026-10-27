@@ -705,15 +705,40 @@ export interface CompanyAdminOwner {
   isBlocked: boolean;
 }
 
-export interface CompanyAdminListItem extends Company {
-  owner: CompanyAdminOwner;
-  _count: { jobs: number; follows: number; reports: number };
-  pendingReportCount: number;
-  // Blended total (real follows + admin's bonusFollowers) -- the same
-  // number the public and admin-detail views show, not _count.follows alone.
-  followerCount: number;
-  // See CompanyAdminDetail's autoApprove for what this controls.
+// The company half of an employer row -- null when that employer never
+// finished their company profile (see EmployerAdminListItem below). Every
+// field here only ever exists once a real Company row does, so there's
+// nothing meaningful to show for location/jobs/followers/Top Hiring/
+// auto-approve without one.
+export interface EmployerAdminCompany {
+  id: string;
+  name: string;
+  slug: string | null;
+  logo: string | null;
+  jobLocation: JobLocationRef | null;
   autoApprove: boolean;
+  isFeaturedTopHiring: boolean;
+  jobCount: number;
+  // Blended total (real follows + admin's bonusFollowers) -- the same
+  // number the public and admin-detail views show, not a raw follow count.
+  followerCount: number;
+  pendingReportCount: number;
+}
+
+// Driven by the employer's User account, not their Company -- an employer
+// who registered but never finished a company profile still gets a row
+// here (company: null) instead of being invisible, per client request to
+// keep complete and incomplete employers in the one list rather than a
+// separate section.
+export interface EmployerAdminListItem {
+  userId: number;
+  fullName: string | null;
+  email: string;
+  phone: string | null;
+  isBlocked: boolean;
+  isVerified: boolean;
+  registeredAt: string;
+  company: EmployerAdminCompany | null;
 }
 
 export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCount"> {
@@ -745,22 +770,6 @@ export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCou
   }[];
 }
 
-// Registered employer accounts with no Company row yet -- invisible to the
-// Company-driven list above, same reasoning as ATS's IncompleteSignupCandidate.
-export interface IncompleteSignupEmployer {
-  userId: number;
-  fullName: string | null;
-  email: string;
-  phone: string | null;
-  registeredAt: string;
-  isVerified: boolean;
-  isBlocked: boolean;
-}
-
-export interface CompaniesAdminResult extends Paginated<CompanyAdminListItem> {
-  incompleteSignups: IncompleteSignupEmployer[];
-}
-
 export function getAllCompaniesAdmin(filters?: AdminListParams) {
   const query = buildQuery({
     page: filters?.page,
@@ -770,7 +779,7 @@ export function getAllCompaniesAdmin(filters?: AdminListParams) {
     sortOrder: filters?.sortOrder,
     all: filters?.all,
   });
-  return apiFetch<CompaniesAdminResult>(
+  return apiFetch<Paginated<EmployerAdminListItem>>(
     `/api/admin/companies${query}`,
   );
 }
@@ -805,6 +814,18 @@ export function bulkDeleteCompanies(payload: BulkDeletePayload) {
     deleted: string[];
     failed: { id: string; reason: string }[];
   }>("/api/admin/companies/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// Keyed by userId -- the admin Employers list's bulk-select now operates
+// over the merged employer list (complete or not), not just companies.
+export function bulkDeleteEmployerUsers(payload: BulkDeletePayload) {
+  return apiFetch<{
+    deleted: number[];
+    failed: { id: number; reason: string }[];
+  }>("/api/admin/companies/employer-users/bulk-delete", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -1343,6 +1364,22 @@ export function grantCreditsToCompany(
 ) {
   return apiFetch<{ message: string }>(
     `/api/admin/companies/${companyId}/credits`,
+    {
+      method: "POST",
+      body: JSON.stringify({ amount, note }),
+    },
+  );
+}
+
+// Same as grantCreditsToCompany above, but for an employer row with no
+// Company yet (company id doesn't exist for one of these).
+export function grantCreditsToEmployerUser(
+  userId: number,
+  amount: number,
+  note?: string,
+) {
+  return apiFetch<{ message: string }>(
+    `/api/admin/companies/employer-users/${userId}/credits`,
     {
       method: "POST",
       body: JSON.stringify({ amount, note }),
