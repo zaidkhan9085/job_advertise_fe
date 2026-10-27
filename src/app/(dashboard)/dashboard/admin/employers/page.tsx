@@ -2,22 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Building, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star } from "lucide-react";
+import { Building, Trash2, Pencil, Lock, ShieldOff, ShieldCheck, Loader2, X, Coins, Star, UserX } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   getAllCompaniesAdmin,
-  deleteCompanyAdmin,
-  bulkDeleteCompanies,
+  deleteEmployerUserAdmin,
+  bulkDeleteEmployerUsers,
   updateCandidateUser,
   setCandidateBlocked,
   grantCreditsToCompany,
+  grantCreditsToEmployerUser,
   setCompanyFeatured,
   revokeCompanyAutoApprove,
   grantCompanyAutoApprove,
   resolveImageUrl,
-  type CompanyAdminListItem,
+  type EmployerAdminListItem,
   type PaginatedMeta,
   ApiError,
 } from "@/lib/api";
@@ -31,23 +32,23 @@ import { isValidEmail } from "@/lib/isValidEmail";
 
 const PAGE_LIMIT = 20;
 
-function toCsv(companies: CompanyAdminListItem[]): string {
-  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Location", "Jobs", "Followers", "Pending Reports", "Top Hiring", "Blocked", "Created"];
-  const rows = companies.map((c) => [
-    c.name,
-    c.owner.full_name ?? "",
-    c.owner.email,
-    c.owner.phone ?? "",
-    c.jobLocation?.name ?? "",
-    String(c._count.jobs),
-    String(c.followerCount),
-    String(c.pendingReportCount),
-    c.isFeaturedTopHiring ? "Yes" : "No",
-    c.owner.isBlocked ? "Yes" : "No",
-    c.createdAt,
+function toCsv(rows: EmployerAdminListItem[]): string {
+  const header = ["Company", "Owner Name", "Owner Email", "Owner Phone", "Location", "Jobs", "Followers", "Pending Reports", "Top Hiring", "Blocked", "Registered"];
+  const csvRows = rows.map((r) => [
+    r.company?.name ?? "",
+    r.fullName ?? "",
+    r.email,
+    r.phone ?? "",
+    r.company?.jobLocation?.name ?? "",
+    String(r.company?.jobCount ?? 0),
+    String(r.company?.followerCount ?? 0),
+    String(r.company?.pendingReportCount ?? 0),
+    r.company?.isFeaturedTopHiring ? "Yes" : "No",
+    r.isBlocked ? "Yes" : "No",
+    r.registeredAt,
   ]);
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  return [header, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+  return [header, ...csvRows].map((row) => row.map(escape).join(",")).join("\n");
 }
 
 function downloadCsv(csv: string, filenamePrefix: string) {
@@ -60,22 +61,22 @@ function downloadCsv(csv: string, filenamePrefix: string) {
   URL.revokeObjectURL(url);
 }
 
-// Edit/block/reset-password below act on the employer's account (the User
-// behind company.owner) via the same generic admin-user endpoints already
-// built for Candidates — those endpoints aren't role-restricted on the
-// target, just on the caller (admin/sub_admin).
+// Edit/block/reset-password act on the employer's own account (User) via
+// the same generic admin-user endpoints already built for Candidates —
+// those aren't role-restricted on the target, just on the caller
+// (admin/sub_admin). None of this needs a Company to exist.
 function EditOwnerModal({
-  company,
+  row,
   onClose,
   onSaved,
 }: {
-  company: CompanyAdminListItem;
+  row: EmployerAdminListItem;
   onClose: () => void;
   onSaved: (owner: { id: number; full_name: string | null; email: string; phone: string | null }) => void;
 }) {
-  const [fullName, setFullName] = useState(company.owner.full_name ?? "");
-  const [email, setEmail] = useState(company.owner.email);
-  const [phone, setPhone] = useState(company.owner.phone ?? "");
+  const [fullName, setFullName] = useState(row.fullName ?? "");
+  const [email, setEmail] = useState(row.email);
+  const [phone, setPhone] = useState(row.phone ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -85,7 +86,7 @@ function EditOwnerModal({
     }
     setIsSaving(true);
     try {
-      const updated = await updateCandidateUser(company.owner.id, { full_name: fullName, email, phone });
+      const updated = await updateCandidateUser(row.userId, { full_name: fullName, email, phone });
       toast.success("Employer updated");
       onSaved(updated);
     } catch (err) {
@@ -137,8 +138,11 @@ function EditOwnerModal({
   );
 }
 
-
-function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem; onClose: () => void }) {
+// Credits are a plain User field -- grants through whichever endpoint
+// actually applies (company-id one when a company exists, since that's the
+// established route; user-id one otherwise), but the UI/flow is identical
+// either way.
+function GrantCreditsModal({ row, onClose }: { row: EmployerAdminListItem; onClose: () => void }) {
   const [amount, setAmount] = useState("5");
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -151,7 +155,9 @@ function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem
     }
     setIsSaving(true);
     try {
-      const result = await grantCreditsToCompany(company.id, amountNum, note || undefined);
+      const result = row.company
+        ? await grantCreditsToCompany(row.company.id, amountNum, note || undefined)
+        : await grantCreditsToEmployerUser(row.userId, amountNum, note || undefined);
       toast.success(result.message);
       onClose();
     } catch (err) {
@@ -171,7 +177,7 @@ function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem
           </button>
         </div>
         <p className="text-sm text-muted-foreground">
-          Add credits to {company.name}&apos;s balance for ATS candidate unlocks.
+          Add credits to {row.company?.name ?? (row.fullName || row.email)}&apos;s balance for ATS candidate unlocks.
         </p>
         <input
           value={amount}
@@ -202,7 +208,7 @@ function GrantCreditsModal({ company, onClose }: { company: CompanyAdminListItem
 export default function AdminEmployersPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [companies, setCompanies] = useState<CompanyAdminListItem[]>([]);
+  const [rows, setRows] = useState<EmployerAdminListItem[]>([]);
   const [meta, setMeta] = useState<PaginatedMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -211,18 +217,18 @@ export default function AdminEmployersPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const [actioningId, setActioningId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CompanyAdminListItem | null>(null);
+  const [actioningId, setActioningId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EmployerAdminListItem | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<CompanyAdminListItem | null>(null);
-  const [passwordCompany, setPasswordCompany] = useState<CompanyAdminListItem | null>(null);
-  const [creditsCompany, setCreditsCompany] = useState<CompanyAdminListItem | null>(null);
-  const [revokeTarget, setRevokeTarget] = useState<CompanyAdminListItem | null>(null);
-  const [grantTarget, setGrantTarget] = useState<CompanyAdminListItem | null>(null);
+  const [editingRow, setEditingRow] = useState<EmployerAdminListItem | null>(null);
+  const [passwordRow, setPasswordRow] = useState<EmployerAdminListItem | null>(null);
+  const [creditsRow, setCreditsRow] = useState<EmployerAdminListItem | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<EmployerAdminListItem | null>(null);
+  const [grantTarget, setGrantTarget] = useState<EmployerAdminListItem | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  const selection = useTableSelection<string>();
+  const selection = useTableSelection<number>();
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
@@ -235,12 +241,12 @@ export default function AdminEmployersPage() {
 
   const filters = useMemo(() => ({ search: search || undefined }), [search]);
 
-  const loadCompanies = useCallback(async () => {
+  const loadRows = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const result = await getAllCompaniesAdmin({ ...filters, page, limit: PAGE_LIMIT });
-      setCompanies(result.data);
+      setRows(result.data);
       setMeta(result.meta);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load employers.");
@@ -251,17 +257,17 @@ export default function AdminEmployersPage() {
 
   useEffect(() => {
     if (user?.role === "admin") {
-      loadCompanies();
+      loadRows();
     }
-  }, [user, loadCompanies]);
+  }, [user, loadRows]);
 
   // Job counts for rows the admin can actually see right now — for
   // "select all matching filters" the exact count isn't known client-side,
   // so the dialog falls back to a generic (still explicit) warning.
   const selectedJobCount = useMemo(() => {
     if (selection.selectAllMatching) return null;
-    return companies.filter((c) => selection.isSelected(c.id)).reduce((sum, c) => sum + c._count.jobs, 0);
-  }, [companies, selection]);
+    return rows.filter((r) => selection.isSelected(r.userId)).reduce((sum, r) => sum + (r.company?.jobCount ?? 0), 0);
+  }, [rows, selection]);
 
   if (user && user.role !== "admin") {
     return <ComingSoon title="Employers" />;
@@ -269,12 +275,12 @@ export default function AdminEmployersPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setActioningId(deleteTarget.id);
+    setActioningId(deleteTarget.userId);
     try {
-      const result = await deleteCompanyAdmin(deleteTarget.id, true);
-      toast.success(result.message);
+      await deleteEmployerUserAdmin(deleteTarget.userId);
+      toast.success("Employer deleted");
       setDeleteTarget(null);
-      loadCompanies();
+      loadRows();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete employer.");
     } finally {
@@ -285,7 +291,7 @@ export default function AdminEmployersPage() {
   const handleBulkDelete = async () => {
     setIsBulkDeleting(true);
     try {
-      const result = await bulkDeleteCompanies(selection.toBulkDeletePayload(filters));
+      const result = await bulkDeleteEmployerUsers(selection.toBulkDeletePayload(filters));
       if (result.failed.length > 0) {
         toast.error(`Deleted ${result.deleted.length}, but ${result.failed.length} failed.`);
       } else {
@@ -293,7 +299,7 @@ export default function AdminEmployersPage() {
       }
       selection.clear();
       setIsBulkDeleteOpen(false);
-      loadCompanies();
+      loadRows();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete employers.");
     } finally {
@@ -301,14 +307,12 @@ export default function AdminEmployersPage() {
     }
   };
 
-  const handleToggleBlock = async (company: CompanyAdminListItem) => {
-    setActioningId(company.id);
+  const handleToggleBlock = async (row: EmployerAdminListItem) => {
+    setActioningId(row.userId);
     try {
-      const result = await setCandidateBlocked(company.owner.id, !company.owner.isBlocked);
+      const result = await setCandidateBlocked(row.userId, !row.isBlocked);
       toast.success(result.message);
-      setCompanies((prev) =>
-        prev.map((c) => (c.id === company.id ? { ...c, owner: { ...c.owner, isBlocked: result.user.isBlocked } } : c))
-      );
+      setRows((prev) => prev.map((r) => (r.userId === row.userId ? { ...r, isBlocked: result.user.isBlocked } : r)));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update employer.");
     } finally {
@@ -316,8 +320,10 @@ export default function AdminEmployersPage() {
     }
   };
 
-  const handleToggleFeatured = async (company: CompanyAdminListItem) => {
-    setActioningId(company.id);
+  const handleToggleFeatured = async (row: EmployerAdminListItem) => {
+    if (!row.company) return;
+    const company = row.company;
+    setActioningId(row.userId);
     try {
       const result = await setCompanyFeatured(company.id, !company.isFeaturedTopHiring);
       toast.success(
@@ -325,8 +331,8 @@ export default function AdminEmployersPage() {
           ? `${company.name} added to Top Companies Hiring`
           : `${company.name} removed from Top Companies Hiring`
       );
-      setCompanies((prev) =>
-        prev.map((c) => (c.id === company.id ? { ...c, isFeaturedTopHiring: result.isFeaturedTopHiring } : c))
+      setRows((prev) =>
+        prev.map((r) => (r.userId === row.userId && r.company ? { ...r, company: { ...r.company, isFeaturedTopHiring: result.isFeaturedTopHiring } } : r))
       );
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update featured status.");
@@ -336,16 +342,17 @@ export default function AdminEmployersPage() {
   };
 
   const handleRevokeAutoApprove = async () => {
-    if (!revokeTarget) return;
-    setActioningId(revokeTarget.id);
+    if (!revokeTarget?.company) return;
+    const { userId, company } = revokeTarget;
+    setActioningId(userId);
     try {
-      const result = await revokeCompanyAutoApprove(revokeTarget.id);
+      const result = await revokeCompanyAutoApprove(company.id);
       toast.success(
         result.jobsSetPending > 0
           ? `Auto-approval paused — ${result.jobsSetPending} job${result.jobsSetPending === 1 ? "" : "s"} set back to Pending.`
           : "Auto-approval paused."
       );
-      setCompanies((prev) => prev.map((c) => (c.id === revokeTarget.id ? { ...c, autoApprove: false } : c)));
+      setRows((prev) => prev.map((r) => (r.userId === userId && r.company ? { ...r, company: { ...r.company, autoApprove: false } } : r)));
       setRevokeTarget(null);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to pause auto-approval.");
@@ -355,16 +362,17 @@ export default function AdminEmployersPage() {
   };
 
   const handleGrantAutoApprove = async () => {
-    if (!grantTarget) return;
-    setActioningId(grantTarget.id);
+    if (!grantTarget?.company) return;
+    const { userId, company } = grantTarget;
+    setActioningId(userId);
     try {
-      const result = await grantCompanyAutoApprove(grantTarget.id);
+      const result = await grantCompanyAutoApprove(company.id);
       toast.success(
         result.jobsApproved > 0
           ? `Auto-approval granted — ${result.jobsApproved} pending job${result.jobsApproved === 1 ? "" : "s"} approved now.`
           : "Auto-approval granted."
       );
-      setCompanies((prev) => prev.map((c) => (c.id === grantTarget.id ? { ...c, autoApprove: true } : c)));
+      setRows((prev) => prev.map((r) => (r.userId === userId && r.company ? { ...r, company: { ...r.company, autoApprove: true } } : r)));
       setGrantTarget(null);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to grant auto-approval.");
@@ -385,18 +393,18 @@ export default function AdminEmployersPage() {
     }
   };
 
-  const columns: CommonTableColumn<CompanyAdminListItem>[] = [
+  const columns: CommonTableColumn<EmployerAdminListItem>[] = [
     {
       key: "company",
       title: "Company",
       minWidth: 220,
-      render: (_, company) => (
+      render: (_, row) => (
         <div className="flex items-center gap-3">
-          {company.logo ? (
+          {row.company?.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={resolveImageUrl(company.logo)}
-              alt={company.name}
+              src={resolveImageUrl(row.company.logo)}
+              alt={row.company.name}
               className="w-8 h-8 rounded-lg object-cover border border-border/60"
             />
           ) : (
@@ -404,7 +412,13 @@ export default function AdminEmployersPage() {
               <Building className="w-4 h-4" />
             </div>
           )}
-          <span className="font-bold text-foreground">{company.name}</span>
+          {row.company ? (
+            <span className="font-bold text-foreground">{row.company.name}</span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600">
+              <UserX className="w-3.5 h-3.5" /> No company profile
+            </span>
+          )}
         </div>
       ),
     },
@@ -412,36 +426,34 @@ export default function AdminEmployersPage() {
       key: "owner",
       title: "Owner",
       minWidth: 180,
-      render: (_, company) => (
-        <span className="text-muted-foreground font-medium">{company.owner.full_name || company.owner.email}</span>
-      ),
+      render: (_, row) => <span className="text-muted-foreground font-medium">{row.fullName || row.email}</span>,
     },
     {
       key: "location",
       title: "Location",
       minWidth: 120,
-      render: (_, company) => <span className="text-muted-foreground font-medium">{company.jobLocation?.name ?? "—"}</span>,
+      render: (_, row) => <span className="text-muted-foreground font-medium">{row.company?.jobLocation?.name ?? "—"}</span>,
     },
     {
       key: "jobs",
       title: "Jobs",
       minWidth: 70,
-      render: (_, company) => <span className="font-bold text-foreground">{company._count.jobs}</span>,
+      render: (_, row) => <span className="font-bold text-foreground">{row.company?.jobCount ?? 0}</span>,
     },
     {
       key: "followers",
       title: "Followers",
       minWidth: 100,
-      render: (_, company) => <span className="font-bold text-foreground">{company.followerCount}</span>,
+      render: (_, row) => <span className="font-bold text-foreground">{row.company?.followerCount ?? 0}</span>,
     },
     {
       key: "reports",
       title: "Reports",
       minWidth: 130,
-      render: (_, company) =>
-        company.pendingReportCount > 0 ? (
+      render: (_, row) =>
+        row.company && row.company.pendingReportCount > 0 ? (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-rose-50 text-rose-700 border-rose-200">
-            {company.pendingReportCount} pending
+            {row.company.pendingReportCount} pending
           </span>
         ) : (
           <span className="text-muted-foreground">—</span>
@@ -451,31 +463,34 @@ export default function AdminEmployersPage() {
       key: "featured",
       title: "Top Hiring",
       minWidth: 100,
-      render: (_, company) => (
-        <button
-          title={company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
-          disabled={actioningId === company.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleFeatured(company);
-          }}
-          className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
-            company.isFeaturedTopHiring
-              ? "text-amber-500 hover:bg-amber-100"
-              : "text-muted-foreground hover:bg-secondary"
-          }`}
-        >
-          <Star className={`w-4 h-4 ${company.isFeaturedTopHiring ? "fill-amber-400" : ""}`} />
-        </button>
-      ),
+      render: (_, row) =>
+        row.company ? (
+          <button
+            title={row.company.isFeaturedTopHiring ? "Remove from Top Companies Hiring" : "Add to Top Companies Hiring"}
+            disabled={actioningId === row.userId}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFeatured(row);
+            }}
+            className={`p-2 rounded-lg transition-colors disabled:opacity-30 ${
+              row.company.isFeaturedTopHiring
+                ? "text-amber-500 hover:bg-amber-100"
+                : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <Star className={`w-4 h-4 ${row.company.isFeaturedTopHiring ? "fill-amber-400" : ""}`} />
+          </button>
+        ) : (
+          <span className="text-muted-foreground px-2">—</span>
+        ),
     },
     {
       key: "created",
       title: "Created",
       minWidth: 140,
-      render: (_, company) => (
+      render: (_, row) => (
         <span className="text-muted-foreground font-medium">
-          {formatDistanceToNow(new Date(company.createdAt), { addSuffix: true })}
+          {formatDistanceToNow(new Date(row.registeredAt), { addSuffix: true })}
         </span>
       ),
     },
@@ -483,8 +498,8 @@ export default function AdminEmployersPage() {
       key: "status",
       title: "Status",
       minWidth: 100,
-      render: (_, company) =>
-        company.owner.isBlocked ? (
+      render: (_, row) =>
+        row.isBlocked ? (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-rose-50 text-rose-700 border-rose-200">
             Blocked
           </span>
@@ -499,20 +514,20 @@ export default function AdminEmployersPage() {
       title: "Actions",
       align: "right",
       minWidth: 120,
-      render: (_, company) => (
+      render: (_, row) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             title="Edit"
-            disabled={actioningId === company.id}
-            onClick={() => setEditingCompany(company)}
+            disabled={actioningId === row.userId}
+            onClick={() => setEditingRow(row)}
             className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
           >
-            {actioningId === company.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+            {actioningId === row.userId ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
           </button>
           <button
             title="Delete Employer"
-            disabled={actioningId === company.id}
-            onClick={() => setDeleteTarget(company)}
+            disabled={actioningId === row.userId}
+            onClick={() => setDeleteTarget(row)}
             className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-30"
           >
             <Trash2 className="w-4 h-4" />
@@ -522,24 +537,30 @@ export default function AdminEmployersPage() {
               {
                 label: "Change Password",
                 icon: <Lock className="w-4 h-4" />,
-                onClick: () => setPasswordCompany(company),
+                onClick: () => setPasswordRow(row),
               },
               {
-                label: company.owner.isBlocked ? "Unblock Employer" : "Block Employer",
-                icon: company.owner.isBlocked ? <ShieldCheck className="w-4 h-4" /> : <ShieldOff className="w-4 h-4" />,
-                onClick: () => handleToggleBlock(company),
+                label: row.isBlocked ? "Unblock Employer" : "Block Employer",
+                icon: row.isBlocked ? <ShieldCheck className="w-4 h-4" /> : <ShieldOff className="w-4 h-4" />,
+                onClick: () => handleToggleBlock(row),
               },
               {
                 label: "Grant Credits",
                 icon: <Coins className="w-4 h-4" />,
-                onClick: () => setCreditsCompany(company),
+                onClick: () => setCreditsRow(row),
               },
-              {
-                label: company.autoApprove ? "Pause Auto-Approval" : "Grant Auto-Approval",
-                icon: company.autoApprove ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />,
-                onClick: () => (company.autoApprove ? setRevokeTarget(company) : setGrantTarget(company)),
-                danger: company.autoApprove,
-              },
+              // Auto-approval is a Company-level setting -- nothing to
+              // toggle for a row with no company yet.
+              ...(row.company
+                ? [
+                    {
+                      label: row.company.autoApprove ? "Pause Auto-Approval" : "Grant Auto-Approval",
+                      icon: row.company.autoApprove ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />,
+                      onClick: () => (row.company?.autoApprove ? setRevokeTarget(row) : setGrantTarget(row)),
+                      danger: row.company.autoApprove,
+                    },
+                  ]
+                : []),
             ]}
           />
         </div>
@@ -552,29 +573,29 @@ export default function AdminEmployersPage() {
       <div>
         <h1 className="text-2xl font-black text-foreground">Employers</h1>
         <p className="text-muted-foreground mt-1 text-sm font-medium">
-          Every registered company, with job counts, followers, and pending reports.
+          Every registered employer, complete or not, with job counts, followers, and pending reports.
         </p>
       </div>
 
       {error && <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">{error}</div>}
 
-      <CommonTable<CompanyAdminListItem, string>
+      <CommonTable<EmployerAdminListItem, number>
         columns={columns}
-        data={companies}
-        rowKey={(c) => c.id}
+        data={rows}
+        rowKey={(r) => r.userId}
         loading={isLoading}
         emptyMessage="No employers found."
-        onRowClick={(company) => router.push(`/dashboard/admin/employers/${company.id}`)}
+        onRowClick={(row) => row.company && router.push(`/dashboard/admin/employers/${row.company.id}`)}
         search={{ value: searchInput, onChange: setSearchInput, placeholder: "Search by company or owner..." }}
         resetFilters={{ onReset: () => setSearchInput(""), hasActiveFilters: !!searchInput }}
-        exportButton={{ onClick: handleExport, disabled: isExporting || companies.length === 0 }}
+        exportButton={{ onClick: handleExport, disabled: isExporting || rows.length === 0 }}
         pagination={
           meta
             ? { page: meta.page, totalPages: meta.totalPages, total: meta.total, limit: meta.limit, onPageChange: setPage }
             : undefined
         }
         selection={{
-          pageIds: companies.map((c) => c.id),
+          pageIds: rows.map((r) => r.userId),
           totalMatching: meta?.total ?? 0,
           isSelected: selection.isSelected,
           isPageFullySelected: selection.isPageFullySelected,
@@ -593,13 +614,13 @@ export default function AdminEmployersPage() {
         isOpen={!!deleteTarget}
         title="Delete Employer"
         message={
-          deleteTarget && deleteTarget._count.jobs > 0
-            ? `Permanently delete "${deleteTarget.name}" and its owner's account?\n\nThis will also delete ${deleteTarget._count.jobs} job posting(s) and all of its follows, ratings, and reports, plus the employer's login, credit history, and resume unlock history.\n\nThis cannot be undone.`
-            : `Permanently delete "${deleteTarget?.name}" and its owner's account?\n\nThis will also delete the employer's login, credit history, and resume unlock history.\n\nThis cannot be undone.`
+          deleteTarget?.company && deleteTarget.company.jobCount > 0
+            ? `Permanently delete "${deleteTarget.company.name}" and its owner's account?\n\nThis will also delete ${deleteTarget.company.jobCount} job posting(s) and all of its follows, ratings, and reports, plus the employer's login, credit history, and resume unlock history.\n\nThis cannot be undone.`
+            : `Permanently delete "${deleteTarget?.company?.name ?? deleteTarget?.fullName ?? deleteTarget?.email}" and their account?\n\nThis will also delete the employer's login, credit history, and resume unlock history.\n\nThis cannot be undone.`
         }
         confirmLabel="Delete"
         variant="danger"
-        isConfirming={actioningId === deleteTarget?.id}
+        isConfirming={actioningId === deleteTarget?.userId}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -627,7 +648,7 @@ export default function AdminEmployersPage() {
         message="Future job posts from this employer will need manual review again, and every job of theirs that's currently Approved will be set back to Pending for you to re-review."
         confirmLabel="Pause"
         variant="danger"
-        isConfirming={actioningId === revokeTarget?.id}
+        isConfirming={actioningId === revokeTarget?.userId}
         onConfirm={handleRevokeAutoApprove}
         onCancel={() => setRevokeTarget(null)}
       />
@@ -637,31 +658,37 @@ export default function AdminEmployersPage() {
         title="Grant auto-approval?"
         message="Future job posts from this employer will skip manual review, and every job of theirs that's currently Pending will be approved right now too."
         confirmLabel="Grant"
-        isConfirming={actioningId === grantTarget?.id}
+        isConfirming={actioningId === grantTarget?.userId}
         onConfirm={handleGrantAutoApprove}
         onCancel={() => setGrantTarget(null)}
       />
 
-      {editingCompany && (
+      {editingRow && (
         <EditOwnerModal
-          company={editingCompany}
-          onClose={() => setEditingCompany(null)}
+          row={editingRow}
+          onClose={() => setEditingRow(null)}
           onSaved={(owner) => {
-            setCompanies((prev) => prev.map((c) => (c.id === editingCompany.id ? { ...c, owner: { ...c.owner, ...owner } } : c)));
-            setEditingCompany(null);
+            setRows((prev) =>
+              prev.map((r) => (r.userId === editingRow.userId ? { ...r, fullName: owner.full_name, email: owner.email, phone: owner.phone } : r))
+            );
+            setEditingRow(null);
           }}
         />
       )}
 
-      {passwordCompany && (
+      {passwordRow && (
         <ResetPasswordModal
-          targetLabel={`${passwordCompany.owner.full_name || passwordCompany.owner.email} (${passwordCompany.name})`}
-          userId={passwordCompany.owner.id}
-          onClose={() => setPasswordCompany(null)}
+          targetLabel={
+            passwordRow.company
+              ? `${passwordRow.fullName || passwordRow.email} (${passwordRow.company.name})`
+              : passwordRow.fullName || passwordRow.email
+          }
+          userId={passwordRow.userId}
+          onClose={() => setPasswordRow(null)}
         />
       )}
 
-      {creditsCompany && <GrantCreditsModal company={creditsCompany} onClose={() => setCreditsCompany(null)} />}
+      {creditsRow && <GrantCreditsModal row={creditsRow} onClose={() => setCreditsRow(null)} />}
     </div>
   );
 }

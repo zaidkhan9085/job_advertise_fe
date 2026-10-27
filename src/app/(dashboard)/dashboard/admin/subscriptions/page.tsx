@@ -3,13 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { X, Loader2, Crown, Gift, Settings2, History, Coins } from "lucide-react";
+import { X, Loader2, Crown, Gift, Settings2, History, Coins, Undo2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import {
   getAllSubscriptionsAdmin,
   getEmployerPaymentHistoryAdmin,
   adjustEmployerSubscriptionAdmin,
   giftSubscriptionAdmin,
+  revertGiftedSubscriptionAdmin,
   ApiError,
   type AdminSubscriptionRow,
   type BillingPayment,
@@ -230,6 +232,7 @@ const PAYMENT_STATUS_STYLES: Record<BillingPayment["status"], string> = {
   PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
   FAILED: "bg-rose-50 text-rose-700 border-rose-200",
+  REVERTED: "bg-secondary text-muted-foreground border-border/60",
 };
 
 // Every payment attempt this employer has ever made, PENDING/FAILED ones
@@ -316,6 +319,8 @@ export default function AdminSubscriptionsPage() {
   const [adjustTarget, setAdjustTarget] = useState<AdminSubscriptionRow | null>(null);
   const [giftTarget, setGiftTarget] = useState<AdminSubscriptionRow["employer"] | null>(null);
   const [historyTarget, setHistoryTarget] = useState<AdminSubscriptionRow["employer"] | null>(null);
+  const [revertTarget, setRevertTarget] = useState<AdminSubscriptionRow | null>(null);
+  const [isReverting, setIsReverting] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
@@ -343,6 +348,21 @@ export default function AdminSubscriptionsPage() {
   useEffect(() => {
     if (user?.role === "admin" || user?.role === "sub_admin") loadRows();
   }, [user, loadRows]);
+
+  const handleRevert = async () => {
+    if (!revertTarget) return;
+    setIsReverting(true);
+    try {
+      await revertGiftedSubscriptionAdmin(revertTarget.employer.id);
+      toast.success(`Reverted ${revertTarget.employer.full_name || revertTarget.employer.email} back to Free`);
+      setRevertTarget(null);
+      loadRows();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to revert subscription.");
+    } finally {
+      setIsReverting(false);
+    }
+  };
 
   if (user && user.role !== "admin" && user.role !== "sub_admin") {
     return <ComingSoon title="Subscriptions" />;
@@ -441,13 +461,26 @@ export default function AdminSubscriptionsPage() {
             <History className="w-4 h-4" />
           </button>
           {r.plan.planType === "PRO" ? (
-            <button
-              title="Adjust limits"
-              onClick={() => setAdjustTarget(r)}
-              className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Settings2 className="w-4 h-4" />
-            </button>
+            <>
+              <button
+                title="Adjust limits"
+                onClick={() => setAdjustTarget(r)}
+                className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Settings2 className="w-4 h-4" />
+              </button>
+              {/* Only an admin-granted plan can be taken back -- a real paid
+                  subscription has no Revert action at all. */}
+              {r.plan.isGifted && (
+                <button
+                  title="Revert gifted plan"
+                  onClick={() => setRevertTarget(r)}
+                  className="p-2 rounded-lg hover:bg-rose-100 text-muted-foreground hover:text-rose-600 transition-colors"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+              )}
+            </>
           ) : (
             <button
               title="Gift a Pro plan"
@@ -510,6 +543,17 @@ export default function AdminSubscriptionsPage() {
       )}
 
       {historyTarget && <PaymentHistoryModal employer={historyTarget} onClose={() => setHistoryTarget(null)} />}
+
+      <ConfirmDialog
+        isOpen={!!revertTarget}
+        title="Revert Gifted Plan"
+        message={`Take back the Pro plan gifted to ${revertTarget?.employer.full_name || revertTarget?.employer.email || "this employer"}?\n\nThey'll drop back to the Free plan immediately. Any unspent gifted credits are removed too -- credits they've already used stay theirs.`}
+        variant="danger"
+        confirmLabel="Revert"
+        isConfirming={isReverting}
+        onConfirm={handleRevert}
+        onCancel={() => setRevertTarget(null)}
+      />
     </div>
   );
 }

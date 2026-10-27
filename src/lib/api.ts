@@ -705,15 +705,40 @@ export interface CompanyAdminOwner {
   isBlocked: boolean;
 }
 
-export interface CompanyAdminListItem extends Company {
-  owner: CompanyAdminOwner;
-  _count: { jobs: number; follows: number; reports: number };
-  pendingReportCount: number;
-  // Blended total (real follows + admin's bonusFollowers) -- the same
-  // number the public and admin-detail views show, not _count.follows alone.
-  followerCount: number;
-  // See CompanyAdminDetail's autoApprove for what this controls.
+// The company half of an employer row -- null when that employer never
+// finished their company profile (see EmployerAdminListItem below). Every
+// field here only ever exists once a real Company row does, so there's
+// nothing meaningful to show for location/jobs/followers/Top Hiring/
+// auto-approve without one.
+export interface EmployerAdminCompany {
+  id: string;
+  name: string;
+  slug: string | null;
+  logo: string | null;
+  jobLocation: JobLocationRef | null;
   autoApprove: boolean;
+  isFeaturedTopHiring: boolean;
+  jobCount: number;
+  // Blended total (real follows + admin's bonusFollowers) -- the same
+  // number the public and admin-detail views show, not a raw follow count.
+  followerCount: number;
+  pendingReportCount: number;
+}
+
+// Driven by the employer's User account, not their Company -- an employer
+// who registered but never finished a company profile still gets a row
+// here (company: null) instead of being invisible, per client request to
+// keep complete and incomplete employers in the one list rather than a
+// separate section.
+export interface EmployerAdminListItem {
+  userId: number;
+  fullName: string | null;
+  email: string;
+  phone: string | null;
+  isBlocked: boolean;
+  isVerified: boolean;
+  registeredAt: string;
+  company: EmployerAdminCompany | null;
 }
 
 export interface CompanyAdminDetail extends Omit<CompanyDetail, "jobs" | "jobCount"> {
@@ -754,7 +779,7 @@ export function getAllCompaniesAdmin(filters?: AdminListParams) {
     sortOrder: filters?.sortOrder,
     all: filters?.all,
   });
-  return apiFetch<Paginated<CompanyAdminListItem>>(
+  return apiFetch<Paginated<EmployerAdminListItem>>(
     `/api/admin/companies${query}`,
   );
 }
@@ -775,11 +800,32 @@ export function deleteCompanyAdmin(id: string, confirm?: boolean) {
   );
 }
 
+// For an incomplete signup (a User with role employer but no Company row
+// yet) -- deleteCompanyAdmin above is keyed off a company id, which doesn't
+// exist for one of these.
+export function deleteEmployerUserAdmin(userId: number) {
+  return apiFetch<{ message: string }>(`/api/admin/companies/employer-users/${userId}`, {
+    method: "DELETE",
+  });
+}
+
 export function bulkDeleteCompanies(payload: BulkDeletePayload) {
   return apiFetch<{
     deleted: string[];
     failed: { id: string; reason: string }[];
   }>("/api/admin/companies/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// Keyed by userId -- the admin Employers list's bulk-select now operates
+// over the merged employer list (complete or not), not just companies.
+export function bulkDeleteEmployerUsers(payload: BulkDeletePayload) {
+  return apiFetch<{
+    deleted: number[];
+    failed: { id: number; reason: string }[];
+  }>("/api/admin/companies/employer-users/bulk-delete", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -1325,6 +1371,22 @@ export function grantCreditsToCompany(
   );
 }
 
+// Same as grantCreditsToCompany above, but for an employer row with no
+// Company yet (company id doesn't exist for one of these).
+export function grantCreditsToEmployerUser(
+  userId: number,
+  amount: number,
+  note?: string,
+) {
+  return apiFetch<{ message: string }>(
+    `/api/admin/companies/employer-users/${userId}/credits`,
+    {
+      method: "POST",
+      body: JSON.stringify({ amount, note }),
+    },
+  );
+}
+
 export function revokeCompanyAutoApprove(companyId: string) {
   return apiFetch<{ message: string; jobsSetPending: number }>(
     `/api/admin/companies/${companyId}/revoke-auto-approve`,
@@ -1829,6 +1891,10 @@ export interface EffectivePlan {
   periodStart: string;
   periodEnd: string;
   expiresAt: string | null;
+  // True only for a PRO plan an admin gave away free (gift or a top-up
+  // created from Free) -- never a real paid subscription. Lets the admin
+  // Subscriptions list show a Revert action only where one actually applies.
+  isGifted: boolean;
 }
 
 export interface EmployerSubscription {
@@ -1856,7 +1922,9 @@ export interface BillingPayment {
   kind: "PLAN" | "CREDIT_PACK";
   amount: number;
   currency: string;
-  status: "PENDING" | "PAID" | "FAILED";
+  // REVERTED: a gift/admin top-up's $0 payment, after revertGiftedSubscriptionAdmin --
+  // kept for Payment History's audit trail, excluded from "Last Purchase".
+  status: "PENDING" | "PAID" | "FAILED" | "REVERTED";
   subscriptionId: string | null;
   subscription: EmployerSubscription | null;
   creditPackageId: string | null;
@@ -2030,6 +2098,15 @@ export function giftSubscriptionAdmin(employerId: number, data: GiftSubscription
   return apiFetch<{ message: string; subscription: EmployerSubscription }>(
     `/api/admin/billing/subscriptions/${employerId}/gift`,
     { method: "POST", body: JSON.stringify(data) },
+  );
+}
+
+// Undoes a gift/admin top-up -- the employer drops back to Free. Refuses
+// (400) if their active subscription isn't actually isGifted.
+export function revertGiftedSubscriptionAdmin(employerId: number) {
+  return apiFetch<{ message: string }>(
+    `/api/admin/billing/subscriptions/${employerId}/revert`,
+    { method: "POST" },
   );
 }
 
