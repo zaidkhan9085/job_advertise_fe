@@ -1885,7 +1885,9 @@ export interface BillingPayment {
   kind: "PLAN" | "CREDIT_PACK";
   amount: number;
   currency: string;
-  status: "PENDING" | "PAID" | "FAILED";
+  // REVERTED: a gift/admin top-up's $0 payment, after revertGiftedSubscriptionAdmin --
+  // kept for Payment History's audit trail, excluded from "Last Purchase".
+  status: "PENDING" | "PAID" | "FAILED" | "REVERTED";
   subscriptionId: string | null;
   subscription: EmployerSubscription | null;
   creditPackageId: string | null;

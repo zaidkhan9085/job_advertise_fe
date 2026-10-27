@@ -232,6 +232,7 @@ const PAYMENT_STATUS_STYLES: Record<BillingPayment["status"], string> = {
   PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
   FAILED: "bg-rose-50 text-rose-700 border-rose-200",
+  REVERTED: "bg-secondary text-muted-foreground border-border/60",
 };
 
 // Every payment attempt this employer has ever made, PENDING/FAILED ones
