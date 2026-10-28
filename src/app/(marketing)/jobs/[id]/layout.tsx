@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import type { JobPost } from "@/lib/api";
 import { jobPagePath } from "@/lib/jobShare";
+import { buildJobPostingJsonLd } from "@/lib/jobPostingSchema";
+import { fetchJobForSeo } from "@/lib/server/fetchJobForSeo";
 
 // The job page itself is a client component (it can't export
 // generateMetadata), and link-preview crawlers (WhatsApp, Facebook,
 // Telegram, ...) never run JavaScript -- so without this server-side layout
 // every shared job link looked identical and had no thumbnail. This
-// produces the per-job Open Graph / Twitter tags in the initial HTML.
+// produces the per-job Open Graph / Twitter tags in the initial HTML, and
+// (below) the Schema.org JobPosting JSON-LD Google's Jobs rich result needs.
 
 // NEXT_PUBLIC_API_URL can legitimately be empty/relative in production
 // (requests then go through the /api rewrite in vercel.json), which a
@@ -16,22 +19,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL?.startsWith("http")
   : "https://api.thejobs4u.com";
 
 const SITE_NAME = "thejobs4u";
-
-async function fetchJob(id: string): Promise<JobPost | null> {
-  try {
-    // Metadata is now resolved before the page is sent to EVERY visitor (see
-    // htmlLimitedBots in next.config.ts), so a slow API must never hold a
-    // page load hostage -- give up after 3s and fall back to generic tags.
-    const res = await fetch(`${API_BASE}/api/jobs/${encodeURIComponent(id)}`, {
-      next: { revalidate: 300 },
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as JobPost;
-  } catch {
-    return null;
-  }
-}
 
 const PREVIEW_W = 1200;
 const PREVIEW_H = 630;
@@ -94,11 +81,17 @@ function buildDescription(job: JobPost): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const job = await fetchJob(id);
+  const result = await fetchJobForSeo(id);
 
-  if (!job) {
+  // Expired jobs fall into this branch too (fetchJobForSeo only ever
+  // returns "active" with a full JobPost) -- correct: a 410'd job has
+  // already had its heavy fields cleared server-side, so there's nothing
+  // left worth putting in a share preview, and noindex is exactly right
+  // for something search engines should be dropping from their index.
+  if (result.status !== "active") {
     return { title: "Job not found", robots: { index: false } };
   }
+  const job = result.job;
 
   const description = buildDescription(job);
   // A text-only listing has no poster -- fall back to the site logo so the
@@ -131,6 +124,30 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export default function JobDetailLayout({ children }: { children: React.ReactNode }) {
-  return children;
+export default async function JobDetailLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  // Same fetchJobForSeo call generateMetadata above already makes -- Next's
+  // request memoization collapses identical fetch()es within one request
+  // into a single real network call, so this isn't a second round trip.
+  const result = await fetchJobForSeo(id);
+
+  return (
+    <>
+      {result.status === "active" && (
+        // JSON.stringify of our own server-built object, not user-supplied
+        // HTML -- safe to inject directly.
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJobPostingJsonLd(result.job)) }}
+        />
+      )}
+      {children}
+    </>
+  );
 }
