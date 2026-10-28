@@ -238,7 +238,10 @@ export interface JobPost {
   jobType: { id: string; name: string } | null;
   industryId: string | null;
   industry: { id: string; name: string } | null;
-  jobLocation: { id: string; name: string; parentId: string | null } | null;
+  // countryName/stateName are only ever populated by getJobById (a CITY
+  // row's own denormalized ancestor names) -- the listing endpoint
+  // (getJobs) doesn't select them, so treat as optional everywhere else.
+  jobLocation: { id: string; name: string; parentId: string | null; countryName?: string | null; stateName?: string | null } | null;
   // The company's OWN location (where the recruiter is based) -- as
   // opposed to jobLocation above (where THIS job is posted). A Mumbai-based
   // company can post a job anywhere; powers the /jobs listing's separate
@@ -246,6 +249,24 @@ export interface JobPost {
   companyProfile: { id: string; jobLocationId: string | null; jobLocationCountryId: string | null; jobLocationStateId: string | null } | null;
   createdAt: string;
   updatedAt: string;
+  // Only present on getJobById's response -- createdAt + the job's expiry
+  // window (JOB_EXPIRY_MINUTES/STORY_EXPIRY_MINUTES), for Schema.org
+  // JobPosting's validThrough. Not computed client-side to avoid a second
+  // copy of that constant drifting from the backend's.
+  validThrough?: string;
+}
+
+// The minimal payload getJobById's 410 response carries for an expired job
+// -- everything else was already cleared server-side when it expired
+// (poster image, full description, contact details).
+export interface ExpiredJobInfo {
+  id: string;
+  slug: string | null;
+  title: string;
+  company: string;
+  location: string | null;
+  companyId: string | null;
+  createdAt: string;
 }
 
 export interface CreateJobPayload {
