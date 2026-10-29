@@ -139,9 +139,9 @@ export default function StoryViewer({
   if (!group || !story) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black flex items-center justify-center">
+    <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="relative w-full h-full sm:w-[420px] sm:h-[90vh] sm:rounded-2xl overflow-hidden bg-black select-none"
+        className="relative w-full max-w-[420px] h-[85vh] max-h-[760px] rounded-2xl overflow-hidden bg-black shadow-2xl select-none"
         onMouseDown={handlePressStart}
         onMouseUp={handlePressEnd}
         onMouseLeave={handlePressEnd}

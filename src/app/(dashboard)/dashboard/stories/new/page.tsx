@@ -20,6 +20,7 @@ import { validateFileSize } from "@/lib/fileValidation";
 import { compressForScan } from "@/lib/compressImage";
 import { resolveBestLocationMatch } from "@/lib/resolveLocationMatch";
 import PosterScanPanel, { SCAN_STEPS, type ScanPhase } from "@/components/jobs/PosterScanPanel";
+import { useAuth } from "@/context/AuthContext";
 
 const STORY_TAGS: StoryTag[] = ["Long Term", "Short Term", "Urgent", "Contract"];
 
@@ -87,6 +88,8 @@ function StoriesBlockedNotice() {
 
 export default function PostStoryPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isStaff = user?.role === "admin" || user?.role === "sub_admin";
   const storiesAllowed = useStoriesAllowed();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -401,7 +404,7 @@ export default function PostStoryPage() {
           </p>
           <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
             <li>Stories appear on the homepage for <strong>24 hours</strong></li>
-            <li>Only <strong>1 story at a time</strong> per employer</li>
+            {!isStaff && <li>Only <strong>1 story at a time</strong> per employer</li>}
             <li>Upload a poster image to grab attention</li>
             <li>Stories are separate from Standard & Highlighted job ads</li>
           </ul>

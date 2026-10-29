@@ -104,7 +104,7 @@ export default function JobCardActions({
               e.stopPropagation();
               recordJobInteraction(job.id, "WHATSAPP");
             }}
-            className={`${secondaryClass} bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20`}
+            className={`${secondaryClass} bg-[#25D366] text-white hover:bg-[#1FAD57]`}
           >
             <MessageCircle className={iconClass} />
             {isList ? "WhatsApp" : "Chat"}
@@ -131,7 +131,7 @@ export default function JobCardActions({
               e.stopPropagation();
               recordJobInteraction(job.id, "CALL");
             }}
-            className={`${secondaryClass} bg-brand-blue-muted text-brand-blue hover:bg-brand-blue-muted/70`}
+            className={`${secondaryClass} bg-brand-blue-light text-white hover:bg-[#083A8F]`}
           >
             <Phone className={iconClass} />
             Call
