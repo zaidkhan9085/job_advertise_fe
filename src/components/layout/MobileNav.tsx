@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
 import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { contactLinks } from "@/data/socialLinks";
-import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
 import { slugify, buildMergedJobsUrl } from "@/lib/utils";
 import { useJobsOpeningCounts } from "@/hooks/useJobsOpeningCounts";
 
@@ -55,31 +54,6 @@ function MobileNavSubSection({ item, depth = 0 }: { item: NavDropdownItem, depth
   );
 }
 
-// Search-as-you-type by location name, same picker LocationNavPanel uses on
-// desktop (Combobox.Positioner portals its own results popup, so it's safe
-// to drop in here inline without the absolute-positioned wrapper desktop's
-// panel components bake into their own root div). Picking a result
-// navigates to /jobs?location=... and closes the whole drawer.
-function MobileLocationSection({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [value, setValue] = useState<LocationValue | null>(null);
-
-  const handleChange = (location: LocationValue | null) => {
-    setValue(location);
-    if (location) {
-      router.push(buildMergedJobsUrl(searchParams, "location", slugify(location.name)));
-      onClose();
-    }
-  };
-
-  return (
-    <div className="bg-secondary/10 p-4">
-      <CityAutocomplete value={value} onChange={handleChange} placeholder="City, state, or country..." />
-    </div>
-  );
-}
-
 // Same live job-count-by-location data as desktop's JobsOpeningNavPanel
 // (useJobsOpeningCounts), rendered as a plain inline list instead of an
 // absolutely-positioned dropdown.
@@ -102,7 +76,7 @@ function MobileJobsOpeningSection({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="bg-secondary/10 py-2 max-h-[min(50vh,420px)] overflow-y-auto">
+    <div className="bg-secondary/10 py-2 max-h-[min(50vh,420px)] overflow-y-auto custom-scrollbar">
       {rows.map((row) => (
         <Link
           key={row.id}
@@ -143,10 +117,7 @@ function MobileNavSection({ item, onClose }: { item: NavItem, onClose: () => voi
     );
   }
 
-  const isLocation = item.label === "Location";
-  const isJobsOpening = item.label === "Jobs Opening";
-
-  if (isLocation || isJobsOpening) {
+  if (item.label === "Jobs Opening") {
     return (
       <div className="border-b border-border/40">
         <button
@@ -156,7 +127,7 @@ function MobileNavSection({ item, onClose }: { item: NavItem, onClose: () => voi
           {item.label}
           <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
         </button>
-        {open && (isLocation ? <MobileLocationSection onClose={onClose} /> : <MobileJobsOpeningSection onClose={onClose} />)}
+        {open && <MobileJobsOpeningSection onClose={onClose} />}
       </div>
     );
   }
@@ -215,7 +186,12 @@ function aiPosterScanHref(user: { role: string } | null): string {
 
 export default function MobileNav({ open, onClose }: MobileNavProps) {
   const { user, logout } = useAuth();
-  const visibleNavItems = user ? mainNavItems.filter((item) => item.href !== "/login") : mainNavItems;
+  // "Location" is dropped from the mobile menu entirely (desktop's own
+  // Location nav panel is untouched) -- client's own call after seeing the
+  // inline search-by-name version live.
+  const visibleNavItems = mainNavItems.filter(
+    (item) => item.label !== "Location" && (!user || item.href !== "/login")
+  );
 
   useEffect(() => {
     if (open) {
