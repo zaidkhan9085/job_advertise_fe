@@ -2,18 +2,25 @@
 
 import Link from "next/link";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { getJobStories, type JobPost, ApiError } from "@/lib/api";
-import { jobPagePath } from "@/lib/jobShare";
 import { useAuth } from "@/context/AuthContext";
 import JobPosterImage from "@/components/common/JobPosterImage";
+import StoryViewer, { groupStoriesByCompany } from "@/components/sections/StoryViewer";
 
 export default function StoriesSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
   const [stories, setStories] = useState<JobPost[]>([]);
+  const [viewerStoryId, setViewerStoryId] = useState<string | null>(null);
   const { user } = useAuth();
+
+  const groups = useMemo(() => groupStoriesByCompany(stories), [stories]);
+  const viewerGroupIndex = useMemo(() => {
+    if (!viewerStoryId) return -1;
+    return groups.findIndex((g) => g.stories.some((s) => s.id === viewerStoryId));
+  }, [groups, viewerStoryId]);
 
   const loadStories = useCallback(async () => {
     try {
@@ -105,9 +112,10 @@ export default function StoriesSection() {
             </Link>
 
             {stories.map((story) => (
-              <Link
+              <button
                 key={story.id}
-                href={jobPagePath(story)}
+                type="button"
+                onClick={() => setViewerStoryId(story.id)}
                 className="flex-shrink-0 w-[132px] h-[188px] sm:w-[140px] sm:h-[196px] rounded-[18px] overflow-hidden relative group cursor-pointer shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-left block"
               >
                 <JobPosterImage image={story.image} title={story.title} company={story.company} className="w-full h-full" />
@@ -126,11 +134,20 @@ export default function StoriesSection() {
                 >
                   <div className="w-full h-full rounded-full bg-white/90 backdrop-blur-sm" />
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
       </div>
+
+      {viewerGroupIndex >= 0 && (
+        <StoryViewer
+          groups={groups}
+          startGroupIndex={viewerGroupIndex}
+          startStoryIndex={groups[viewerGroupIndex].stories.findIndex((s) => s.id === viewerStoryId)}
+          onClose={() => setViewerStoryId(null)}
+        />
+      )}
     </section>
   );
 }

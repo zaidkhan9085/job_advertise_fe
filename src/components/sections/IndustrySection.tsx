@@ -200,7 +200,13 @@ export default function IndustrySection() {
   if (cards.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-14 bg-gradient-to-r from-white via-brand-blue-muted to-white relative overflow-hidden">
+    <section
+      id="industries"
+      // scroll-mt offsets for the sticky header (Header.tsx) so the section
+      // isn't partially hidden under it when linked to via /#industries
+      // (the mobile nav's "Industry" item does this).
+      className="scroll-mt-20 py-10 md:py-14 bg-gradient-to-r from-white via-brand-blue-muted to-white relative overflow-hidden"
+    >
       <DecorativeBlur size="3xl" blur="strong" className="top-0 left-0 bg-brand-blue/5 -translate-x-1/2 -translate-y-1/2" />
 
       <div className="container-site relative">
