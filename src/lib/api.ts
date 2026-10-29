@@ -246,7 +246,8 @@ export interface JobPost {
   // opposed to jobLocation above (where THIS job is posted). A Mumbai-based
   // company can post a job anywhere; powers the /jobs listing's separate
   // "Company Location" filter. Null for jobs with no linked Company row.
-  companyProfile: { id: string; jobLocationId: string | null; jobLocationCountryId: string | null; jobLocationStateId: string | null } | null;
+  // `logo` is used by the Stories full-screen viewer.
+  companyProfile: { id: string; logo: string | null; jobLocationId: string | null; jobLocationCountryId: string | null; jobLocationStateId: string | null } | null;
   createdAt: string;
   updatedAt: string;
   // Only present on getJobById's response -- createdAt + the job's expiry
