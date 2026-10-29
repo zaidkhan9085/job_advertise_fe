@@ -56,13 +56,18 @@ export default function JobCardActions({
 
   const isList = layout === "list";
 
+  // Compact (grid/carousel cards): client wants Apply smaller and
+  // WhatsApp/Call bigger than before, all three equal width -- was
+  // grid-cols-[1fr_auto_auto] (Apply wide, WhatsApp/Call small fixed icon
+  // buttons); now an equal 3-column row, each cell full-width, with
+  // WhatsApp/Call wide enough to carry short labels instead of icon-only.
   const applyClass = isList
     ? "flex-1 sm:flex-none sm:w-36 flex items-center justify-center gap-2 py-2 rounded-xl font-bold text-[13px] transition-colors"
-    : "flex items-center justify-center h-8 px-3 rounded-lg font-black text-[12px] transition-colors min-w-0";
+    : "w-full flex items-center justify-center h-8 rounded-lg font-black text-[11px] transition-colors min-w-0";
   const secondaryClass = isList
     ? "flex-1 sm:flex-none sm:w-36 flex items-center justify-center gap-2 py-2 rounded-xl font-bold text-[13px] transition-colors"
-    : "flex items-center justify-center w-9 h-8 rounded-lg transition-colors";
-  const iconClass = isList ? "w-4 h-4 shrink-0" : "w-3.5 h-3.5";
+    : "w-full flex items-center justify-center gap-1 h-8 rounded-lg font-bold text-[11px] transition-colors min-w-0";
+  const iconClass = isList ? "w-4 h-4 shrink-0" : "w-3.5 h-3.5 shrink-0";
   const disabledClass = "bg-secondary text-muted-foreground/40 cursor-not-allowed";
 
   return (
@@ -71,7 +76,7 @@ export default function JobCardActions({
         className={
           isList
             ? "w-full sm:w-auto flex flex-row sm:flex-col gap-1.5 sm:gap-2 shrink-0"
-            : "grid grid-cols-[1fr_auto_auto] gap-1.5"
+            : "grid grid-cols-3 gap-1.5"
         }
       >
         {hasApplied ? (
@@ -102,7 +107,7 @@ export default function JobCardActions({
             className={`${secondaryClass} bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20`}
           >
             <MessageCircle className={iconClass} />
-            {isList && "WhatsApp"}
+            {isList ? "WhatsApp" : "Chat"}
           </a>
         ) : (
           <span
@@ -113,7 +118,7 @@ export default function JobCardActions({
             className={`${secondaryClass} ${disabledClass}`}
           >
             <MessageCircle className={iconClass} />
-            {isList && "WhatsApp"}
+            {isList ? "WhatsApp" : "Chat"}
           </span>
         )}
 
@@ -129,7 +134,7 @@ export default function JobCardActions({
             className={`${secondaryClass} bg-brand-blue-muted text-brand-blue hover:bg-brand-blue-muted/70`}
           >
             <Phone className={iconClass} />
-            {isList && "Call"}
+            Call
           </a>
         ) : (
           <span
@@ -140,7 +145,7 @@ export default function JobCardActions({
             className={`${secondaryClass} ${disabledClass}`}
           >
             <Phone className={iconClass} />
-            {isList && "Call"}
+            Call
           </span>
         )}
       </div>
