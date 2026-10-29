@@ -37,6 +37,12 @@ export const metadata: Metadata = {
     shortcut: "/favicon-pin.png",
     apple: "/favicon-pin.png",
   },
+  // Proves domain ownership to Google Search Console -- lets Google know to
+  // crawl the sitemap/index jobs regularly instead of relying on incidental
+  // discovery. One-time setup token, safe to keep here permanently.
+  verification: {
+    google: "lBt-E2YRW7HiUC-EPo7Px_z-ozt24qcmVLi-gQOVIfY",
+  },
 };
 
 // Was missing entirely -- without it, mobile browsers render at a desktop-
