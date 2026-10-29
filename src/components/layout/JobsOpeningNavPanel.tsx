@@ -1,72 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getJobs, getJobLocations, type JobLocation } from "@/lib/api";
 import { slugify, buildMergedJobsUrl } from "@/lib/utils";
-
-interface LocationCount {
-  id: string;
-  name: string;
-  count: number;
-}
-
-// Every COUNTRY-level node (Saudi Arabia, UAE, ...) and every STATE-level
-// node under India (the tree's one country whose direct children are
-// states rather than the tree splitting country/state across another
-// level) -- the same two granularities the homepage's "Browse by Country"
-// tabs use, just flattened into one list instead of grouped, per Zaid's
-// choice over keeping the region-tab structure.
-function collectCountableNodes(nodes: JobLocation[]): JobLocation[] {
-  const out: JobLocation[] = [];
-  for (const node of nodes) {
-    if (node.locationType === "COUNTRY" || node.locationType === "STATE") out.push(node);
-    // getJobLocations() only returns two levels (top-level + their direct
-    // children) -- a grandchild's own `.children` was never fetched, so
-    // this guards against recursing into `undefined` there rather than
-    // assuming every node in the tree carries the same shape.
-    if (node.children?.length > 0) out.push(...collectCountableNodes(node.children));
-  }
-  return out;
-}
-
-const MAX_SHOWN = 25;
+import { useJobsOpeningCounts } from "@/hooks/useJobsOpeningCounts";
 
 // Replaces the old "Jobs Opening" nav dropdown -- a hand-maintained,
 // alphabetically-grouped tree of countries with no real job counts.
 // Highest-demand locations now surface first ("Saudi Arabia has 200 jobs,
 // it should be on top"), which a static list could never reflect.
+// Data logic lives in useJobsOpeningCounts -- shared with MobileNav's
+// inline "Jobs Opening" section, which needs the same counts without this
+// panel's absolute positioning.
 export default function JobsOpeningNavPanel() {
-  const [rows, setRows] = useState<LocationCount[] | null>(null);
+  const rows = useJobsOpeningCounts();
   const searchParams = useSearchParams();
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const [jobs, tree] = await Promise.all([getJobs(), getJobLocations()]);
-        const countByAncestorId = new Map<string, number>();
-        const bump = (id: string | null) => {
-          if (!id) return;
-          countByAncestorId.set(id, (countByAncestorId.get(id) ?? 0) + 1);
-        };
-        for (const job of jobs) {
-          bump(job.jobLocationCountryId);
-          bump(job.jobLocationStateId);
-        }
-
-        const nodes = collectCountableNodes(tree);
-        const withCounts = nodes
-          .map((n) => ({ id: n.id, name: n.name, count: countByAncestorId.get(n.id) ?? 0 }))
-          .filter((n) => n.count > 0)
-          .sort((a, b) => b.count - a.count)
-          .slice(0, MAX_SHOWN);
-        setRows(withCounts);
-      } catch {
-        setRows([]);
-      }
-    })();
-  }, []);
 
   return (
     <div className="absolute top-full left-0 pt-3 z-50">

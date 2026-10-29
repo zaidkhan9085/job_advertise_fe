@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
-import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut } from "lucide-react";
+import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { contactLinks } from "@/data/socialLinks";
+import CityAutocomplete, { type LocationValue } from "@/components/common/CityAutocomplete";
+import { slugify, buildMergedJobsUrl } from "@/lib/utils";
+import { useJobsOpeningCounts } from "@/hooks/useJobsOpeningCounts";
 
 function MobileNavSubSection({ item, depth = 0 }: { item: NavDropdownItem, depth?: number }) {
   const [open, setOpen] = useState(false);
@@ -51,8 +55,111 @@ function MobileNavSubSection({ item, depth = 0 }: { item: NavDropdownItem, depth
   );
 }
 
+// Search-as-you-type by location name, same picker LocationNavPanel uses on
+// desktop (Combobox.Positioner portals its own results popup, so it's safe
+// to drop in here inline without the absolute-positioned wrapper desktop's
+// panel components bake into their own root div). Picking a result
+// navigates to /jobs?location=... and closes the whole drawer.
+function MobileLocationSection({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [value, setValue] = useState<LocationValue | null>(null);
+
+  const handleChange = (location: LocationValue | null) => {
+    setValue(location);
+    if (location) {
+      router.push(buildMergedJobsUrl(searchParams, "location", slugify(location.name)));
+      onClose();
+    }
+  };
+
+  return (
+    <div className="bg-secondary/10 p-4">
+      <CityAutocomplete value={value} onChange={handleChange} placeholder="City, state, or country..." />
+    </div>
+  );
+}
+
+// Same live job-count-by-location data as desktop's JobsOpeningNavPanel
+// (useJobsOpeningCounts), rendered as a plain inline list instead of an
+// absolutely-positioned dropdown.
+function MobileJobsOpeningSection({ onClose }: { onClose: () => void }) {
+  const searchParams = useSearchParams();
+  const rows = useJobsOpeningCounts();
+
+  if (rows === null) {
+    return (
+      <div className="flex flex-col gap-1.5 p-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-9 rounded-lg bg-secondary/40 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (rows.length === 0) {
+    return <p className="px-5 py-6 text-sm text-muted-foreground text-center">No open positions yet.</p>;
+  }
+
+  return (
+    <div className="bg-secondary/10 py-2 max-h-[min(50vh,420px)] overflow-y-auto">
+      {rows.map((row) => (
+        <Link
+          key={row.id}
+          href={buildMergedJobsUrl(searchParams, "location", slugify(row.name))}
+          onClick={onClose}
+          className="flex items-center justify-between gap-3 px-5 py-2.5 text-[14px] text-foreground/80 hover:text-brand-blue hover:bg-brand-blue-muted transition-all"
+        >
+          <span className="truncate">{row.name}</span>
+          <span className="shrink-0 text-xs font-black text-brand-blue tabular-nums">{row.count}</span>
+        </Link>
+      ))}
+      <Link
+        href="/jobs"
+        onClick={onClose}
+        className="block mt-1 px-5 py-2.5 text-sm font-bold text-brand-blue hover:bg-brand-blue-muted transition-all text-center border-t border-border/40 pt-3"
+      >
+        View all jobs
+      </Link>
+    </div>
+  );
+}
+
 function MobileNavSection({ item, onClose }: { item: NavItem, onClose: () => void }) {
   const [open, setOpen] = useState(false);
+
+  // Industry just scrolls to the homepage's live "Browse by Industry"
+  // section -- a plain hash link, not a dropdown, since the full picker is
+  // already right there on the page it jumps to.
+  if (item.label === "Industry") {
+    return (
+      <Link
+        href="/#industries"
+        onClick={onClose}
+        className="block px-5 py-4 text-[15px] font-black text-brand-blue border-b border-border/40 hover:bg-brand-blue-muted transition-colors uppercase tracking-tight"
+      >
+        {item.label}
+      </Link>
+    );
+  }
+
+  const isLocation = item.label === "Location";
+  const isJobsOpening = item.label === "Jobs Opening";
+
+  if (isLocation || isJobsOpening) {
+    return (
+      <div className="border-b border-border/40">
+        <button
+          onClick={() => setOpen(!open)}
+          className={`w-full flex items-center justify-between px-5 py-4 text-[15px] font-black transition-all uppercase tracking-tight ${open ? 'bg-brand-blue text-white' : 'text-brand-blue hover:bg-brand-blue-muted'}`}
+        >
+          {item.label}
+          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+        </button>
+        {open && (isLocation ? <MobileLocationSection onClose={onClose} /> : <MobileJobsOpeningSection onClose={onClose} />)}
+      </div>
+    );
+  }
 
   if (!item.dropdownItems) {
     return (
@@ -91,6 +198,19 @@ function MobileNavSection({ item, onClose }: { item: NavItem, onClose: () => voi
 interface MobileNavProps {
   open: boolean;
   onClose: () => void;
+}
+
+// Same role-based destination MobileNav's own "Post Jobs" footer CTA
+// already uses (guest -> /login, employer -> the real posting form) --
+// /dashboard/jobs/new is where PosterScanPanel (the actual AI-scan feature)
+// lives; /post-job is an unrelated public marketing page with no scan UI.
+// A logged-in candidate has no company and isn't staff, so the real page
+// would immediately bounce them with a toast + redirect -- sent to their
+// own dashboard instead.
+function aiPosterScanHref(user: { role: string } | null): string {
+  if (!user) return "/login";
+  if (user.role === "employer" || user.role === "admin" || user.role === "sub_admin") return "/dashboard/jobs/new";
+  return "/dashboard";
 }
 
 export default function MobileNav({ open, onClose }: MobileNavProps) {
@@ -134,6 +254,20 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto no-scrollbar py-2">
+          <Link
+            href={aiPosterScanHref(user)}
+            onClick={onClose}
+            className="mx-5 mt-1 mb-3 flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-brand-blue to-brand-blue-light text-white shadow-lg shadow-[#1098F0]/20 active:scale-95 transition-transform"
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-black leading-tight">AI Poster Scan</p>
+              <p className="text-[11px] text-white/80 leading-tight truncate">Upload a poster, auto-fill the job form</p>
+            </div>
+          </Link>
+
           {visibleNavItems.map((item) => (
             <MobileNavSection key={item.label} item={item} onClose={onClose} />
           ))}
