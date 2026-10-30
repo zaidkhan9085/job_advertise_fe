@@ -902,6 +902,52 @@ export function updateReportStatus(id: string, status: ReportStatus) {
   );
 }
 
+// --- Support inbox (replaces the old support@ email flow) ---
+export type SupportMessageStatus = "NEW" | "IN_PROGRESS" | "RESOLVED";
+
+export interface AdminSupportMessage {
+  id: string;
+  subject: string;
+  message: string;
+  status: SupportMessageStatus;
+  createdAt: string;
+  sender: { id: number; full_name: string | null; email: string; role: BackendRole };
+}
+
+export function createSupportMessage(subject: string, message: string) {
+  return apiFetch<{ message: string }>("/api/support", {
+    method: "POST",
+    body: JSON.stringify({ subject, message }),
+  });
+}
+
+export function getSupportMessages(filters?: AdminListParams & { status?: SupportMessageStatus }) {
+  const query = buildQuery({
+    status: filters?.status,
+    page: filters?.page,
+    limit: filters?.limit,
+    search: filters?.search,
+    sortBy: filters?.sortBy,
+    sortOrder: filters?.sortOrder,
+    all: filters?.all,
+  });
+  return apiFetch<Paginated<AdminSupportMessage>>(`/api/support${query}`);
+}
+
+export function getSupportUnreadCount() {
+  return apiFetch<{ count: number }>("/api/support/unread-count");
+}
+
+export function updateSupportMessageStatus(id: string, status: SupportMessageStatus) {
+  return apiFetch<{ message: string; supportMessage: AdminSupportMessage }>(
+    `/api/support/${id}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
+}
+
 // --- Resume Builder ---
 // The builder's document is a loosely-typed { theme, sections } structure
 // (see Editor.tsx/resume-builder/page.tsx, which use `any` throughout) --

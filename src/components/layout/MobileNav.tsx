@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { mainNavItems, type NavItem, type NavDropdownItem } from "@/data/navigation";
 import Logo from "@/components/common/Logo";
-import { X, ChevronDown, ChevronRight, Mail, MapPin, Send, MessageCircle, Globe, LogOut, Sparkles } from "lucide-react";
+import { X, ChevronDown, ChevronRight, LifeBuoy, MapPin, Send, MessageCircle, Globe, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { contactLinks } from "@/data/socialLinks";
 import { slugify, buildMergedJobsUrl } from "@/lib/utils";
 import { useJobsOpeningCounts } from "@/hooks/useJobsOpeningCounts";
 
@@ -252,12 +251,16 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           <div className="m-5 p-6 rounded-3xl bg-brand-blue-muted/30 border border-brand-blue/5">
             <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue/50 mb-5">Support Center</h5>
             <div className="space-y-5">
-              <a href={contactLinks.email} className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors">
+              <Link
+                href="/contact"
+                onClick={onClose}
+                className="flex items-center gap-4 text-sm font-bold text-brand-blue/80 hover:text-brand-blue transition-colors"
+              >
                 <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-border/40">
-                  <Mail className="w-5 h-5 text-brand-blue" />
+                  <LifeBuoy className="w-5 h-5 text-brand-blue" />
                 </div>
-                Email Support
-              </a>
+                Contact Support
+              </Link>
               <div className="flex items-center gap-4 text-sm font-bold text-brand-blue/80">
                 <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-border/40">
                   <MapPin className="w-5 h-5 text-brand-blue-light" />

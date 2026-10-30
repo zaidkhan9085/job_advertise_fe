@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { FileCheck, BookOpen, AlertCircle } from "lucide-react";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
-import { SUPPORT_EMAIL } from "@/data/socialLinks";
 
 export default function TermsPage() {
   return (
@@ -69,10 +68,10 @@ export default function TermsPage() {
                 jobs, posting jobs, saving posts, following companies, using the resume builder, or any
                 other logged-in feature requires a free account. You are responsible for maintaining the
                 confidentiality of your credentials and for all activity under your account. Notify us
-                immediately at{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-blue font-bold hover:underline">
-                  {SUPPORT_EMAIL}
-                </a>{" "}
+                immediately through our{" "}
+                <Link href="/contact" className="text-brand-blue font-bold hover:underline">
+                  Support page
+                </Link>{" "}
                 if you suspect unauthorized access.
               </p>
             </section>
@@ -160,10 +159,10 @@ export default function TermsPage() {
               <h2 className="text-2xl font-black text-brand-blue mb-6">8. Account Deletion</h2>
               <p>
                 You can request deletion of your account and all associated personal data at any time by
-                writing to{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-blue font-bold hover:underline">
-                  {SUPPORT_EMAIL}
-                </a>
+                contacting us through our{" "}
+                <Link href="/contact" className="text-brand-blue font-bold hover:underline">
+                  Support page
+                </Link>
                 . We will action the request and confirm once complete.
               </p>
             </section>
@@ -253,10 +252,10 @@ export default function TermsPage() {
             <section className="p-8 rounded-[32px] border border-brand-blue/15 bg-brand-blue-muted/30 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-brand-blue shrink-0 mt-0.5" />
               <p className="text-brand-blue/70 text-sm">
-                Questions, complaints, or requests relating to these Terms? Contact us at{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold hover:underline">
-                  {SUPPORT_EMAIL}
-                </a>
+                Questions, complaints, or requests relating to these Terms? Contact us through our{" "}
+                <Link href="/contact" className="font-bold hover:underline">
+                  Support page
+                </Link>
                 .
               </p>
             </section>
