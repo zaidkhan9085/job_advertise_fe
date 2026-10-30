@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Facebook, Twitter, Linkedin, Instagram, Youtube, MessageCircle, Smartphone } from "lucide-react";
-import { socialLinks, contactLinks, SUPPORT_EMAIL } from "@/data/socialLinks";
+import { LifeBuoy, Facebook, Twitter, Linkedin, Instagram, Youtube, MessageCircle, Smartphone } from "lucide-react";
+import { socialLinks, contactLinks } from "@/data/socialLinks";
 import { authNavItems } from "@/data/navigation";
 
 // Map social names to their respective icons
@@ -20,13 +20,13 @@ export default function TopBar() {
       <div className="container-site flex items-center justify-between h-9">
         {/* Left: contact info */}
         <div className="flex items-center gap-5">
-          <a
-            href={contactLinks.email}
+          <Link
+            href="/contact"
             className="flex items-center gap-1.5 hover:text-white transition-colors"
           >
-            <Mail className="w-3.5 h-3.5" />
-            {SUPPORT_EMAIL}
-          </a>
+            <LifeBuoy className="w-3.5 h-3.5" />
+            Contact Support
+          </Link>
           <a
             href={contactLinks.whatsapp}
             target="_blank"

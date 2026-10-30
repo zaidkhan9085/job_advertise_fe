@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { AlertTriangle, ShieldAlert } from "lucide-react";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
-import { SUPPORT_EMAIL } from "@/data/socialLinks";
 
 export default function DisclaimerPage() {
   return (
@@ -77,10 +77,10 @@ export default function DisclaimerPage() {
             <section className="p-8 rounded-[32px] border border-brand-blue/15 bg-brand-blue-muted/30 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-brand-blue shrink-0 mt-0.5" />
               <p className="text-brand-blue/70 text-sm">
-                Come across a fraudulent posting or a suspicious employer? Report it to{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold hover:underline">
-                  {SUPPORT_EMAIL}
-                </a>{" "}
+                Come across a fraudulent posting or a suspicious employer? Report it through our{" "}
+                <Link href="/contact" className="font-bold hover:underline">
+                  Support page
+                </Link>{" "}
                 and our team will investigate.
               </p>
             </section>

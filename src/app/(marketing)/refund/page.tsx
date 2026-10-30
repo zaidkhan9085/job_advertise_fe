@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { Wallet, ReceiptText, AlertCircle } from "lucide-react";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
-import { SUPPORT_EMAIL } from "@/data/socialLinks";
 
 export default function RefundPolicyPage() {
   return (
@@ -86,13 +86,12 @@ export default function RefundPolicyPage() {
             <section>
               <h2 className="text-2xl font-black text-brand-blue mb-6">4. How to Request a Refund</h2>
               <p>
-                Email{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-blue font-bold hover:underline">
-                  {SUPPORT_EMAIL}
-                </a>{" "}
-                from your registered email address with your payment reference and the reason for the
-                request. We acknowledge every request within 2 business days and complete the review
-                within 7 business days.
+                Reach us through our{" "}
+                <Link href="/contact" className="text-brand-blue font-bold hover:underline">
+                  Support page
+                </Link>{" "}
+                with your payment reference and the reason for the request. We acknowledge every request
+                within 2 business days and complete the review within 7 business days.
               </p>
             </section>
 
@@ -117,10 +116,10 @@ export default function RefundPolicyPage() {
             <section className="p-8 rounded-[32px] border border-brand-blue/15 bg-brand-blue-muted/30 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-brand-blue shrink-0 mt-0.5" />
               <p className="text-brand-blue/70 text-sm">
-                Questions about a specific purchase? Reach us at{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="font-bold hover:underline">
-                  {SUPPORT_EMAIL}
-                </a>{" "}
+                Questions about a specific purchase? Reach us through our{" "}
+                <Link href="/contact" className="font-bold hover:underline">
+                  Support page
+                </Link>{" "}
                 and we&apos;ll help sort it out.
               </p>
             </section>

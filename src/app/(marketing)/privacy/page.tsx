@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, Lock } from "lucide-react";
 import DecorativeBlur from "@/components/common/DecorativeBlur";
-import { SUPPORT_EMAIL } from "@/data/socialLinks";
 
 export default function PrivacyPage() {
   return (
@@ -142,10 +141,10 @@ export default function PrivacyPage() {
               <ul className="list-disc pl-6 space-y-2">
                 <li>Update or modify your profile at any time through your account settings.</li>
                 <li>
-                  Request deletion of your account and data by writing to{" "}
-                  <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-blue font-bold hover:underline">
-                    {SUPPORT_EMAIL}
-                  </a>
+                  Request deletion of your account and data through our{" "}
+                  <Link href="/contact" className="text-brand-blue font-bold hover:underline">
+                    Support page
+                  </Link>
                   . We will action the request and confirm once complete.
                 </li>
                 <li>Opt out of marketing emails or notifications through account settings.</li>
@@ -183,9 +182,9 @@ export default function PrivacyPage() {
                 </Link>
                 .
               </p>
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-blue font-black hover:underline">
-                {SUPPORT_EMAIL}
-              </a>
+              <Link href="/contact" className="text-brand-blue font-black hover:underline">
+                Contact Support
+              </Link>
             </section>
           </div>
         </div>

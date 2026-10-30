@@ -20,18 +20,23 @@ import {
   MessageSquareQuote,
   CreditCard,
   Megaphone,
+  LifeBuoy,
   X,
 } from "lucide-react";
 
 import Logo from "@/components/common/Logo";
 import { useSidebar } from "@/context/SidebarContext";
 import { useAuth } from "@/context/AuthContext";
+import { useSupportUnreadCount } from "@/hooks/useSupportUnreadCount";
 import type { BackendRole } from "@/lib/api";
 
 interface SidebarLink {
   label: string;
   href: string;
   icon: typeof LayoutDashboard;
+  // Live unread-count pill -- only the admin/sub_admin "Support" link uses
+  // this today (see useSupportUnreadCount), not a static per-link number.
+  showBadge?: boolean;
 }
 
 const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
@@ -43,6 +48,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
     { label: "All Applicants", href: "/dashboard/admin/all-applicants", icon: Users },
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
+    { label: "Support", href: "/dashboard/admin/support", icon: LifeBuoy, showBadge: true },
     { label: "AI Scans", href: "/dashboard/admin/ai-scans", icon: ScanText },
     { label: "Testimonials", href: "/dashboard/admin/testimonials", icon: MessageSquareQuote },
     { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone },
@@ -57,6 +63,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Contact Leads", href: "/dashboard/jobs?tab=leads", icon: Users },
     { label: "Company Profile", href: "/dashboard/profile", icon: Building },
     { label: "Plans & Billing", href: "/dashboard/billing", icon: CreditCard },
+    { label: "Support", href: "/contact", icon: LifeBuoy },
   ],
   // sub_admin has no dedicated nav yet — it's promoted from Employer and
   // gains moderation permissions, not a distinct dashboard (see [[api.ts]]).
@@ -68,6 +75,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "All Jobs", href: "/dashboard/admin/all-jobs", icon: ShieldCheck },
     { label: "All Applicants", href: "/dashboard/admin/all-applicants", icon: Users },
     { label: "Reports", href: "/dashboard/admin/reports", icon: Flag },
+    { label: "Support", href: "/dashboard/admin/support", icon: LifeBuoy, showBadge: true },
     { label: "Testimonials", href: "/dashboard/admin/testimonials", icon: MessageSquareQuote },
     { label: "Subscriptions", href: "/dashboard/admin/subscriptions", icon: CreditCard },
     { label: "Settings", href: "/dashboard/admin/settings", icon: Settings },
@@ -78,6 +86,7 @@ const LINKS_BY_ROLE: Record<BackendRole, SidebarLink[]> = {
     { label: "Browse Jobs", href: "/jobs", icon: Search },
     { label: "My Applications", href: "/dashboard/applications", icon: Briefcase },
     { label: "My Resume", href: "/resume-builder", icon: FileText },
+    { label: "Support", href: "/contact", icon: LifeBuoy },
   ],
 };
 
@@ -98,12 +107,14 @@ function SidebarNavContent({
   pathname,
   isCollapsed,
   onLinkClick,
+  supportUnreadCount,
 }: {
   links: SidebarLink[];
   role: BackendRole;
   pathname: string;
   isCollapsed: boolean;
   onLinkClick?: () => void;
+  supportUnreadCount: number;
 }) {
   return (
     <>
@@ -118,6 +129,7 @@ function SidebarNavContent({
         {links.map((link, index) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
+          const badgeCount = link.showBadge ? supportUnreadCount : 0;
 
           return (
             <Link
@@ -133,13 +145,25 @@ function SidebarNavContent({
                   : "text-foreground/70 hover:bg-secondary hover:text-foreground"
               }`}
             >
-              <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-brand-blue" : "text-muted-foreground group-hover:text-foreground"}`} />
+              <span className="relative shrink-0">
+                <Icon className={`w-5 h-5 ${isActive ? "text-brand-blue" : "text-muted-foreground group-hover:text-foreground"}`} />
+                {isCollapsed && badgeCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold leading-[14px] text-center ring-2 ring-white">
+                    {badgeCount > 9 ? "9+" : badgeCount}
+                  </span>
+                )}
+              </span>
               {!isCollapsed && (
-                <span className="whitespace-nowrap transition-opacity duration-300">
+                <span className="flex-1 flex items-center justify-between gap-2 whitespace-nowrap transition-opacity duration-300">
                   {link.label}
+                  {badgeCount > 0 && (
+                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold leading-[18px] text-center">
+                      {badgeCount > 99 ? "99+" : badgeCount}
+                    </span>
+                  )}
                 </span>
               )}
-              {isActive && !isCollapsed && (
+              {isActive && !isCollapsed && !badgeCount && (
                 <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-brand-blue" />
               )}
             </Link>
@@ -158,6 +182,7 @@ export default function DashboardSidebar() {
 
   const role = user?.role ?? "candidate";
   const sidebarLinks = LINKS_BY_ROLE[role];
+  const supportUnreadCount = useSupportUnreadCount();
 
   // Same body-scroll-lock pattern as MobileNav.tsx/ApplyDialog.tsx -- the
   // mobile drawer below is a fixed-position overlay, so the page behind it
@@ -198,7 +223,7 @@ export default function DashboardSidebar() {
           </Link>
         </div>
 
-        <SidebarNavContent links={sidebarLinks} role={role} pathname={pathname} isCollapsed={isCollapsed} />
+        <SidebarNavContent links={sidebarLinks} role={role} pathname={pathname} isCollapsed={isCollapsed} supportUnreadCount={supportUnreadCount} />
       </aside>
 
       {/* Mobile drawer -- same proven pattern as components/layout/MobileNav.tsx
@@ -230,6 +255,7 @@ export default function DashboardSidebar() {
               pathname={pathname}
               isCollapsed={false}
               onLinkClick={closeMobileSidebar}
+              supportUnreadCount={supportUnreadCount}
             />
           </div>
         </>

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Facebook, Linkedin, Instagram, Youtube, Mail, MapPin, ArrowRight, Briefcase } from "lucide-react";
+import { Facebook, Linkedin, Instagram, Youtube, LifeBuoy, MapPin, ArrowRight, Briefcase } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
-import { socialLinks as staticSocialLinks, contactLinks, SUPPORT_EMAIL } from "@/data/socialLinks";
+import { socialLinks as staticSocialLinks, contactLinks } from "@/data/socialLinks";
 import { SHORT_TERM_JOBS_HREF } from "@/data/navigation";
 import { getSocialLinks, type SocialLinks } from "@/lib/api";
 import Logo from "@/components/common/Logo";
@@ -189,10 +189,10 @@ export default function Footer() {
             {/* Contact & Location Info */}
             <div className="flex flex-col sm:flex-row items-center gap-10">
               <div className="flex flex-col items-center sm:items-start gap-2">
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center gap-3 text-brand-blue-light group cursor-pointer">
-                  <Mail className="w-5 h-5" />
-                  <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">{SUPPORT_EMAIL}</span>
-                </a>
+                <Link href="/contact" className="flex items-center gap-3 text-brand-blue-light group cursor-pointer">
+                  <LifeBuoy className="w-5 h-5" />
+                  <span className="text-[15px] font-black tracking-tight text-white/90 group-hover:text-white transition-colors">Contact Support</span>
+                </Link>
                 <div className="flex items-center gap-3 text-white/40">
                   <MapPin className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-widest">Mumbai — Global Recruitment HQ</span>
