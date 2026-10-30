@@ -13,22 +13,21 @@ import { createSupportMessage, ApiError } from "@/lib/api";
 // triage from their dashboard. Logged-in only, by deliberate scope choice
 // -- a guest sees a log-in prompt instead of the form, same as every other
 // support-email reference removed site-wide.
-const SUBJECT_OPTIONS = ["Job Seeker Inquiry", "Recruiter Partnership", "Bug Report", "Other"];
-
 export default function ContactPage() {
   const { user, isLoading } = useAuth();
-  const [subject, setSubject] = useState(SUBJECT_OPTIONS[0]);
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!subject.trim() || !message.trim()) return;
     setIsSubmitting(true);
     try {
-      await createSupportMessage(subject, message.trim());
+      await createSupportMessage(subject.trim(), message.trim());
       toast.success("Message sent — our team will get back to you.");
+      setSubject("");
       setMessage("");
       setSent(true);
     } catch (err) {
@@ -139,15 +138,14 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="grid gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-black text-brand-blue uppercase tracking-widest">Subject</label>
-                    <select
+                    <input
+                      type="text"
+                      required
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="w-full px-5 py-4 rounded-xl bg-brand-blue-muted/30 border-transparent focus:border-brand-blue/20 focus:bg-white transition-all outline-none font-medium appearance-none"
-                    >
-                      {SUBJECT_OPTIONS.map((opt) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                      placeholder="What's this about?"
+                      className="w-full px-5 py-4 rounded-xl bg-brand-blue-muted/30 border-transparent focus:border-brand-blue/20 focus:bg-white transition-all outline-none font-medium"
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-black text-brand-blue uppercase tracking-widest">Your Message</label>
@@ -163,7 +161,7 @@ export default function ContactPage() {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      disabled={isSubmitting || !message.trim()}
+                      disabled={isSubmitting || !subject.trim() || !message.trim()}
                       className="flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-5 bg-brand-blue text-white rounded-xl font-black text-sm hover:bg-brand-blue-medium shadow-lg shadow-brand-blue/20 transition-all uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? "Sending..." : "Send Message"} <Send className="w-4 h-4" />

@@ -948,6 +948,14 @@ export function updateSupportMessageStatus(id: string, status: SupportMessageSta
   );
 }
 
+// Resolves every message that isn't already RESOLVED, system-wide -- not
+// scoped to whatever search/filter is currently applied in the admin UI.
+export function resolveAllSupportMessages() {
+  return apiFetch<{ message: string; count: number }>("/api/support/resolve-all", {
+    method: "POST",
+  });
+}
+
 // --- Resume Builder ---
 // The builder's document is a loosely-typed { theme, sections } structure
 // (see Editor.tsx/resume-builder/page.tsx, which use `any` throughout) --

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { CheckCheck, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   getSupportMessages,
   updateSupportMessageStatus,
+  resolveAllSupportMessages,
   type AdminSupportMessage,
   type SupportMessageStatus,
   type PaginatedMeta,
@@ -17,6 +18,7 @@ import ComingSoon from "@/components/dashboard/ComingSoon";
 import CommonTable, { type CommonTableColumn } from "@/components/dashboard/CommonTable";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { StatusFilterPills } from "@/components/dashboard/StatusFilterPills";
+import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 
 const PAGE_LIMIT = 20;
 
@@ -41,6 +43,8 @@ export default function AdminSupportPage() {
   const [statusFilter, setStatusFilter] = useState<FilterOption>("NEW");
   const [page, setPage] = useState(1);
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [showResolveAllConfirm, setShowResolveAllConfirm] = useState(false);
+  const [isResolvingAll, setIsResolvingAll] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
@@ -93,6 +97,20 @@ export default function AdminSupportPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to update message.");
     } finally {
       setActioningId(null);
+    }
+  };
+
+  const handleResolveAll = async () => {
+    setIsResolvingAll(true);
+    try {
+      const result = await resolveAllSupportMessages();
+      toast.success(result.message);
+      setShowResolveAllConfirm(false);
+      loadMessages();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to resolve all messages.");
+    } finally {
+      setIsResolvingAll(false);
     }
   };
 
@@ -168,9 +186,17 @@ export default function AdminSupportPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-black text-foreground">Support</h1>
-        <p className="text-muted-foreground mt-1 text-sm font-medium">Messages sent in-app by candidates and employers.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black text-foreground">Support</h1>
+          <p className="text-muted-foreground mt-1 text-sm font-medium">Messages sent in-app by candidates and employers.</p>
+        </div>
+        <button
+          onClick={() => setShowResolveAllConfirm(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+        >
+          <CheckCheck className="w-4 h-4" /> Resolve All
+        </button>
       </div>
 
       {error && <div className="bg-red-50 text-red-800 text-sm p-4 rounded-2xl border border-red-100">{error}</div>}
@@ -195,6 +221,16 @@ export default function AdminSupportPage() {
             ? { page: meta.page, totalPages: meta.totalPages, total: meta.total, limit: meta.limit, onPageChange: setPage }
             : undefined
         }
+      />
+
+      <ConfirmDialog
+        isOpen={showResolveAllConfirm}
+        title="Resolve All Messages?"
+        message="This marks every New and In Progress message as Resolved, across the whole inbox -- not just what's currently filtered or shown on this page."
+        confirmLabel="Resolve All"
+        isConfirming={isResolvingAll}
+        onConfirm={handleResolveAll}
+        onCancel={() => setShowResolveAllConfirm(false)}
       />
     </div>
   );
