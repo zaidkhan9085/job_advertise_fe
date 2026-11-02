@@ -1,5 +1,6 @@
 import { getTokenFromDocumentCookie } from "./auth-token";
 import type { BillingCurrency } from "./currency";
+import type { ResumeTheme, ResumeSection, TemplateId } from "./resumeTemplates/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
@@ -957,14 +958,13 @@ export function resolveAllSupportMessages() {
 }
 
 // --- Resume Builder ---
-// The builder's document is a loosely-typed { theme, sections } structure
-// (see Editor.tsx/resume-builder/page.tsx, which use `any` throughout) --
-// kept loose here too rather than introducing stricter typing the rest of
-// that feature doesn't have.
 export interface ResumeRecord {
   id: string;
-  theme: unknown;
-  sections: unknown;
+  theme: ResumeTheme;
+  sections: ResumeSection[];
+  // Null for any resume saved before templates existed -- callers fall
+  // back to "modern" (TemplateRenderer's own default).
+  template: TemplateId | null;
   fullName: string | null;
   jobTitle: string | null;
   email: string | null;
@@ -977,7 +977,7 @@ export function getMyResume() {
   return apiFetch<ResumeRecord | null>("/api/resume/mine");
 }
 
-export function upsertMyResume(payload: { theme: unknown; sections: unknown }) {
+export function upsertMyResume(payload: { theme: ResumeTheme; sections: ResumeSection[]; template: TemplateId }) {
   return apiFetch<{ message: string; resume: ResumeRecord }>(
     "/api/resume/mine",
     {
@@ -985,6 +985,30 @@ export function upsertMyResume(payload: { theme: unknown; sections: unknown }) {
       body: JSON.stringify(payload),
     },
   );
+}
+
+// Rewrites one short piece of resume text (a professional summary, or one
+// experience/project/education entry's description) -- review-only, like
+// /api/resume/parse: the caller shows the result for the candidate to
+// accept or discard rather than overwriting the field automatically.
+export function polishResumeText(payload: { text: string; kind: "summary" | "bullet" }) {
+  return apiFetch<{ polished: string }>("/api/resume/polish", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface ResumeMatchScore {
+  score: number;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+}
+
+export function matchResumeToJob(payload: { sections: ResumeSection[]; jobDescription: string }) {
+  return apiFetch<ResumeMatchScore>("/api/resume/match-score", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // --- Applications ---
@@ -1623,7 +1647,7 @@ export function searchCandidates(filters?: ATSSearchFilters) {
 
 export interface UnlockCandidateResult {
   candidate: { whatsapp: string | null; email: string | null };
-  resume: { theme: unknown; sections: unknown } | null;
+  resume: { theme: ResumeTheme; sections: ResumeSection[]; template: TemplateId | null } | null;
   // Signed, ready-to-open URL for the candidate's uploaded resume FILE
   // (PDF/DOC/DOCX) — a separate source from the Resume Builder `resume`
   // field above; a candidate can have either, both, or neither.

@@ -18,10 +18,18 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import SortableSection from "./SortableSection";
 import { Plus } from "lucide-react";
+import type { ResumeSection } from "@/lib/resumeTemplates/types";
 
 interface EditorProps {
-  sections: any[];
-  setSections: (sections: any[]) => void;
+  sections: ResumeSection[];
+  // Accepts a plain array OR a React-style updater over the latest sections.
+  // Every mutator below uses the updater form -- closing over the `sections`
+  // prop directly let two edits in quick succession (e.g. typing into an
+  // Experience field then an Education field before this component
+  // re-rendered with fresh props) silently drop the first one, since the
+  // second mutation's `sections.map(...)` still read the pre-first-edit
+  // array. Reproduced live via scripted rapid field edits.
+  setSections: (sections: ResumeSection[] | ((prev: ResumeSection[]) => ResumeSection[])) => void;
 }
 
 export default function Editor({ sections, setSections }: EditorProps) {
@@ -39,54 +47,65 @@ export default function Editor({ sections, setSections }: EditorProps) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = sections.findIndex((s) => s.id === active.id);
-      const newIndex = sections.findIndex((s) => s.id === over.id);
-      setSections(arrayMove(sections, oldIndex, newIndex));
+      setSections((prev) => {
+        const oldIndex = prev.findIndex((s) => s.id === active.id);
+        const newIndex = prev.findIndex((s) => s.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
     }
   };
 
-  const updateSection = (id: string, newData: any) => {
-    setSections(sections.map(s => s.id === id ? { ...s, ...newData } : s));
+  const updateSection = (id: string, updated: ResumeSection) => {
+    setSections((prev) => prev.map(s => s.id === id ? updated : s));
   };
 
   const deleteSection = (id: string) => {
     if (confirm("Remove this entire section?")) {
-      setSections(sections.filter(s => s.id !== id));
+      setSections((prev) => prev.filter(s => s.id !== id));
     }
   };
 
   const toggleSection = (id: string) => {
-    setSections(sections.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s));
+    setSections((prev) => prev.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s));
   };
 
   const duplicateSection = (id: string) => {
-    const section = sections.find(s => s.id === id);
-    if (!section) return;
-    const index = sections.findIndex(s => s.id === id);
-    const newSection = { ...JSON.parse(JSON.stringify(section)), id: `copy-${Date.now()}`, isExpanded: true };
-    const newSections = [...sections];
-    newSections.splice(index + 1, 0, newSection);
-    setSections(newSections);
+    const copyId = `copy-${Date.now()}`;
+    setSections((prev) => {
+      const section = prev.find(s => s.id === id);
+      if (!section) return prev;
+      const index = prev.findIndex(s => s.id === id);
+      const newSection: ResumeSection = { ...JSON.parse(JSON.stringify(section)), id: copyId, isExpanded: true };
+      const newSections = [...prev];
+      newSections.splice(index + 1, 0, newSection);
+      return newSections;
+    });
   };
 
-  const addSection = (type: string, title: string) => {
+  const addSection = (type: ResumeSection["type"], title: string) => {
     const id = `${type.toLowerCase()}-${Date.now()}`;
-    const newSection: any = {
-      id,
-      type,
-      title,
-      isExpanded: true,
-    };
 
-    if (type === "SUMMARY") newSection.data = { content: "" };
-    if (type === "LIST") {
-      newSection.data = {};
-      newSection.lastId = 1;
-      newSection.items = [{ id: "1", title: "", subtitle: "", date: "", content: "" }];
+    let newSection: ResumeSection;
+    switch (type) {
+      case "SUMMARY":
+        newSection = { id, type, title, isExpanded: true, data: { content: "" } };
+        break;
+      case "LIST":
+        newSection = { id, type, title, isExpanded: true, lastId: 1, items: [{ id: "1", title: "", subtitle: "", date: "", content: "" }] };
+        break;
+      case "TAGS":
+        newSection = { id, type, title, isExpanded: true, items: [""] };
+        break;
+      case "LANGUAGES":
+        newSection = { id, type, title, isExpanded: true, lastId: 1, items: [{ id: "1", language: "", level: "B1" }] };
+        break;
+      case "PERSONAL":
+        // Not reachable from the add-section UI (there's always exactly
+        // one PERSONAL section, seeded by default) -- exhaustive case only.
+        return;
     }
-    if (type === "TAGS") newSection.items = [""];
 
-    setSections([...sections, newSection]);
+    setSections((prev) => [...prev, newSection]);
   };
 
   return (
@@ -106,7 +125,7 @@ export default function Editor({ sections, setSections }: EditorProps) {
             <SortableSection 
               key={section.id} 
               section={section} 
-              onUpdate={(data: any) => updateSection(section.id, data)}
+              onUpdate={(updated) => updateSection(section.id, updated)}
               onToggle={() => toggleSection(section.id)}
               onDelete={() => deleteSection(section.id)}
               onDuplicate={() => duplicateSection(section.id)}
@@ -130,11 +149,17 @@ export default function Editor({ sections, setSections }: EditorProps) {
             >
               + Projects
             </button>
-            <button 
+            <button
               onClick={() => addSection("TAGS", "Certifications")}
               className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-blue hover:border-brand-blue/30 transition-all shadow-sm"
             >
               + Certifications
+            </button>
+            <button
+              onClick={() => addSection("LANGUAGES", "Language Skills")}
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-brand-blue hover:border-brand-blue/30 transition-all shadow-sm"
+            >
+              + Languages
             </button>
             <button 
               onClick={() => addSection("SUMMARY", "Achievements")}

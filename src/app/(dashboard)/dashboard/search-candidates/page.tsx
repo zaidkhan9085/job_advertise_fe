@@ -42,6 +42,7 @@ import {
   type CreditsSummary,
   type PaginatedMeta,
   type IncompleteSignupCandidate,
+  type UnlockCandidateResult,
   ApiError,
 } from "@/lib/api";
 import ComingSoon from "@/components/dashboard/ComingSoon";
@@ -138,7 +139,7 @@ function ResumeModal({
   onClose,
 }: {
   candidate: ATSCandidate;
-  resume: { theme: unknown; sections: unknown } | null;
+  resume: UnlockCandidateResult["resume"];
   uploadedResumeUrl: string | null;
   onClose: () => void;
 }) {
@@ -195,7 +196,7 @@ function ResumeModal({
         </div>
         <div className="flex-1 overflow-y-auto bg-secondary/30 p-6 flex justify-center">
           {resume ? (
-            <Preview ref={previewRef} data={{ theme: resume.theme, sections: resume.sections }} />
+            <Preview ref={previewRef} data={{ theme: resume.theme, sections: resume.sections, templateId: resume.template }} />
           ) : uploadedResumeUrl ? (
             <div className="text-center text-muted-foreground py-20">
               <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
@@ -297,7 +298,7 @@ export default function SearchCandidatesPage() {
   const [unlockingId, setUnlockingId] = useState<number | null>(null);
   const [viewing, setViewing] = useState<{
     candidate: ATSCandidate;
-    resume: { theme: unknown; sections: unknown } | null;
+    resume: UnlockCandidateResult["resume"];
     uploadedResumeUrl: string | null;
   } | null>(null);
 
