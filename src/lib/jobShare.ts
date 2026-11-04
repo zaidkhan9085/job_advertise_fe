@@ -115,13 +115,20 @@ export function buildCompanyMailtoUrl(email: string, companyName: string) {
 
 // The text that travels WITH a shared job link (native share sheet, or
 // copied to the clipboard) so it reads as a message rather than a bare URL.
+// Deliberately doesn't mention the site/domain here -- the caller always
+// appends the full job URL right after this text (navigator.share's `url`
+// field, or `${text}\n${url}` for the clipboard fallback), and that URL
+// already starts with the domain. A trailing "Apply on www.thejobs4u.com"
+// line followed immediately by "https://www.thejobs4u.com/jobs/..." read as
+// the same link shown twice -- most share targets (WhatsApp included) just
+// concatenate text+url into one message.
 export function buildJobShareText(job: ShareJob) {
   return [
     `*${job.title}*`,
     hasRealCompany(job) ? job.company : null,
     job.location,
     "",
-    `Apply on ${SITE_REF}`,
+    "Apply now:",
   ]
     .filter((line): line is string => line !== null && line !== undefined)
     .join("\n");

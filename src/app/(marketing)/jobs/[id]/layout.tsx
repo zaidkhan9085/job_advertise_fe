@@ -94,9 +94,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const job = result.job;
 
   const description = buildDescription(job);
-  // A text-only listing has no poster -- fall back to the site logo so the
-  // preview still carries a thumbnail instead of nothing.
-  const image = job.image ? previewImage(job.image) : { url: "/logo-icon.png" };
+  // A text-only listing has no poster -- fall back to the same 1200x630
+  // default share image the rest of the site uses (src/app/layout.tsx),
+  // not /logo-icon.png: that's a 305x251 app-icon-shaped PNG with no
+  // declared width/height, a materially weaker crawler target than a
+  // properly-sized, dimension-declared landscape card -- this was the
+  // actual cause of no-image job shares showing as a bare text link with
+  // no thumbnail at all.
+  const image = job.image ? previewImage(job.image) : { url: "/og-default.png", width: PREVIEW_W, height: PREVIEW_H };
   // The slug-prefixed path (see jobPagePath) -- the canonical/OG URL should
   // point at the same pretty URL the page itself links to everywhere else,
   // not the bare id this route still also accepts for old shared links.
