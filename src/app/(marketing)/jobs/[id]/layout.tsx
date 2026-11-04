@@ -37,7 +37,7 @@ const PREVIEW_H = 630;
 // its size isn't known.
 const CLOUDINARY_UPLOAD = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)((?:v\d+\/)?)([A-Za-z0-9_\-/]+)(\.[A-Za-z0-9]+)?$/;
 
-function previewImage(raw: string): { url: string; width?: number; height?: number } {
+function previewImage(raw: string, jobId: string): { url: string; width?: number; height?: number } {
   const absolute = /^https?:\/\//.test(raw) ? raw : `${API_BASE}${raw}`;
   const size = { width: PREVIEW_W, height: PREVIEW_H };
 
@@ -65,7 +65,15 @@ function previewImage(raw: string): { url: string; width?: number; height?: numb
       ...size,
     };
   }
-  return { url: absolute };
+
+  // Not Cloudinary -- the common case now that uploads live on the VPS
+  // instead. A job poster used as-is is almost always portrait/square, not
+  // the ~1.91:1 landscape ratio link-preview crawlers want for a large
+  // card, so WhatsApp/Facebook/etc drew it as a small compact thumbnail
+  // instead of a proper share card. The backend builds (and caches) the
+  // same padded-landscape treatment Cloudinary used to via a dedicated
+  // endpoint -- see getOrBuildOgPreview in the backend.
+  return { url: `${API_BASE}/api/jobs/og-image/${jobId}`, ...size };
 }
 
 // Deliberately short and fixed-format rather than an excerpt of the job's
@@ -101,7 +109,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   // properly-sized, dimension-declared landscape card -- this was the
   // actual cause of no-image job shares showing as a bare text link with
   // no thumbnail at all.
-  const image = job.image ? previewImage(job.image) : { url: "/og-default.png", width: PREVIEW_W, height: PREVIEW_H };
+  const image = job.image ? previewImage(job.image, job.id) : { url: "/og-default.png", width: PREVIEW_W, height: PREVIEW_H };
   // The slug-prefixed path (see jobPagePath) -- the canonical/OG URL should
   // point at the same pretty URL the page itself links to everywhere else,
   // not the bare id this route still also accepts for old shared links.
