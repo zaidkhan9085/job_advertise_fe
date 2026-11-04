@@ -1,8 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { SITE_URL } from "@/lib/site";
+
+// Measurement ID for the client's Google Analytics 4 property (GA4) --
+// not a secret, it's publicly visible in every page's rendered HTML once
+// installed, same as the Search Console verification token below. Hardcoded
+// here rather than an env var for the same reason that token is: one-time,
+// safe to keep permanently, and this way there's no separate Vercel env var
+// to remember to set on deploy.
+const GA_MEASUREMENT_ID = "G-83XWYY7WR1";
 
 export const metadata: Metadata = {
   title: {
@@ -76,6 +85,7 @@ export default function RootLayout({
           <Toaster richColors position="top-right" />
         </AuthProvider>
       </body>
+      <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </html>
   );
 }
