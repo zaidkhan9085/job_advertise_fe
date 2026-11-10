@@ -193,7 +193,7 @@ export default function JobDetailClient({
   const handleShare = async () => {
     if (!job) return;
     const url = jobPageUrl(job);
-    const text = buildJobShareText(job);
+    const text = buildJobShareText();
     if (navigator.share) {
       try {
         await navigator.share({ title: job.title, text, url });
