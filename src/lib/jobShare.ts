@@ -114,22 +114,16 @@ export function buildCompanyMailtoUrl(email: string, companyName: string) {
 }
 
 // The text that travels WITH a shared job link (native share sheet, or
-// copied to the clipboard) so it reads as a message rather than a bare URL.
-// Deliberately doesn't mention the site/domain here -- the caller always
-// appends the full job URL right after this text (navigator.share's `url`
-// field, or `${text}\n${url}` for the clipboard fallback), and that URL
-// already starts with the domain. A trailing "Apply on www.thejobs4u.com"
-// line followed immediately by "https://www.thejobs4u.com/jobs/..." read as
-// the same link shown twice -- most share targets (WhatsApp included) just
-// concatenate text+url into one message.
-export function buildJobShareText(job: ShareJob) {
-  return [
-    `*${job.title}*`,
-    hasRealCompany(job) ? job.company : null,
-    job.location,
-    "",
-    "Apply now:",
-  ]
-    .filter((line): line is string => line !== null && line !== undefined)
-    .join("\n");
+// copied to the clipboard). Deliberately just one line -- the job's URL
+// already renders a full link-preview card wherever it's pasted (WhatsApp,
+// etc.), built from the page's own og:title/og:description/og:image (see
+// jobs/[id]/layout.tsx), and that card's description already folds in the
+// title, company and location (buildDescription there). Repeating any of
+// that here just duplicated the card's own title/text right underneath it,
+// padding the message and crowding out the image. One line, then the
+// caller appends the single link right after (navigator.share's `url`
+// field, or `${text}\n${url}` for the clipboard fallback) -- nothing here
+// mentions the domain either, so the link only ever appears once.
+export function buildJobShareText() {
+  return "Apply now:";
 }
