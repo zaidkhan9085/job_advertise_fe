@@ -15,5 +15,12 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  // Resume Builder has no account-specific content of its own to protect,
+  // but saving a draft does -- it was reachable by every signed-out visitor
+  // through several entry points (the mobile bottom nav's "Resume" tab, the
+  // footer's "Resume Builder" link, a direct URL) with no guard at all, each
+  // of which would have needed its own client-side special-case otherwise
+  // (the footer's "Post Resume" link already had one, for exactly this
+  // reason -- see Footer.tsx). One middleware match covers all of them.
+  matcher: ["/dashboard/:path*", "/resume-builder/:path*"],
 };
