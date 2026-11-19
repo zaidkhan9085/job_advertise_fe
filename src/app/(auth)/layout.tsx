@@ -15,11 +15,11 @@ export default function AuthLayout({
         </Link>
       </header>
 
-      {/* Main Content Centered */}
+      {/* Main Content Centered -- no width constraint here anymore (moved
+          to (narrow)/layout.tsx for every page except login, which needs
+          the full width for its two-column layout). */}
       <main className="flex-1 flex items-center justify-center p-4 py-12">
-        <div className="w-full max-w-[420px]">
-          {children}
-        </div>
+        {children}
       </main>
 
       {/* Simple Auth Footer */}
