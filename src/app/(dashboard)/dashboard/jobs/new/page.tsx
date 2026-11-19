@@ -169,7 +169,6 @@ export default function PostJobPage() {
   const [parsingStep, setParsingStep] = useState(0);
   const [parsingProgress, setParsingProgress] = useState(0);
   const [parsedPoster, setParsedPoster] = useState<ParsedJobPoster | null>(null);
-  const [scanBasic, setScanBasic] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   // The server refused the scan because the recruiter's daily allowance is used
   // up or an admin paused AI scanning for them -- retrying can't help.
@@ -341,7 +340,6 @@ export default function PostJobPage() {
     setParsedPoster(null);
     setScanError(null);
     setScanLocked(false);
-    setScanBasic(false);
     setScanPhase("scanning");
     try {
       // A shrunken copy is what gets scanned (the original is still what's
@@ -350,18 +348,18 @@ export default function PostJobPage() {
       const result = await parseJobPoster(scanFile, { rescan });
       setParsedPoster(result.parsed);
       await applyParsedPoster(result.parsed, rescan);
-      setScanBasic(result.parsed.degraded);
       setScanQuota(result.meta?.quota ?? null);
       setScanPhase("scanned");
-      if (result.parsed.degraded) {
-        toast.warning("AI was busy, so we used a basic scan — please check every field carefully.");
-      } else {
-        toast.success(
-          result.parsed.jobs.length > 1
-            ? `Found ${result.parsed.jobs.length} positions on this poster — all included in one listing below.`
-            : "We've read your poster and filled the form — please review before submitting."
-        );
-      }
+      // Whether this landed via the full AI read or the rule-based fallback
+      // (result.parsed.degraded) is deliberately never surfaced to the
+      // recruiter -- same success message either way. The always-shown
+      // "please review every field" line in PosterScanPanel already covers
+      // double-checking, without naming which path produced the result.
+      toast.success(
+        result.parsed.jobs.length > 1
+          ? `Found ${result.parsed.jobs.length} positions on this poster — all included in one listing below.`
+          : "We've read your poster and filled the form — please review before submitting."
+      );
     } catch (err) {
       // Cap what we'll show verbatim -- these are meant to be short,
       // deliberately-written messages (see jobController.js's parseJobPoster),
@@ -394,7 +392,6 @@ export default function PostJobPage() {
     setPosterPreview(file ? URL.createObjectURL(file) : null);
     setParsedPoster(null);
     setScanError(null);
-    setScanBasic(false);
     // Nothing is scanned automatically: the panel asks first.
     setScanPhase(file ? "choose" : null);
   };
@@ -555,7 +552,6 @@ export default function PostJobPage() {
                 progress={parsingProgress}
                 roleCount={parsedPoster?.jobs.length}
                 shortTerm={parsedPoster?.job_type === "short"}
-                basic={scanBasic}
                 quota={scanQuota}
                 locked={scanLocked}
                 errorMessage={scanError}

@@ -31,7 +31,6 @@ export default function PosterScanPanel({
   progress,
   roleCount = 0,
   shortTerm = false,
-  basic = false,
   quota = null,
   locked = false,
   errorMessage,
@@ -44,7 +43,6 @@ export default function PosterScanPanel({
   progress: number;
   roleCount?: number;
   shortTerm?: boolean;
-  basic?: boolean;
   // Daily allowance after the last scan (null for staff / not scanned yet).
   quota?: { limit: number; used: number; remaining: number } | null;
   // The scan was refused for good (limit used up / paused by an admin), so
@@ -116,15 +114,6 @@ export default function PosterScanPanel({
         {shortTerm && (
           <p className="text-xs font-semibold text-brand-blue mt-2">
             Job Type set to Short Term — the poster mentions a shutdown or short-term job. Change it below if that&apos;s wrong.
-          </p>
-        )}
-        {basic && (
-          <p className="flex items-start gap-2 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-3">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
-            <span>
-              AI was busy, so we used a basic scan. Some fields may be missing — check them carefully, or press
-              Re-scan in a minute.
-            </span>
           </p>
         )}
         <div className="mt-3">
