@@ -111,7 +111,6 @@ export default function PostStoryPage() {
   const [parsingStep, setParsingStep] = useState(0);
   const [parsingProgress, setParsingProgress] = useState(0);
   const [parsedPoster, setParsedPoster] = useState<ParsedJobPoster | null>(null);
-  const [scanBasic, setScanBasic] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanLocked, setScanLocked] = useState(false);
   const [scanQuota, setScanQuota] = useState<PosterScanMeta["quota"]>(null);
@@ -173,21 +172,18 @@ export default function PostStoryPage() {
     setParsedPoster(null);
     setScanError(null);
     setScanLocked(false);
-    setScanBasic(false);
     setScanPhase("scanning");
     try {
       const scanFile = await compressForScan(file);
       const result = await parseJobPoster(scanFile, { rescan });
       setParsedPoster(result.parsed);
       await applyParsedPoster(result.parsed, rescan);
-      setScanBasic(result.parsed.degraded);
       setScanQuota(result.meta?.quota ?? null);
       setScanPhase("scanned");
-      if (result.parsed.degraded) {
-        toast.warning("AI was busy, so we used a basic scan — please check every field carefully.");
-      } else {
-        toast.success("We've read your poster and filled the form — please review before posting.");
-      }
+      // Whether this landed via the full AI read or the rule-based fallback
+      // (result.parsed.degraded) is deliberately never surfaced to the
+      // recruiter -- same success message either way, same as Post Job.
+      toast.success("We've read your poster and filled the form — please review before posting.");
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "";
       const shown =
@@ -214,7 +210,6 @@ export default function PostStoryPage() {
     setPosterPreview(file ? URL.createObjectURL(file) : null);
     setParsedPoster(null);
     setScanError(null);
-    setScanBasic(false);
     // Nothing is scanned automatically: the panel asks first, same as Post Job.
     setScanPhase(file ? "choose" : null);
   };
@@ -327,7 +322,6 @@ export default function PostStoryPage() {
               progress={parsingProgress}
               roleCount={parsedPoster?.jobs.length}
               shortTerm={parsedPoster?.job_type === "short"}
-              basic={scanBasic}
               quota={scanQuota}
               locked={scanLocked}
               errorMessage={scanError}
